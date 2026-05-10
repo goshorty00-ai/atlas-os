@@ -121,3 +121,5 @@ mcp_config_final.json
 *secret*.json
 *secret*.txt
 *secret*.key
+virustotal_key.txt
+**/virustotal_key.txt

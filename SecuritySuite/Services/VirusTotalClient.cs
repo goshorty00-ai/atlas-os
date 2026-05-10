@@ -24,9 +24,6 @@ namespace AtlasAI.SecuritySuite.Services
         private DateTime _lastRequestTime = DateTime.MinValue;
         private const int MinRequestIntervalMs = 15500; // ~4 requests per minute
         
-        // Embedded API key for Atlas AI
-        private const string EmbeddedApiKey = "2a927188fb1e6a58d097af05d3a08c8f9807c342470a1f6bd4304d05d96ad274";
-        
         private string? _apiKey;
         public bool IsConfigured => !string.IsNullOrEmpty(_apiKey);
         
@@ -46,15 +43,25 @@ namespace AtlasAI.SecuritySuite.Services
         {
             try
             {
-                // First try to load user-provided key
+                // 1. Try IntegrationKeyStore (DPAPI-protected, preferred)
+                var storeKey = AtlasAI.Core.IntegrationKeyStore.GetDecrypted("virustotal");
+                if (!string.IsNullOrWhiteSpace(storeKey))
+                {
+                    _apiKey = storeKey.Trim();
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Add("x-apikey", _apiKey);
+                    return;
+                }
+
+                // 2. Try ignored local flat file (%APPDATA%\AtlasAI\virustotal_key.txt)
                 var keyPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                     "AtlasAI", "virustotal_key.txt");
-                
+
                 if (File.Exists(keyPath))
                 {
                     var savedKey = File.ReadAllText(keyPath).Trim();
-                    if (!string.IsNullOrEmpty(savedKey))
+                    if (!string.IsNullOrWhiteSpace(savedKey))
                     {
                         _apiKey = savedKey;
                         _httpClient.DefaultRequestHeaders.Clear();
@@ -62,18 +69,13 @@ namespace AtlasAI.SecuritySuite.Services
                         return;
                     }
                 }
-                
-                // Fall back to embedded key
-                _apiKey = EmbeddedApiKey;
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("x-apikey", _apiKey);
+
+                // No key available — IsConfigured returns false; callers handle gracefully.
+                _apiKey = null;
             }
             catch
             {
-                // Use embedded key on any error
-                _apiKey = EmbeddedApiKey;
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("x-apikey", _apiKey);
+                _apiKey = null;
             }
         }
         
