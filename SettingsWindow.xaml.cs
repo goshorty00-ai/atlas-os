@@ -3318,31 +3318,28 @@ namespace AtlasAI {
 
         private void UpdateProviderInfo(VoiceProviderType type)
         {
-            ElevenLabsKeyLabel.Visibility = Visibility.Visible;
-            ElevenLabsKeyBox.Visibility = Visibility.Visible;
+            // Key entry boxes are locked down — never shown to users.
+            ElevenLabsKeyLabel.Visibility = Visibility.Collapsed;
+            ElevenLabsKeyBox.Visibility = Visibility.Collapsed;
+            OpenAIKeyLabel.Visibility = Visibility.Collapsed;
+            OpenAIKeyBox.Visibility = Visibility.Collapsed;
 
             switch (type)
             {
                 case VoiceProviderType.ElevenLabs:
-                    ProviderInfoText.Text = "☁️ ElevenLabs: Premium expressive voices. Requires API key.";
+                    ProviderInfoText.Text = "☁️ ElevenLabs: Premium expressive voices.";
                     ProviderInfoText.Visibility = Visibility.Visible;
                     CloudIndicator.Visibility = Visibility.Visible;
-                    OpenAIKeyLabel.Visibility = Visibility.Collapsed;
-                    OpenAIKeyBox.Visibility = Visibility.Collapsed;
                     break;
                 case VoiceProviderType.OpenAI:
-                    ProviderInfoText.Text = "OpenAI TTS is active. ElevenLabs key stays visible so you can switch providers quickly.";
+                    ProviderInfoText.Text = "OpenAI TTS is active.";
                     ProviderInfoText.Visibility = Visibility.Visible;
                     CloudIndicator.Visibility = Visibility.Visible;
-                    OpenAIKeyLabel.Visibility = Visibility.Visible;
-                    OpenAIKeyBox.Visibility = Visibility.Visible;
                     break;
                 default:
-                    ProviderInfoText.Text = "Local voice output is active. ElevenLabs key stays visible so saved credentials remain accessible.";
+                    ProviderInfoText.Text = "Local voice output is active.";
                     ProviderInfoText.Visibility = Visibility.Visible;
                     CloudIndicator.Visibility = Visibility.Collapsed;
-                    OpenAIKeyLabel.Visibility = Visibility.Collapsed;
-                    OpenAIKeyBox.Visibility = Visibility.Collapsed;
                     break;
             }
         }

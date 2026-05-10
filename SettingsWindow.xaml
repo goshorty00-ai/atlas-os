@@ -577,9 +577,9 @@
                             <ComboBox x:Name="VoiceProviderCombo" Style="{StaticResource AtlasComboBox}"
                                       SelectionChanged="VoiceProvider_Changed" Margin="0,0,0,16"/>
                             
-                            <TextBlock x:Name="ElevenLabsKeyLabel" Text="ElevenLabs API Key" Style="{StaticResource FieldLabel}"/>
-                            <PasswordBox x:Name="ElevenLabsKeyBox" Style="{StaticResource AtlasPasswordBox}"/>
-                            <Border Background="#16161f" CornerRadius="999" Padding="12,6" Margin="0,8,0,0" BorderBrush="#22d3ee20" BorderThickness="1" HorizontalAlignment="Left">
+                            <TextBlock x:Name="ElevenLabsKeyLabel" Text="ElevenLabs API Key" Style="{StaticResource FieldLabel}" Visibility="Collapsed"/>
+                            <PasswordBox x:Name="ElevenLabsKeyBox" Style="{StaticResource AtlasPasswordBox}" Visibility="Collapsed"/>
+                            <Border Background="#16161f" CornerRadius="999" Padding="12,6" Margin="0,8,0,0" BorderBrush="#22d3ee20" BorderThickness="1" HorizontalAlignment="Left" Visibility="Collapsed">
                                 <TextBlock Foreground="#94a3b8" FontSize="11">
                                     <Hyperlink NavigateUri="https://elevenlabs.io" RequestNavigate="ElevenLabsLink_RequestNavigate">
                                         <Run Text="Open ElevenLabs ↗"/>
