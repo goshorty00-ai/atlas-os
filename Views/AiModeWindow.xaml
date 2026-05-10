@@ -34,11 +34,12 @@
                   Checked="AutoModeCheckBox_Changed"
                   Unchecked="AutoModeCheckBox_Changed"/>
 
-        <TextBlock Grid.Row="2" Text="Provider" Opacity="0.9"/>
+        <TextBlock Grid.Row="2" Text="Provider" Opacity="0.9" Visibility="Collapsed"/>
         <ComboBox Grid.Row="3"
                   x:Name="ProviderCombo"
                   MinWidth="360"
                   Margin="0,6,0,12"
+                  Visibility="Collapsed"
                   SelectionChanged="ProviderCombo_SelectionChanged"/>
 
         <TextBlock Grid.Row="4" Text="Manual model" Opacity="0.9"/>
