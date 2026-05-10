@@ -890,13 +890,15 @@
                             <TextBlock Text="Provider"
                                        FontFamily="{DynamicResource AtlasFontMono}"
                                        FontSize="11"
-                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Visibility="Collapsed"/>
                             <ComboBox Style="{StaticResource AtlasComboBox}"
                                       ItemsSource="{Binding AvailableAiProviders}"
                                       SelectedItem="{Binding SelectedAiProvider, Mode=TwoWay}"
                                       DropDownOpened="SettingsCombo_DropDownOpened"
                                       DropDownClosed="SettingsCombo_DropDownClosed"
-                                      Margin="0,6,0,10"/>
+                                      Margin="0,6,0,10"
+                                      Visibility="Collapsed"/>
 
                             <TextBlock Text="Model"
                                        FontFamily="{DynamicResource AtlasFontMono}"
