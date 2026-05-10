@@ -1,0 +1,46 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+@layer utilities {
+  .bg-gradient-radial {
+    background-image: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+
+  .atlas-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.25) transparent;
+  }
+
+  .atlas-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .atlas-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .atlas-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.22);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .atlas-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.35);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

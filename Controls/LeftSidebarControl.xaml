@@ -1,0 +1,706 @@
+<UserControl x:Class="AtlasAI.Controls.LeftSidebarControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:AtlasAI.Views.Converters"
+             Width="90"
+             Background="{StaticResource DeepSeaGradient}">
+
+    <UserControl.Effect>
+        <x:Null/>
+    </UserControl.Effect>
+    
+    <UserControl.Resources>
+        <conv:SidebarIconSourceConverter x:Key="SidebarIconSourceConverter"/>
+        <Style x:Key="SidebarTooltip" TargetType="ToolTip">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="HasDropShadow" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Grid x:Name="Root" Opacity="0" Panel.ZIndex="50">
+                            <Border Width="8"
+                                    Height="8"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="-4,0,0,0"
+                                    Background="#E60f172a"
+                                    BorderBrush="#4D06b6d4"
+                                    BorderThickness="1,0,0,1"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <RotateTransform Angle="45"/>
+                                </Border.RenderTransform>
+                            </Border>
+
+                            <Border Background="#E60f172a"
+                                    BorderBrush="#4D06b6d4"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,6"
+                                    Margin="4,0,0,0">
+                                <TextBlock Text="{TemplateBinding Content}"
+                                           Foreground="#EAF2F8"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           TextWrapping="NoWrap"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsOpen" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="1"
+                                                             Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Root"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="0"
+                                                             Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SidebarIconButton" TargetType="RadioButton">
+            <Setter Property="Width" Value="84"/>
+            <Setter Property="Height" Value="84"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="ToolTipService.Placement" Value="Right"/>
+            <Setter Property="ToolTipService.HorizontalOffset" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="ScaleTransform" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+
+                            <Border x:Name="ButtonBorder"
+                                    Background="Transparent"
+                                    CornerRadius="8"
+                                    Padding="8">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="{StaticResource AtlasCyan}" BlurRadius="12" ShadowDepth="0" Opacity="0"/>
+                                </Border.Effect>
+                                <Border x:Name="ContentWrapper"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                    <Border.LayoutTransform>
+                                        <ScaleTransform ScaleX="0.82" ScaleY="0.82"/>
+                                    </Border.LayoutTransform>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Border>
+
+                            <Border x:Name="ActiveIndicator"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Opacity="0"
+                                    Width="52" Height="52"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Border.RenderTransform>
+                                    <ScaleTransform x:Name="IndicatorScale" ScaleX="0.95" ScaleY="0.95"/>
+                                </Border.RenderTransform>
+                                <Border.Effect>
+                                    <DropShadowEffect Color="{StaticResource AtlasCyan}" BlurRadius="12" ShadowDepth="0" Opacity="0"/>
+                                </Border.Effect>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.05" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.05" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.0" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.0" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="0.95" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="0.95" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.0" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.0" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ContentWrapper" Property="LayoutTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.0" ScaleY="1.0"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SidebarActionButton" TargetType="Button">
+            <Setter Property="Width" Value="84"/>
+            <Setter Property="Height" Value="84"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="ToolTipService.Placement" Value="Right"/>
+            <Setter Property="ToolTipService.HorizontalOffset" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5">
+                            <Grid.RenderTransform>
+                                <ScaleTransform x:Name="ScaleTransform" ScaleX="1" ScaleY="1"/>
+                            </Grid.RenderTransform>
+
+                            <Border x:Name="ButtonBorder"
+                                    Background="Transparent"
+                                    CornerRadius="8"
+                                    Padding="8">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="{StaticResource AtlasCyan}" BlurRadius="12" ShadowDepth="0" Opacity="0"/>
+                                </Border.Effect>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.05" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.05" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.0" Duration="0:0:0.15"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.0" Duration="0:0:0.15"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="0.95" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="0.95" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleX"
+                                                           To="1.0" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="ScaleTransform"
+                                                           Storyboard.TargetProperty="ScaleY"
+                                                           To="1.0" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="IconPath" TargetType="Path">
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Stretch" Value="Uniform"/>
+            <Setter Property="Fill" Value="#22d3ee"/>
+            <Setter Property="StrokeThickness" Value="0"/>
+            <Setter Property="Opacity" Value="0.8"/>
+            <Style.Triggers>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=IsMouseOver}" Value="True"/>
+                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=IsChecked}" Value="False"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Fill" Value="#22d3ee"/>
+                    <Setter Property="Opacity" Value="1"/>
+                </MultiDataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=IsChecked}" Value="True">
+                    <Setter Property="Fill" Value="#22d3ee"/>
+                    <Setter Property="Opacity" Value="1"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SidebarIconImage" TargetType="Image">
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Stretch" Value="Uniform"/>
+            <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border BorderThickness="0" BorderBrush="Transparent">
+            <Border.Background>
+                <SolidColorBrush Color="#0b1220"/>
+            </Border.Background>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer x:Name="SidebarScrollViewer"
+                              Grid.Row="0"
+                              VerticalScrollBarVisibility="Hidden"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Focusable="True"
+                              PreviewMouseWheel="SidebarScrollViewer_PreviewMouseWheel"
+                              PreviewKeyDown="SidebarScrollViewer_PreviewKeyDown">
+                    <ScrollViewer.Resources>
+                        <Style TargetType="{x:Type ScrollBar}">
+                            <Setter Property="Width" Value="0"/>
+                            <Setter Property="Opacity" Value="0"/>
+                            <Setter Property="Focusable" Value="False"/>
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                        </Style>
+                    </ScrollViewer.Resources>
+                    <StackPanel Margin="0,16,0,16" HorizontalAlignment="Center">
+                <RadioButton x:Name="ChatButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Chat"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Chat</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="EmailButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Email"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Email</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="InternetButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Browser Hub"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Internet</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="DownloadButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Downloads"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Downloads</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="FileExplorerButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Files"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>FileExplorer</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="MediaButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Media Centre"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Media</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="SmartHomeButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Click="SmartHomeButton_Click"
+                             PreviewMouseLeftButtonUp="SmartHomeButton_PreviewMouseLeftButtonUp"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Smart Home"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>SmartHome</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="MusicButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI DJ Booth"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>DJ</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="SpeechButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="Speech Studio"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Speech</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="AiChefButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Chef"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>AiChef</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="QuizButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Quiz Night"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Quiz</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="ApiButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="API &amp; Network Management"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>API</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="SecurityButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Security"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Security</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="CreateButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Create"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Create</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                <RadioButton x:Name="CodeButton"
+                             GroupName="LeftSidebar"
+                             Style="{StaticResource SidebarIconButton}"
+                             Margin="0"
+                             Checked="SidebarItem_Checked">
+                    <RadioButton.ToolTip>
+                        <ToolTip Style="{StaticResource SidebarTooltip}" Content="AI Code"/>
+                    </RadioButton.ToolTip>
+                    <RadioButton.Tag>Code</RadioButton.Tag>
+                    <Grid Width="50" Height="50" IsHitTestVisible="False">
+                        <Image Style="{StaticResource SidebarIconImage}">
+                            <Image.Source>
+                                <MultiBinding Converter="{StaticResource SidebarIconSourceConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="Tag"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsChecked"/>
+                                    <Binding RelativeSource="{RelativeSource AncestorType=RadioButton}" Path="IsMouseOver"/>
+                                </MultiBinding>
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </RadioButton>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="1" Margin="0,0,0,6" HorizontalAlignment="Center">
+                    <Button x:Name="SettingsButton"
+                            Style="{StaticResource SidebarActionButton}"
+                            Click="SettingsButton_Click">
+                        <Button.ToolTip>
+                            <ToolTip Style="{StaticResource SidebarTooltip}" Content="Settings"/>
+                        </Button.ToolTip>
+                        <TextBlock Text="&#xE713;"
+                                   FontFamily="{StaticResource AtlasFontIcon}"
+                                   FontSize="18"
+                                   Foreground="#22d3ee"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

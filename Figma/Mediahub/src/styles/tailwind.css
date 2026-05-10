@@ -1,0 +1,24 @@
+/* Custom dark theme scrollbar for main content */
+html, body, .dark, .dark * {
+	scrollbar-color: #0ff2 #181a20;
+}
+::-webkit-scrollbar {
+	width: 10px;
+	background: transparent;
+}
+::-webkit-scrollbar-track {
+	background: #181a20;
+}
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(120deg, #0ff2 0%, #0ff2 40%, #222c38 100%);
+	border-radius: 9999px;
+	min-height: 40px;
+	border: 2px solid #181a20;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(120deg, #0ff2 0%, #0ff2 60%, #222c38 100%);
+}
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';

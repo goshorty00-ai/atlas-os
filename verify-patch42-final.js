@@ -1,0 +1,12 @@
+const fs = require('fs');
+const content = fs.readFileSync('D:/My Apps/AOS/Atlas.OS/bin/x64/Figma/Email/dist/assets/index-C4iwRHDc.js', 'utf8');
+const lines = content.split('\n');
+const l = lines[234];
+console.log('iframe at col:', l.indexOf('"iframe"'));
+console.log('srcDoc:_html at col:', l.indexOf('srcDoc:_html'));
+console.log('sandbox allow-popups at col:', l.indexOf('allow-popups allow-popups'));
+console.log('_html=(typeof _d.htmlBody at col:', l.indexOf('_html=(typeof _d.htmlBody'));
+console.log('htmlBody read:', content.includes('_d.htmlBody') ? 'YES' : 'NO');
+console.log('no allow-scripts:', !content.includes('allow-scripts') ? 'CONFIRMED' : 'WARNING - allow-scripts found');
+console.log('no allow-same-origin:', !content.includes('allow-same-origin') ? 'CONFIRMED' : 'WARNING');
+console.log('no allow-forms:', !content.includes('allow-forms') ? 'CONFIRMED' : 'WARNING');

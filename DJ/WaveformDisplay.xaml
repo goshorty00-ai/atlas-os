@@ -1,0 +1,10 @@
+<UserControl x:Class="AtlasAI.DJ.WaveformDisplay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Canvas x:Name="BarsCanvas"/>
+        <Rectangle x:Name="LoopArea" Fill="#3022D3EE" HorizontalAlignment="Left" Visibility="Collapsed"/>
+        <Canvas x:Name="MarkersCanvas" IsHitTestVisible="False"/>
+        <Rectangle x:Name="Playhead" Width="2" Fill="#80FFFFFF" HorizontalAlignment="Left"/>
+    </Grid>
+</UserControl>

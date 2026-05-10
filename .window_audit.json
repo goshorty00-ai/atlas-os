@@ -1,0 +1,236 @@
+[
+  {
+    "ClassName": "AIDiagnosticWindow",
+    "Path": "SecuritySuite\\AI\\AIDiagnosticWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "AiModeWindow",
+    "Path": "Views\\AiModeWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "AppsBrowserPopupWindow",
+    "Path": "Controls\\AppsBrowserPopupWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "AtlasDialogWindow",
+    "Path": "UI\\AtlasDialogWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "AtlasOverlayWindow",
+    "Path": "InAppAssistant\\AtlasOverlayWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "AudioReactiveWallpaperWindow",
+    "Path": "Wallpaper\\AudioReactiveWallpaperWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "BrandDialog",
+    "Path": "SocialMedia\\Dialogs\\BrandDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "CampaignDialog",
+    "Path": "SocialMedia\\Dialogs\\CampaignDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "CaptchaSolverWindow",
+    "Path": "Controls\\CaptchaSolverWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "ChatWindow",
+    "Path": "ChatWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "CommandCenterWindow",
+    "Path": "CommandCenterWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "CommandPalette",
+    "Path": "UI\\CommandPalette.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "DebugOverlay",
+    "Path": "UI\\DebugOverlay.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "DownloaderWindow",
+    "Path": "DownloaderWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "FirstRunWizardWindow",
+    "Path": "UI\\FirstRunWizardWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "FloatingHudWindow",
+    "Path": "FloatingHud\\FloatingHudWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "FloatingOverlay",
+    "Path": "SmartAssistant\\UI\\FloatingOverlay.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "IDEWindow",
+    "Path": "Coding\\IDEWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "IntegrationHubWindow",
+    "Path": "Integrations\\IntegrationHubWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "LibraryModal",
+    "Path": "DJ\\LibraryModal.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "MainWindow",
+    "Path": "MainWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "OnboardingWindow",
+    "Path": "Conversation\\UI\\OnboardingWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "OnlineConsentDialog",
+    "Path": "UI\\OnlineConsentDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "ProcessManagerWindow",
+    "Path": "UI\\ProcessManagerWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "RealDebridConfigDialog",
+    "Path": "Modules\\Downloader\\RealDebridConfigDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SafetySelfTestWindow",
+    "Path": "UI\\SafetySelfTestWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "ScheduleDialog",
+    "Path": "SocialMedia\\Dialogs\\ScheduleDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SecurityAlertWindow",
+    "Path": "UI\\SecurityAlertWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SecuritySuiteWindow",
+    "Path": "SecuritySuite\\SecuritySuiteWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SettingsWindow",
+    "Path": "SettingsWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SocialMediaConsoleWindow",
+    "Path": "SocialMedia\\SocialMediaConsoleWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SocialMediaWindow",
+    "Path": "SocialMedia\\UI\\SocialMediaWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "StartupVideoWindow",
+    "Path": "UI\\StartupVideoWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SystemGuardWindow",
+    "Path": "SecuritySuite\\SystemGuardWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SystemHealthDialog",
+    "Path": "UI\\SystemHealthDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "SystemScannerDialog",
+    "Path": "UI\\SystemScannerDialog.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "ThreatRemediationModal",
+    "Path": "SecuritySuite\\UI\\ThreatRemediationModal.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "UnifiedCommandPalette",
+    "Path": "Agent\\UI\\UnifiedCommandPalette.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  },
+  {
+    "ClassName": "VoiceModeWindow",
+    "Path": "Views\\VoiceModeWindow.xaml",
+    "RefCount": 0,
+    "Sample": ""
+  }
+]

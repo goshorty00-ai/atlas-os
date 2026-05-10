@@ -1,0 +1,66 @@
+ATLAS OS - RECOVERY MARKER
+Created: 2026-05-10 21:30 (after safe launch confirmed working)
+================================================================================
+
+WORKING EXE PATH:
+  D:\My Apps\AOS\New build\Atlas.OS\bin\x64\Atlas_v2.exe
+
+WORKING DLL PATH:
+  D:\My Apps\AOS\New build\Atlas.OS\bin\x64\Atlas_v2.dll
+
+SAFE LAUNCH TASK:
+  launch-x64-safe   (.vscode/tasks.json)
+  Script: D:\My Apps\AOS\New build\Atlas.OS\launch-working-x64.ps1
+
+VERIFIED STATE:
+  Atlas_v2.exe timestamp : 10/05/2026 20:07
+  Atlas_v2.dll timestamp : 10/05/2026 20:07
+  PID at last confirm    : 28152
+  Window title           : Atlas AI Command Center (RUN 20:07:32)
+  Launched from          : bin\x64\Atlas_v2.exe  (confirmed via wmic)
+
+RUNTIME FIGMA DIST ASSETS:
+  Media Streamer  : bin\x64\Figma\Media Streamer\dist\assets\index-HINyV_eT.js
+  Addon Manager   : bin\x64\Figma\Addon Manager\dist\assets\index-DT2BWBjL.js
+
+================================================================================
+BACKUP STATUS (2026-05-10)
+================================================================================
+
+x64 backup created          : yes
+backup path                 : D:\My Apps\AOS\New build\Atlas.OS_BACKUP_WORKING_X64_2026-05-10
+backup contains Atlas_v2.exe: yes
+backup contains Atlas_v2.dll: yes
+backup contains Figma folder : yes
+backup contains Media Streamer dist: yes
+backup contains Addon Manager dist : yes
+note: WebView2 cache cookie files were skipped because Atlas was running; non-critical
+
+================================================================================
+PROTECTION RULES - DO NOT VIOLATE
+================================================================================
+
+DO NOT delete bin\x64
+DO NOT run any dotnet build before taking a backup of bin\x64\Figma\Media Streamer\dist\assets
+DO NOT use launch.json debug launch  (preLaunchTask: build was removed 2026-05-10)
+DO NOT use dotnet run
+DO NOT use dev-build-run.ps1
+DO NOT use restart-atlas.ps1
+DO NOT use run-dev.ps1
+DO NOT use launch-atlas-dotnet task
+DO NOT use the .slnx build task without backing up Media Streamer dist first
+
+USE ONLY: launch-x64-safe task or launch-working-x64.ps1 directly
+
+BUILD RISK:
+  AtlasAI.csproj target CopyReactBuildToOutput runs AfterTargets="Build"
+  It WIPES bin\x64\Figma\Media Streamer\dist on every build
+  Source it copies from: Figma\Mediahub\dist
+  If Mediahub dist is stale, Media Streamer runtime dist will be broken after build
+
+"FIXED" DEFINITION:
+  A change is only "fixed" when ALL of the following are true:
+  1. launch-x64-safe opens the app
+  2. The exact runtime UI is visually verified
+  3. Logs or screenshots prove the change
+================================================================================

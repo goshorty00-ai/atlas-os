@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas Downloader</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="scene">
+        <div class="bgGrid"></div>
+        <div class="bgScan"></div>
+        <div class="bgNoise"></div>
+        <div class="root">
+          <div class="topBar">
+            <div class="topLeft">
+              <div class="titleRow">
+                <div class="titleIcon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 12.5c6-8 10-8 16 0" stroke="rgba(34,211,238,.95)" stroke-width="1.6" stroke-linecap="round"/>
+                    <path d="M5 15c4-5 10-5 14 0" stroke="rgba(168,85,247,.75)" stroke-width="1.6" stroke-linecap="round"/>
+                    <circle cx="12" cy="18" r="1.6" fill="rgba(34,211,238,.9)"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="title">AI NEURAL DOWNLOAD MATRIX</div>
+                  <div class="subtitle">Quantum Speed Optimization • Threat Intelligence Active</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="topRight">
+              <button class="chipBtn cyan" id="btnAdd">
+                <span class="chipIcon" aria-hidden="true">+</span>
+                <span>ADD URL</span>
+              </button>
+              <button class="chipBtn purple" id="btnImportCsv">
+                <span class="chipIcon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 3h7l3 3v15H7V3z" stroke="rgba(226,232,240,.9)" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M14 3v4h4" stroke="rgba(226,232,240,.9)" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M9 12h6M9 16h6" stroke="rgba(168,85,247,.85)" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </span>
+                <span>CSV BATCH</span>
+              </button>
+              <button class="iconBtn2" id="btnSettings" title="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="rgba(226,232,240,.9)" stroke-width="1.6"/>
+                  <path d="M19.4 15a7.9 7.9 0 0 0 .1-1l2-1.5-2-3.4-2.4.6a7.7 7.7 0 0 0-.9-.5L14.8 6h-3.6L10.8 9.2c-.3.1-.6.3-.9.5L7.5 9 5.5 12.5 7.5 14a7.9 7.9 0 0 0 .1 1l-2 1.5 2 3.4 2.4-.6c.3.2.6.3.9.5l.4 3.2h3.6l.4-3.2c.3-.1.6-.3.9-.5l2.4.6 2-3.4-2-1.5z" stroke="rgba(34,211,238,.75)" stroke-width="1.2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="statsRow" aria-label="Stats">
+            <button class="statCard" id="statCardActive" type="button" aria-label="Active downloads">
+              <div class="statIcon cyan" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M7 12h10M7 16h6" stroke="rgba(34,211,238,.95)" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="rgba(226,232,240,.35)" stroke-width="1.2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="statLabel">Active Downloads</div>
+                <div class="statValue"><span id="statActive">0</span> <span class="statUnit">/</span> <span id="statQueuedTotal">0</span></div>
+              </div>
+            </button>
+            <button class="statCard" id="statCardSpeed" type="button" aria-label="Speed">
+              <div class="statIcon orange" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" stroke="rgba(249,115,22,.95)" stroke-width="1.6" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="statLabel">Neural Speed</div>
+                <div class="statValue" id="statSpeed">0 B/s</div>
+              </div>
+            </button>
+            <button class="statCard" id="statCardQueued" type="button" aria-label="Queued downloads">
+              <div class="statIcon green" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 3v18M3 12h18" stroke="rgba(34,197,94,.85)" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M7 7c3-2 7-2 10 0M7 17c3 2 7 2 10 0" stroke="rgba(34,197,94,.55)" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="statLabel">Queued</div>
+                <div class="statValue" id="statQueued">0</div>
+              </div>
+            </button>
+            <button class="statCard" id="statCardCompleted" type="button" aria-label="Completed downloads">
+              <div class="statIcon purple" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2 3 6.5V12c0 5 3 9 9 10 6-1 9-5 9-10V6.5L12 2z" stroke="rgba(168,85,247,.85)" stroke-width="1.6" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="statLabel">Completed</div>
+                <div class="statValue" id="statCompleted">0</div>
+              </div>
+            </button>
+          </div>
+
+          <div class="mainGrid">
+            <div class="panel listPanel">
+              <div class="panelHeader">
+                <div class="panelTitle">DOWNLOAD QUEUE</div>
+                <div class="panelActions">
+                  <button class="miniIconBtn" id="btnResumeAll" title="Resume all">
+                    <span aria-hidden="true">▶</span>
+                  </button>
+                  <button class="miniIconBtn" id="btnPauseAll" title="Pause all">
+                    <span aria-hidden="true">⏸</span>
+                  </button>
+                  <button class="miniIconBtn danger" id="btnStopAll" title="Stop all">
+                    <span aria-hidden="true">■</span>
+                  </button>
+                  <button class="miniIconBtn" id="btnClearFinished" title="Clear finished">
+                    <span aria-hidden="true">✕</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="listHeader">
+                <div class="col file">FILE</div>
+                <div class="col status">STATUS</div>
+                <div class="col progress">PROGRESS</div>
+                <div class="col speed">SPEED</div>
+                <div class="col eta">ETA</div>
+                <div class="col actions">ACTIONS</div>
+              </div>
+              <div class="listBody" id="listBody"></div>
+              <div class="empty" id="emptyState">
+                <div class="emptyTitle">No downloads in queue</div>
+                <div class="emptySub">Add a URL or import a CSV to begin.</div>
+              </div>
+            </div>
+
+            <div class="panel sidePanel">
+              <div class="panelHeader">
+                <div class="panelTitle">AI PREDICTIVE QUEUE</div>
+                <button class="miniIconBtn" id="btnSideClose" title="Collapse">×</button>
+              </div>
+              <div class="sideBody">
+                <div class="sideHint">Auto suggestions and smart batching will appear here.</div>
+                <div class="sideBox">
+                  <div class="sideBoxTitle">ADD TO QUEUE</div>
+                  <div class="sideBoxAction">
+                    <button class="chipBtn cyan" id="btnAdd2">
+                      <span class="chipIcon" aria-hidden="true">+</span>
+                      <span>ADD URL</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="sideMeta">
+                  <div class="sideMetaLine"><span class="dot green"></span><span class="sideMetaText">NEURAL NETWORK • ACTIVE • LEARNING</span></div>
+                </div>
+                <div class="sideFolder">
+                  <div class="sideFolderLabel">Output Folder</div>
+                  <div class="monoSmall" id="outputFolder">(loading...)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modalBackdrop hidden" id="addModal">
+      <div class="modal">
+        <div class="modalHeader">
+          <div class="modalTitle">Add URL(s)</div>
+          <button class="iconBtn" id="addModalClose">✕</button>
+        </div>
+        <div class="modalBody">
+          <label class="label">URLs (one per line)</label>
+          <textarea class="textarea" id="addUrlsText" placeholder="https://example.com/file.zip"></textarea>
+          <div class="row">
+            <div class="colFill">
+              <label class="label">Provider</label>
+              <select class="select" id="providerSelect">
+                <option value="Auto">Auto</option>
+                <option value="DirectHttp">Direct HTTP</option>
+                <option value="RealDebrid">Real-Debrid</option>
+                <option value="AllDebrid">AllDebrid</option>
+                <option value="Premiumize">Premiumize</option>
+              </select>
+            </div>
+            <div class="colFill">
+              <label class="label">Output folder</label>
+              <div class="monoSmall" id="outputFolderAddModal">(loading...)</div>
+            </div>
+          </div>
+        </div>
+        <div class="modalFooter">
+          <button class="btn" id="addModalCancel">Cancel</button>
+          <button class="btn" id="addModalPaste">Paste</button>
+          <button class="btn primary" id="addModalStart">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modalBackdrop hidden" id="settingsModal">
+      <div class="modal">
+        <div class="modalHeader">
+          <div class="modalTitle">Settings</div>
+          <button class="iconBtn" id="settingsClose">✕</button>
+        </div>
+        <div class="modalBody">
+          <div class="row">
+            <div class="colFill">
+              <label class="label">Max parallel downloads</label>
+              <input class="input" id="settingParallel" type="number" min="1" max="12" />
+            </div>
+            <div class="colFill">
+              <label class="label">Resolver mode</label>
+              <select class="select" id="settingResolverMode">
+                <option value="Auto">Auto</option>
+                <option value="ForcedProvider">ForcedProvider</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sectionTitle">Providers</div>
+          <div class="provider">
+            <div class="providerRow">
+              <div class="providerName">Real-Debrid</div>
+              <div class="providerControls">
+                <label class="toggle">
+                  <input type="checkbox" id="rdEnabled" />
+                  <span>Enabled</span>
+                </label>
+              </div>
+            </div>
+            <label class="label">Token</label>
+            <input class="input" id="rdToken" type="password" placeholder="Stored securely (DPAPI)" />
+            <div class="providerButtons">
+              <button class="btn" id="rdTest">Test Token</button>
+              <button class="btn primary" id="rdSave">Save</button>
+            </div>
+          </div>
+
+          <div class="provider">
+            <div class="providerRow">
+              <div class="providerName">AllDebrid</div>
+              <div class="providerControls">
+                <label class="toggle">
+                  <input type="checkbox" id="adEnabled" />
+                  <span>Enabled</span>
+                </label>
+              </div>
+            </div>
+            <label class="label">Token</label>
+            <input class="input" id="adToken" type="password" placeholder="Not implemented (scaffold)" />
+            <div class="providerButtons">
+              <button class="btn" id="adTest">Test Token</button>
+              <button class="btn primary" id="adSave">Save</button>
+            </div>
+          </div>
+
+          <div class="provider">
+            <div class="providerRow">
+              <div class="providerName">Premiumize</div>
+              <div class="providerControls">
+                <label class="toggle">
+                  <input type="checkbox" id="pmEnabled" />
+                  <span>Enabled</span>
+                </label>
+              </div>
+            </div>
+            <label class="label">Token</label>
+            <input class="input" id="pmToken" type="password" placeholder="Not implemented (scaffold)" />
+            <div class="providerButtons">
+              <button class="btn" id="pmTest">Test Token</button>
+              <button class="btn primary" id="pmSave">Save</button>
+            </div>
+          </div>
+        </div>
+        <div class="modalFooter">
+          <button class="btn" id="settingsCancel">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toastHost" id="toastHost"></div>
+    <div class="ctxMenu hidden" id="ctxMenu" role="menu" aria-label="Download actions">
+      <button class="ctxItem" id="ctxPasteUrls" type="button">Paste URL(s)</button>
+      <button class="ctxItem" id="ctxAddUrl" type="button">Add URL…</button>
+      <div class="ctxSep"></div>
+      <button class="ctxItem" id="ctxPause" type="button">Pause</button>
+      <button class="ctxItem" id="ctxResume" type="button">Resume</button>
+      <button class="ctxItem" id="ctxRetry" type="button">Retry</button>
+      <button class="ctxItem" id="ctxCancel" type="button">Stop</button>
+      <div class="ctxSep"></div>
+      <button class="ctxItem" id="ctxOpenFolder" type="button">Open Folder</button>
+      <button class="ctxItem" id="ctxCopyUrl" type="button">Copy URL</button>
+      <div class="ctxSep"></div>
+      <button class="ctxItem danger" id="ctxRemove" type="button">Remove</button>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

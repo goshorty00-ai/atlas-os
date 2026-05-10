@@ -1,0 +1,60 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasAI", "AtlasAI.csproj", "{30D3DB58-9D57-5261-5455-A045B5A714D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasAI_c25tn2ch_wpftmp", "AtlasAI_c25tn2ch_wpftmp.csproj", "{9547101E-3DD3-A998-7117-56C486A377A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasAI_fk4tcw1m_wpftmp", "AtlasAI_fk4tcw1m_wpftmp.csproj", "{03C5071A-0E4A-4462-C621-04F1EFBBA370}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasAI_kvbh4qsm_wpftmp", "AtlasAI_kvbh4qsm_wpftmp.csproj", "{5ACBA78D-3EFB-657E-D85E-30C40C7D8D5D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlasAI.Tests", "Tests\AtlasAI.Tests.csproj", "{9B061F45-1A7C-3C8F-C867-5C0E82F44762}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SettingsRuntimeVerifier", "Tests\SettingsRuntimeVerifier\SettingsRuntimeVerifier.csproj", "{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{30D3DB58-9D57-5261-5455-A045B5A714D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30D3DB58-9D57-5261-5455-A045B5A714D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30D3DB58-9D57-5261-5455-A045B5A714D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30D3DB58-9D57-5261-5455-A045B5A714D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9547101E-3DD3-A998-7117-56C486A377A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9547101E-3DD3-A998-7117-56C486A377A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9547101E-3DD3-A998-7117-56C486A377A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9547101E-3DD3-A998-7117-56C486A377A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03C5071A-0E4A-4462-C621-04F1EFBBA370}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C5071A-0E4A-4462-C621-04F1EFBBA370}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C5071A-0E4A-4462-C621-04F1EFBBA370}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C5071A-0E4A-4462-C621-04F1EFBBA370}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ACBA78D-3EFB-657E-D85E-30C40C7D8D5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ACBA78D-3EFB-657E-D85E-30C40C7D8D5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ACBA78D-3EFB-657E-D85E-30C40C7D8D5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ACBA78D-3EFB-657E-D85E-30C40C7D8D5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B061F45-1A7C-3C8F-C867-5C0E82F44762}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B061F45-1A7C-3C8F-C867-5C0E82F44762}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B061F45-1A7C-3C8F-C867-5C0E82F44762}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B061F45-1A7C-3C8F-C867-5C0E82F44762}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9B061F45-1A7C-3C8F-C867-5C0E82F44762} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{AA799ED9-8B00-9DDD-0EA1-0EF1E80DD955} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4C15FBA7-7B8B-42E8-890A-06B1C781E9B1}
+	EndGlobalSection
+EndGlobal

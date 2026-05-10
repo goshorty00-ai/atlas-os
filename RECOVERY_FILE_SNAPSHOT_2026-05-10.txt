@@ -1,0 +1,111 @@
+ATLAS OS - FILE SNAPSHOT
+Created: 2026-05-10 21:30
+================================================================================
+
+ATLAS_V2.EXE LOCATIONS:
+  D:\My Apps\AOS\New build\Atlas.OS\bin\x64\Atlas_v2.exe               << WORKING - DO NOT DELETE
+  D:\My Apps\AOS\New build\Atlas.OS\bin\companion-validate\Atlas_v2.exe
+  D:\My Apps\AOS\New build\Atlas.OS\bin\ringfix\Atlas_v2.exe
+  D:\My Apps\AOS\New build\Atlas.OS\bin\verify\Atlas_v2.exe
+
+ATLAS_V2.DLL LOCATIONS:
+  D:\My Apps\AOS\New build\Atlas.OS\bin\x64\Atlas_v2.dll               << WORKING - DO NOT DELETE
+  D:\My Apps\AOS\New build\Atlas.OS\bin\companion-validate\Atlas_v2.dll
+  D:\My Apps\AOS\New build\Atlas.OS\bin\ringfix\Atlas_v2.dll
+  D:\My Apps\AOS\New build\Atlas.OS\bin\verify\Atlas_v2.dll
+
+================================================================================
+BIN FOLDERS (top-level under bin\):
+================================================================================
+  bin\x64\                       << WORKING RUNTIME - PROTECT THIS
+  bin\companion-validate\
+  bin\ringfix\
+  bin\verify\
+  bin\publish-fixed\
+  bin\_run_logs\
+
+================================================================================
+OBJ FOLDERS:
+================================================================================
+  obj\AtlasAI\                   (MSBuild intermediates)
+
+================================================================================
+RUNTIME FIGMA DIST FOLDERS (bin\x64\Figma\):
+================================================================================
+  bin\x64\Figma\Media Streamer\dist\               index.html + assets\index-HINyV_eT.js   POPULATED
+  bin\x64\Figma\Addon Manager\dist\                index.html + assets\index-DT2BWBjL.js   POPULATED
+  bin\x64\Figma\Futuristic Karaoke Player\dist\    index.html present                       POPULATED
+  bin\x64\Figma\Music_MediaHub\dist\               index.html present                       POPULATED
+  bin\x64\Figma\Futuristic AI Command Center (6)\dist\  index.html present                  POPULATED
+  bin\x64\Figma\Futuristic AI File Explorer\dist\  index.html present                       POPULATED
+  bin\x64\Figma\Futuristic API Management Dashboard\dist\  index.html present               POPULATED
+  bin\x64\Figma\Design AI Quiz Night Section\dist\ index.html present                       POPULATED
+  bin\x64\Figma\Premium Social Media Creator App (1)\dist\  index.html present              POPULATED
+  bin\x64\Figma\AI_Smart_Home\dist\                index.html present                       POPULATED
+  bin\x64\Figma\djcode\dist\                       index.html present                       POPULATED
+  bin\x64\Figma\Email\dist\                        index.html present                       POPULATED
+  bin\x64\Figma\Create new feature\dist\           index.html present                       POPULATED
+  bin\x64\Figma\Futuristic Discovery Section Design (1)\dist\assets\   EMPTY (always was - loaded from source)
+  bin\x64\Figma\AI Security Command Center Dashboard\dist\assets\      EMPTY (always was - loaded from source)
+  bin\x64\Figma\SmartHome\dist\assets\                                  EMPTY (always was - loaded from source)
+
+================================================================================
+SOURCE FIGMA DIST FOLDERS (Figma\):
+================================================================================
+  Figma\Mediahub\dist\                             assets\index-HINyV_eT.js   (current build)
+  Figma\Media Streamer\dist\                       assets\ (multiple JS files - legacy/mixed)
+  Figma\Futuristic Discovery Section Design (1)\dist\  assets\index-D0Je1iTA.js
+  Figma\AI Security Command Center Dashboard\dist\ assets\index-C4KeppLp.js
+  Figma\SmartHome\dist\                            assets\index-BVD7TRvF.js
+  Figma\Futuristic Karaoke Player\dist\            present
+  Figma\Music_MediaHub\dist\                       present
+  Figma\Addon Manager\dist\                        present
+  Figma\Futuristic API Management Dashboard\dist\  present
+  Figma\AI_Smart_Home\dist\                        present
+  Figma\Premium Social Media Creator App (1)\dist\ present
+  Figma\Email\dist\                                present
+  Figma\Design AI Quiz Night Section\dist\         present
+  Figma\djcode\dist\                               present
+  Figma\Create new feature\dist\                   present
+  Figma\Futuristic AI File Explorer\dist\          present
+  Figma\Futuristic AI Command Center (6)\  (embedded via EmbeddedUiDir)
+  Figma\SmartHome\dist_backup\                     << BACKUP EXISTS
+
+================================================================================
+NODE_MODULES FOLDERS (source Figma apps - do not npm install without planning):
+================================================================================
+  Figma\Mediahub\node_modules\
+  Figma\Media Streamer\node_modules\              (if present)
+  Figma\Futuristic Discovery Section Design (1)\node_modules\
+  Figma\AI Security Command Center Dashboard\node_modules\
+  Figma\SmartHome\node_modules\
+  Figma\Futuristic Karaoke Player\node_modules\
+  Figma\Music_MediaHub\node_modules\              (if present)
+  Figma\Addon Manager\node_modules\
+  Figma\Futuristic API Management Dashboard\node_modules\
+  Figma\AI_Smart_Home\node_modules\
+  Figma\Premium Social Media Creator App (1)\node_modules\
+  Figma\Email\node_modules\
+  Figma\Design AI Quiz Night Section\node_modules\
+  Figma\djcode\node_modules\
+  Figma\Create new feature\node_modules\
+  Figma\Futuristic AI File Explorer\node_modules\
+
+================================================================================
+BACKUP FOLDERS IDENTIFIED:
+================================================================================
+  Figma\SmartHome\dist_backup\                     << SmartHome has a backup dist
+  bin\companion-validate\                          << separate Atlas build (companion)
+  bin\ringfix\                                     << separate Atlas build (ringfix)
+  bin\verify\                                      << separate Atlas build (verify)
+  bin\publish-fixed\                               << separate publish output
+
+================================================================================
+SAFE LAUNCH PROTECTION FILES:
+================================================================================
+  launch-working-x64.ps1                          << safe launch script (created 2026-05-10)
+  RECOVERY_MARKER_WORKING_X64_2026-05-10.txt      << this marker
+  RECOVERY_FILE_SNAPSHOT_2026-05-10.txt           << this snapshot
+  .vscode\launch.json                              << preLaunchTask:build REMOVED 2026-05-10
+  .vscode\tasks.json                               << launch-x64-safe task ADDED 2026-05-10
+================================================================================

@@ -1,0 +1,325 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         ATLAS AI - CINEMATIC DARK THEME
+         Modern glassmorphism with violet/cyan gradients
+         Feels like an AI presence, not an app window
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         BASE COLORS - Dark premium sci-fi palette
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasBgDeep">#0B0F14</Color>
+    <Color x:Key="AtlasBgDark">#0B0F14</Color>
+    <Color x:Key="AtlasBgMedium">#0F1419</Color>
+    <Color x:Key="AtlasBgLight">#151B23</Color>
+    <Color x:Key="AtlasSurfaceColor">#0F1419</Color>
+    <Color x:Key="AtlasSurfaceHoverColor">#1A2332</Color>
+    <Color x:Key="AtlasSurfaceActiveColor">#1F2A37</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         GLASS COLORS - Translucent surfaces
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasGlass">#330F1419</Color>
+    <Color x:Key="AtlasGlassMedium">#550F1419</Color>
+    <Color x:Key="AtlasGlassSolid">#CC0F1419</Color>
+    <Color x:Key="AtlasGlassBorder">#3322D3EE</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         ACCENT COLORS - Neon accents
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasViolet">#A855F7</Color>
+    <Color x:Key="AtlasVioletDim">#8B5CF6</Color>
+    <Color x:Key="AtlasVioletGlow">#40A855F7</Color>
+    <Color x:Key="AtlasCyan">#22D3EE</Color>
+    <Color x:Key="AtlasCyanDim">#06B6D4</Color>
+    <Color x:Key="AtlasCyanGlow">#4022D3EE</Color>
+    <Color x:Key="AtlasOrange">#FB923C</Color>
+    <Color x:Key="AtlasOrangeDim">#F97316</Color>
+    <Color x:Key="AtlasOrangeGlow">#40FB923C</Color>
+    <Color x:Key="AtlasTeal">#00D4FF</Color>
+    <Color x:Key="AtlasBlue">#3B82F6</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         STATE COLORS - UI States
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasIdle">#6366f1</Color>
+    <Color x:Key="AtlasListening">#22d3ee</Color>
+    <Color x:Key="AtlasResponding">#8b5cf6</Color>
+    <Color x:Key="AtlasFocus">#64748b</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         SEMANTIC COLORS - Status indicators
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasSuccess">#4ADE80</Color>
+    <Color x:Key="AtlasSuccessDim">#22C55E</Color>
+    <Color x:Key="AtlasWarning">#FB923C</Color>
+    <Color x:Key="AtlasWarningDim">#F97316</Color>
+    <Color x:Key="AtlasError">#ef4444</Color>
+    <Color x:Key="AtlasErrorDim">#dc2626</Color>
+    <Color x:Key="AtlasPurple">#A855F7</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TEXT COLORS - Typography hierarchy
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasTextPrimaryColor">#F1F5F9</Color>
+    <Color x:Key="AtlasTextSecondaryColor">#E2E8F0</Color>
+    <Color x:Key="AtlasTextMuted">#94A3B8</Color>
+    <Color x:Key="AtlasTextDisabled">#64748B</Color>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         BORDER COLORS - Panel borders and focus states
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Color x:Key="AtlasBorderColor">#22D3EE</Color> <!-- Neon Cyan (Full opacity) -->
+    <Color x:Key="AtlasBorderLight">#8022D3EE</Color>
+    <Color x:Key="AtlasBorderFocus">#22D3EE</Color>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         SOLID COLOR BRUSHES
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- Backgrounds -->
+    <SolidColorBrush x:Key="AtlasBgDeepBrush" Color="{StaticResource AtlasBgDeep}"/>
+    <SolidColorBrush x:Key="AtlasBgDarkBrush" Color="{StaticResource AtlasBgDark}"/>
+    <SolidColorBrush x:Key="AtlasBgMediumBrush" Color="{StaticResource AtlasBgMedium}"/>
+    <SolidColorBrush x:Key="AtlasBgLightBrush" Color="{StaticResource AtlasBgLight}"/>
+    <SolidColorBrush x:Key="AtlasSurfaceBrush" Color="{StaticResource AtlasSurfaceColor}"/>
+    <!-- Use AtlasSurfaceHoverColor since we renamed the color key -->
+    <SolidColorBrush x:Key="AtlasSurfaceHoverBrush" Color="#1A2332"/>
+    <SolidColorBrush x:Key="AtlasSurfaceActiveBrush" Color="{StaticResource AtlasSurfaceActiveColor}"/>
+    
+    <!-- Glass -->
+    <SolidColorBrush x:Key="AtlasGlassBrush" Color="{StaticResource AtlasGlass}"/>
+    <SolidColorBrush x:Key="AtlasGlassMediumBrush" Color="{StaticResource AtlasGlassMedium}"/>
+    <SolidColorBrush x:Key="AtlasGlassSolidBrush" Color="{StaticResource AtlasGlassSolid}"/>
+    <SolidColorBrush x:Key="AtlasGlassBorderBrush" Color="{StaticResource AtlasGlassBorder}"/>
+
+    <SolidColorBrush x:Key="AtlasCardGradient" Color="{StaticResource AtlasGlassMedium}"/>
+    
+    <!-- Accents -->
+    <SolidColorBrush x:Key="AtlasVioletBrush" Color="{StaticResource AtlasViolet}"/>
+    <SolidColorBrush x:Key="AtlasVioletDimBrush" Color="{StaticResource AtlasVioletDim}"/>
+    <SolidColorBrush x:Key="AtlasVioletGlowBrush" Color="{StaticResource AtlasVioletGlow}"/>
+    <SolidColorBrush x:Key="AtlasCyanBrush" Color="{StaticResource AtlasCyan}"/>
+    <SolidColorBrush x:Key="AtlasCyanDimBrush" Color="{StaticResource AtlasCyanDim}"/>
+    <SolidColorBrush x:Key="AtlasCyanGlowBrush" Color="{StaticResource AtlasCyanGlow}"/>
+    <SolidColorBrush x:Key="AtlasOrangeBrush" Color="{StaticResource AtlasOrange}"/>
+    <SolidColorBrush x:Key="AtlasOrangeDimBrush" Color="{StaticResource AtlasOrangeDim}"/>
+    <SolidColorBrush x:Key="AtlasOrangeGlowBrush" Color="{StaticResource AtlasOrangeGlow}"/>
+    <SolidColorBrush x:Key="AtlasTealBrush" Color="{StaticResource AtlasTeal}"/>
+    <SolidColorBrush x:Key="AtlasBlueBrush" Color="{StaticResource AtlasBlue}"/>
+    <SolidColorBrush x:Key="AtlasBgCardBrush" Color="{StaticResource AtlasBgMedium}"/>
+    
+    <!-- States -->
+    <SolidColorBrush x:Key="AtlasIdleBrush" Color="{StaticResource AtlasIdle}"/>
+    <SolidColorBrush x:Key="AtlasListeningBrush" Color="{StaticResource AtlasListening}"/>
+    <SolidColorBrush x:Key="AtlasRespondingBrush" Color="{StaticResource AtlasResponding}"/>
+    <SolidColorBrush x:Key="AtlasFocusBrush" Color="{StaticResource AtlasFocus}"/>
+    
+    <!-- Semantic -->
+    <SolidColorBrush x:Key="AtlasSuccessBrush" Color="{StaticResource AtlasSuccess}"/>
+    <SolidColorBrush x:Key="AtlasSuccessDimBrush" Color="{StaticResource AtlasSuccessDim}"/>
+    <SolidColorBrush x:Key="AtlasWarningBrush" Color="{StaticResource AtlasWarning}"/>
+    <SolidColorBrush x:Key="AtlasWarningDimBrush" Color="{StaticResource AtlasWarningDim}"/>
+    <SolidColorBrush x:Key="AtlasErrorBrush" Color="{StaticResource AtlasError}"/>
+    <SolidColorBrush x:Key="AtlasErrorDimBrush" Color="{StaticResource AtlasErrorDim}"/>
+    <SolidColorBrush x:Key="AtlasPurpleBrush" Color="{StaticResource AtlasPurple}"/>
+    
+    <!-- Text -->
+    <SolidColorBrush x:Key="AtlasTextPrimaryBrush" Color="{StaticResource AtlasTextPrimaryColor}"/>
+    <SolidColorBrush x:Key="AtlasTextSecondaryBrush" Color="{StaticResource AtlasTextSecondaryColor}"/>
+    <SolidColorBrush x:Key="AtlasTextMutedBrush" Color="{StaticResource AtlasTextMuted}"/>
+    <SolidColorBrush x:Key="AtlasTextDisabledBrush" Color="{StaticResource AtlasTextDisabled}"/>
+    
+    <!-- Borders -->
+    <LinearGradientBrush x:Key="AtlasBorderBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#001E293B" Offset="0"/>
+        <GradientStop Color="#331E293B" Offset="0.5"/>
+        <GradientStop Color="#001E293B" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AtlasBorderLightBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#00334155" Offset="0"/>
+        <GradientStop Color="#33334155" Offset="0.5"/>
+        <GradientStop Color="#00334155" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AtlasBorderFocusBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource AtlasCyanGlow}" Offset="0"/>
+        <GradientStop Color="#8022D3EE" Offset="0.5"/>
+        <GradientStop Color="{StaticResource AtlasCyanGlow}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         GRADIENT BRUSHES - Cinematic effects
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- Main background - Dark blue → black -->
+    <LinearGradientBrush x:Key="AtlasSpaceGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#0b1f36" Offset="0"/>
+        <GradientStop Color="#09121a" Offset="0.55"/>
+        <GradientStop Color="#00080f" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Ambient glow -->
+    <RadialGradientBrush x:Key="AtlasAmbientGlow" GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.8" RadiusY="0.8">
+        <GradientStop Color="{StaticResource AtlasCyanGlow}" Offset="0"/>
+        <GradientStop Color="#14000000" Offset="0.45"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </RadialGradientBrush>
+    
+    <!-- Glass card gradient -->
+    <LinearGradientBrush x:Key="AtlasGlassGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource AtlasGlassMedium}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasGlass}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Accent gradient -->
+    <LinearGradientBrush x:Key="AtlasAccentGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasCyan}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasViolet}" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Deep sea navy gradient (header/sidebar) -->
+    <LinearGradientBrush x:Key="DeepSeaGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#0B1220" Offset="0.0"/>
+        <GradientStop Color="#070D16" Offset="0.55"/>
+        <GradientStop Color="#05080C" Offset="1.0"/>
+    </LinearGradientBrush>
+    
+    <!-- Header Border Brush: Make it transparent to remove the line -->
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="Transparent"/>
+
+    <!-- Media Centre: really dark blue gradient -->
+    <LinearGradientBrush x:Key="MediaCentreDeepBlueGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#05070B" Offset="0"/>
+        <GradientStop Color="#061526" Offset="0.55"/>
+        <GradientStop Color="#05070B" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="AtlasGradientCyanBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource AtlasCyanDim}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasCyan}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Listening state gradient -->
+    <LinearGradientBrush x:Key="AtlasListeningGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasCyanGlow}" Offset="0"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Responding state gradient -->
+    <LinearGradientBrush x:Key="AtlasRespondingGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasVioletGlow}" Offset="0"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Idle pulse gradient -->
+    <RadialGradientBrush x:Key="AtlasIdlePulse" GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#4022D3EE" Offset="0"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </RadialGradientBrush>
+    
+    <!-- Response card gradient -->
+    <LinearGradientBrush x:Key="AtlasResponseCardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource AtlasGlassSolid}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasGlassMedium}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- User message gradient -->
+    <LinearGradientBrush x:Key="AtlasUserMsgGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2022D3EE" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasGlassSolid}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Assistant message gradient -->
+    <LinearGradientBrush x:Key="AtlasAssistantMsgGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasGlassSolid}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasGlass}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Send button gradient -->
+    <LinearGradientBrush x:Key="AtlasSendGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasCyanGlow}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasCyanDim}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Success gradient -->
+    <LinearGradientBrush x:Key="AtlasSuccessGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AtlasSuccessDim}" Offset="0"/>
+        <GradientStop Color="{StaticResource AtlasSuccess}" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         WPF-UI ACCENT COLOR OVERRIDES - Force cyan instead of yellow
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- System accent colors (WPF-UI uses these) -->
+    <Color x:Key="SystemAccentColor">#22D3EE</Color>
+    <Color x:Key="SystemAccentColorLight1">#67E8F9</Color>
+    <Color x:Key="SystemAccentColorLight2">#A5F3FC</Color>
+    <Color x:Key="SystemAccentColorLight3">#CFFAFE</Color>
+    <Color x:Key="SystemAccentColorDark1">#06B6D4</Color>
+    <Color x:Key="SystemAccentColorDark2">#0891B2</Color>
+    <Color x:Key="SystemAccentColorDark3">#0E7490</Color>
+    
+    <!-- WPF-UI specific accent brushes -->
+    <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="SystemAccentColorLight1Brush" Color="#67E8F9"/>
+    <SolidColorBrush x:Key="SystemAccentColorLight2Brush" Color="#A5F3FC"/>
+    <SolidColorBrush x:Key="SystemAccentColorLight3Brush" Color="#CFFAFE"/>
+    <SolidColorBrush x:Key="SystemAccentColorDark1Brush" Color="#06B6D4"/>
+    <SolidColorBrush x:Key="SystemAccentColorDark2Brush" Color="#0891B2"/>
+    <SolidColorBrush x:Key="SystemAccentColorDark3Brush" Color="#0E7490"/>
+    
+    <!-- WPF-UI Primary/Secondary/Tertiary accent -->
+    <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#06B6D4"/>
+    <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#0891B2"/>
+    <SolidColorBrush x:Key="AccentTextFillColorDisabledBrush" Color="#475569"/>
+    
+    <!-- Control fill colors for hover/pressed states -->
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="{StaticResource AtlasBgMedium}"/>
+    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="{StaticResource AtlasBgLight}"/>
+    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="{StaticResource AtlasSurfaceHoverColor}"/>
+    <SolidColorBrush x:Key="ControlFillColorDisabledBrush" Color="{StaticResource AtlasBgDeep}"/>
+    
+    <!-- Subtle fill colors (used for hover backgrounds) -->
+    <SolidColorBrush x:Key="SubtleFillColorTransparentBrush" Color="Transparent"/>
+    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#1522D3EE"/>
+    <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="#2022D3EE"/>
+    <SolidColorBrush x:Key="SubtleFillColorDisabledBrush" Color="Transparent"/>
+    
+    <!-- Accent fill colors (buttons, toggles, etc.) -->
+    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#06B6D4"/>
+    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#0891B2"/>
+    <SolidColorBrush x:Key="AccentFillColorDisabledBrush" Color="#475569"/>
+    
+    <!-- Text on accent colors -->
+    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#0B0F14"/>
+    <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#0B0F14"/>
+    <SolidColorBrush x:Key="TextOnAccentFillColorDisabledBrush" Color="#64748b"/>
+    <SolidColorBrush x:Key="TextOnAccentFillColorSelectedTextBrush" Color="#0B0F14"/>
+    
+    <!-- Control stroke colors -->
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#3322D3EE"/>
+    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="#2022D3EE"/>
+    <SolidColorBrush x:Key="ControlStrokeColorOnAccentDefaultBrush" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="ControlStrokeColorOnAccentSecondaryBrush" Color="#06B6D4"/>
+    
+    <!-- Focus visual colors -->
+    <SolidColorBrush x:Key="FocusStrokeColorOuterBrush" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="FocusStrokeColorInnerBrush" Color="#0B0F14"/>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         ATLAS PRO UNIFIED THEME TOKENS
+    ───────────────────────────────────────────────────────────────────────── -->
+    <SolidColorBrush x:Key="AtlasBackground" Color="#0b1220"/>
+    <SolidColorBrush x:Key="AtlasSurface" Color="#111c2e"/>
+    <SolidColorBrush x:Key="AtlasSurfaceAlt" Color="#0f172a"/>
+    <SolidColorBrush x:Key="AtlasAccent" Color="#22d3ee"/>
+    <SolidColorBrush x:Key="AtlasTextPrimary" Color="#e2e8f0"/>
+    <SolidColorBrush x:Key="AtlasTextSecondary" Color="#94a3b8"/>
+    <SolidColorBrush x:Key="AtlasBorder" Color="#3322D3EE"/>
+    
+</ResourceDictionary>

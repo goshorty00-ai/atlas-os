@@ -1,0 +1,30 @@
+<!-- Figma Component: MediaCarousel -->
+<!-- Design URL: https://www.figma.com/make/d4uCeNSISrzcORhzKRF76b/Atlas.MediaCentre.Main (Copy) -->
+<UserControl x:Class="AtlasAI.Controls.MediaCarouselControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Theme/Colors.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <StackPanel>
+        <!-- Carousel Header -->
+        <Grid Margin="0,0,0,16">
+            <TextBlock Name="CarouselTitle"
+                       Text="Carousel Title"
+                       Foreground="{StaticResource AtlasTextPrimaryBrush}"
+                       FontSize="20"
+                       FontWeight="SemiBold" />
+        </Grid>
+        
+        <!-- Carousel Content (3-Column Grid) -->
+        <WrapPanel Name="CarouselPanel" Orientation="Horizontal">
+            <!-- Cards will be added here programmatically in 3-column layout -->
+        </WrapPanel>
+    </StackPanel>
+</UserControl>

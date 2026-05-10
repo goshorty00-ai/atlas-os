@@ -1,0 +1,156 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         ATLAS NEO â€” Design Token Layer
+         All Neo-prefixed keys; existing Atlas* keys are left untouched.
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
+    <!-- â”€â”€ Backgrounds â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <SolidColorBrush x:Key="NeoBgVoid"     Color="#05080f"/>
+    <SolidColorBrush x:Key="NeoBgDeep"     Color="#0a0d18"/>
+    <SolidColorBrush x:Key="NeoBgSpace"    Color="#0e1220"/>
+    <SolidColorBrush x:Key="NeoBgLayer"    Color="#131826"/>
+
+    <!-- â”€â”€ Accent â€“ Cyan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <SolidColorBrush x:Key="NeoCyanIce"    Color="#00e5ff"/>
+    <SolidColorBrush x:Key="NeoCyanPrimary" Color="#00d4ff"/>
+    <SolidColorBrush x:Key="NeoCyanDim"    Color="#0099cc"/>
+
+    <!-- â”€â”€ Accent â€“ Violet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <SolidColorBrush x:Key="NeoVioletElectric" Color="#7c3aed"/>
+    <SolidColorBrush x:Key="NeoVioletBright"   Color="#8b5cf6"/>
+    <SolidColorBrush x:Key="NeoVioletGlow"     Color="#a78bfa"/>
+
+    <!-- â”€â”€ Accent â€“ Other â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <SolidColorBrush x:Key="NeoOrange"  Color="#f59e0b"/>
+    <SolidColorBrush x:Key="NeoGray"    Color="#6b7280"/>
+
+    <!-- â”€â”€ Text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <SolidColorBrush x:Key="NeoTextPrimary"   Color="#e8edf5"/>
+    <SolidColorBrush x:Key="NeoTextSecondary" Color="#9ca9bf"/>
+    <SolidColorBrush x:Key="NeoTextTertiary"  Color="#5d6b85"/>
+    <SolidColorBrush x:Key="NeoTextDim"       Color="#3d4a61"/>
+
+    <!-- â”€â”€ Glass Fills (ARGB hex: alpha first) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- rgba(14,18,32, 0.45) -->
+    <SolidColorBrush x:Key="NeoGlassSurface"  Color="#730e1220"/>
+    <!-- rgba(19,24,38, 0.65) -->
+    <SolidColorBrush x:Key="NeoGlassElevated" Color="#A6131826"/>
+    <!-- rgba(19,24,38, 0.10/0.12/0.14/0.16) -->
+    <SolidColorBrush x:Key="NeoGlass10"       Color="#1A131826"/>
+    <SolidColorBrush x:Key="NeoGlass12"       Color="#1F131826"/>
+    <SolidColorBrush x:Key="NeoGlass14"       Color="#24131826"/>
+    <SolidColorBrush x:Key="NeoGlass16"       Color="#29131826"/>
+
+    <!-- â”€â”€ Borders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- rgba(255,255,255, 0.08) -->
+    <SolidColorBrush x:Key="NeoBorderGlass"  Color="#2600E5FF"/>
+    <!-- rgba(0,229,255, 0.20) -->
+    <SolidColorBrush x:Key="NeoBorderNeon"   Color="#3300E5FF"/>
+    <!-- rgba(0,229,255, 0.50) -->
+    <SolidColorBrush x:Key="NeoBorderActive" Color="#8000E5FF"/>
+
+    <!-- â”€â”€ Glows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- rgba(0,229,255, 0.40) -->
+    <SolidColorBrush x:Key="NeoGlowCyan"       Color="#6600E5FF"/>
+    <!-- rgba(0,229,255, 0.15) -->
+    <SolidColorBrush x:Key="NeoGlowCyanSoft"   Color="#2600E5FF"/>
+    <!-- rgba(124,58,237, 0.40) -->
+    <SolidColorBrush x:Key="NeoGlowViolet"     Color="#667C3AED"/>
+    <!-- rgba(124,58,237, 0.15) -->
+    <SolidColorBrush x:Key="NeoGlowVioletSoft" Color="#267C3AED"/>
+
+    <!-- â”€â”€ Gradients â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <!-- 135Â° background: #05080f â†’ #0a0d18 â†’ #0e1220 -->
+    <LinearGradientBrush x:Key="NeoBackgroundGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#05080f" Offset="0"/>
+        <GradientStop Color="#0a0d18" Offset="0.5"/>
+        <GradientStop Color="#0e1220" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Vignette: transparent at 40% â†’ rgba(5,8,15,0.6) at 100% -->
+    <RadialGradientBrush x:Key="NeoVignette">
+        <GradientStop Color="Transparent"  Offset="0.40"/>
+        <GradientStop Color="#9905080f"    Offset="1"/>
+    </RadialGradientBrush>
+
+    <!-- AI energy: leftâ†’right cyanâ†’violet -->
+    <LinearGradientBrush x:Key="NeoAiEnergyGradient" StartPoint="0,0.5" EndPoint="1,0.5">
+        <GradientStop Color="#00e5ff" Offset="0"/>
+        <GradientStop Color="#7c3aed" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Holographic 135Â° -->
+    <LinearGradientBrush x:Key="NeoHolographicGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2600e5ff" Offset="0"/>
+        <GradientStop Color="#267c3aed" Offset="0.5"/>
+        <GradientStop Color="#2600e5ff" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Player overlay: transparent â†’ rgba(5,8,15,0.95) -->
+    <LinearGradientBrush x:Key="NeoPlayerOverlayGradient" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="Transparent" Offset="0"/>
+        <GradientStop Color="#F205080f"   Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Card info overlay: transparent â†’ rgba(5,8,15,0.95) -->
+    <LinearGradientBrush x:Key="NeoCardOverlayGradient" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="Transparent" Offset="0"/>
+        <GradientStop Color="#F205080f"   Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- â”€â”€ Typography â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <FontFamily x:Key="NeoFontFamily">Inter, Segoe UI Variable, Segoe UI, Arial</FontFamily>
+
+    <sys:Double x:Key="NeoFontSize48">48</sys:Double>
+    <sys:Double x:Key="NeoFontSize36">36</sys:Double>
+    <sys:Double x:Key="NeoFontSize30">30</sys:Double>
+    <sys:Double x:Key="NeoFontSize24">24</sys:Double>
+    <sys:Double x:Key="NeoFontSize20">20</sys:Double>
+    <sys:Double x:Key="NeoFontSize18">18</sys:Double>
+    <sys:Double x:Key="NeoFontSize16">16</sys:Double>
+    <sys:Double x:Key="NeoFontSize14">14</sys:Double>
+    <sys:Double x:Key="NeoFontSize12">12</sys:Double>
+
+    <!-- â”€â”€ Spacing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <sys:Double x:Key="NeoSpacing8">8</sys:Double>
+    <sys:Double x:Key="NeoSpacing16">16</sys:Double>
+    <sys:Double x:Key="NeoSpacing24">24</sys:Double>
+    <sys:Double x:Key="NeoSpacing40">40</sys:Double>
+    <sys:Double x:Key="NeoSpacing60">60</sys:Double>
+    <sys:Double x:Key="NeoGap12">12</sys:Double>
+    <sys:Double x:Key="NeoGap32">32</sys:Double>
+    <sys:Double x:Key="NeoGap48">48</sys:Double>
+    <sys:Double x:Key="NeoGap64">64</sys:Double>
+
+    <!-- â”€â”€ Radius â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <CornerRadius x:Key="NeoRadius8">8</CornerRadius>
+    <CornerRadius x:Key="NeoRadius12">12</CornerRadius>
+    <CornerRadius x:Key="NeoRadius16">16</CornerRadius>
+    <CornerRadius x:Key="NeoRadius20">20</CornerRadius>
+    <CornerRadius x:Key="NeoRadius24">24</CornerRadius>
+    <CornerRadius x:Key="NeoRadius32">32</CornerRadius>
+    <CornerRadius x:Key="NeoRadiusPill">9999</CornerRadius>
+
+    <!-- â”€â”€ Drop-Shadow / Glow Effects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+    <DropShadowEffect x:Key="NeoGlowCyanEffect"
+                      Color="#00E5FF" BlurRadius="20" ShadowDepth="0" Opacity="0.40"/>
+    <DropShadowEffect x:Key="NeoGlowCyanSoftEffect"
+                      Color="#00E5FF" BlurRadius="24" ShadowDepth="0" Opacity="0.08"/>
+    <DropShadowEffect x:Key="NeoGlowVioletEffect"
+                      Color="#7C3AED" BlurRadius="20" ShadowDepth="0" Opacity="0.40"/>
+    <DropShadowEffect x:Key="NeoGlowVioletSoftEffect"
+                      Color="#7C3AED" BlurRadius="40" ShadowDepth="0" Opacity="0.15"/>
+    <DropShadowEffect x:Key="NeoCardShadow"
+                      Color="#000000" BlurRadius="32" ShadowDepth="0" Opacity="0.55"/>
+
+    <!-- â”€â”€ Blur Effects (decorative overlays only â€” never on ItemsControl items) -->
+    <BlurEffect x:Key="NeoBlur16"  Radius="16"/>
+    <BlurEffect x:Key="NeoBlur24"  Radius="24"/>
+    <BlurEffect x:Key="NeoBlur40"  Radius="40"/>
+    <BlurEffect x:Key="NeoBlur96"  Radius="96"/>
+
+</ResourceDictionary>
+

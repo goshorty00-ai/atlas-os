@@ -1,0 +1,1170 @@
+<UserControl x:Class="AtlasAI.Views.AiChat.AiChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:AtlasAI.Models"
+             xmlns:converters="clr-namespace:AtlasAI.Views.Converters"
+             xmlns:core="clr-namespace:AtlasAI.Core"
+             xmlns:lottie="clr-namespace:LottieSharp.WPF;assembly=LottieSharp"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             mc:Ignorable="d"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <converters:WidthMultiplierConverter x:Key="WidthMultiplier"/>
+        <converters:FileNameConverter x:Key="FileNameConverter"/>
+
+        <RadialGradientBrush x:Key="InputBloomBrush.Cyan"
+                             Center="0.5,1"
+                             GradientOrigin="0.5,1"
+                             RadiusX="0.9"
+                             RadiusY="0.85">
+            <GradientStop Color="#6622D3EE" Offset="0"/>
+            <GradientStop Color="#0022D3EE" Offset="1"/>
+        </RadialGradientBrush>
+
+        <RadialGradientBrush x:Key="InputBloomBrush.Purple"
+                             Center="0.5,1"
+                             GradientOrigin="0.5,1"
+                             RadiusX="0.9"
+                             RadiusY="0.85">
+            <GradientStop Color="#66A855F7" Offset="0"/>
+            <GradientStop Color="#00A855F7" Offset="1"/>
+        </RadialGradientBrush>
+
+        <RadialGradientBrush x:Key="InputBloomBrush.Orange"
+                             Center="0.5,1"
+                             GradientOrigin="0.5,1"
+                             RadiusX="0.9"
+                             RadiusY="0.85">
+            <GradientStop Color="#66F97316" Offset="0"/>
+            <GradientStop Color="#00F97316" Offset="1"/>
+        </RadialGradientBrush>
+
+        <RadialGradientBrush x:Key="InputBloomBrush.Red"
+                             Center="0.5,1"
+                             GradientOrigin="0.5,1"
+                             RadiusX="0.9"
+                             RadiusY="0.85">
+            <GradientStop Color="#66EF4444" Offset="0"/>
+            <GradientStop Color="#00EF4444" Offset="1"/>
+        </RadialGradientBrush>
+
+        <Style x:Key="Style.HeaderPillToggle" TargetType="ToggleButton">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#140F172A"/>
+            <Setter Property="BorderBrush" Value="#6622D3EE"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.AccentCyan}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="13">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1A0F172A"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#221E293B"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Prevent default control templates from painting white backgrounds -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid x:Name="RootGrid" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- In-app header strip (no window controls) -->
+        <Border Grid.Row="0"
+                Background="{StaticResource DeepSeaGradient}"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Padding="0"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid Margin="18,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Kept for code-behind binding, but hidden (lotties live in main header) -->
+                        <lottie:LottieAnimationView x:Name="HeaderLottie"
+                                                    Width="0"
+                                                    Height="0"
+                                                    Margin="0"
+                                                    AutoPlay="True"
+                                                    RepeatCount="-1"
+                                                    Visibility="Collapsed"/>
+                        <Image Height="46"
+                               Stretch="Uniform"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="HighQuality"
+                               IsHitTestVisible="False"
+                               Source="pack://application:,,,/Assets/Logos/AtlasAiChatLogo.png"/>
+                    </StackPanel>
+
+                    <ContentControl Grid.Column="1"
+                                    Style="{StaticResource NeonStatusPillStyle}"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,0,10,0">
+                        <TextBlock Text="{Binding CurrentMode}"
+                                   FontFamily="{DynamicResource AtlasFontMono}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                    </ContentControl>
+
+                    <Button Grid.Column="2"
+                            Width="26"
+                            Height="26"
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Background="#1A0F172A"
+                            BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                            BorderThickness="1"
+                            Foreground="{StaticResource Brush.AccentCyan}"
+                            Click="HeaderOpenArrow_Click"
+                            ToolTip="Show header"
+                            Content="˄"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Orb overlay (right side panel) -->
+        <Grid x:Name="OrbOverlay"
+              Grid.Row="0"
+              Grid.RowSpan="3"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Stretch"
+              Margin="0"
+              IsHitTestVisible="False"
+              Panel.ZIndex="5000">
+            <Grid.Width>
+                <Binding ElementName="RootGrid" Path="ActualWidth" Converter="{StaticResource WidthMultiplier}" ConverterParameter="0.52"/>
+            </Grid.Width>
+            <wv2:WebView2 x:Name="ChatOrbsWebView"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch" />
+        </Grid>
+
+        <!-- Messages -->
+        <ScrollViewer x:Name="MessageScrollViewer"
+                      Grid.Row="1"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="28,16,16,8">
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Width" Value="7"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Margin" Value="2,0,0,0"/>
+                    <Setter Property="Opacity" Value="0.18"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+
+                <Style TargetType="Thumb">
+                    <Setter Property="Background" Value="#331E293B"/>
+                    <Setter Property="BorderBrush" Value="#00000000"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Thumb">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="8"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ScrollViewer.Resources>
+            <StackPanel>
+                <ListBox x:Name="MessagesList"
+                         ItemsSource="{Binding Messages}"
+                         PreviewMouseWheel="MessagesList_PreviewMouseWheel">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:ChatMessage}">
+                            <!-- Fixed-width lane: matches the input pill width so bubbles never exceed input alignment -->
+                            <Grid Width="{Binding ElementName=InputPill, Path=ActualWidth}" HorizontalAlignment="Left">
+                                <ContentControl x:Name="Bubble"
+                                                Style="{StaticResource Style.ChatBubbleAtlas}"
+                                                MaxWidth="{Binding ElementName=InputPill, Path=ActualWidth}"
+                                                Opacity="0">
+                                    <ContentControl.Triggers>
+                                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     To="1"
+                                                                     Duration="0:0:0.2"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </ContentControl.Triggers>
+
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="SenderLabel"
+                                                       Text="ATLAS"
+                                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"
+                                                       Foreground="{StaticResource Brush.AccentCyan}"
+                                                       VerticalAlignment="Top"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}"
+                                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                                       FontSize="9"
+                                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                                       VerticalAlignment="Top"
+                                                       Margin="10,2,0,0"/>
+                                        </Grid>
+
+                                        <TextBox Text="{Binding Content, Mode=OneWay}"
+                                                 IsReadOnly="True"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 FontFamily="{DynamicResource AtlasFontMono}"
+                                                 FontSize="14"
+                                                 FontWeight="SemiBold"
+                                                 Foreground="#EAF2F8"
+                                                 TextWrapping="Wrap"
+                                                 AcceptsReturn="True"
+                                                 Padding="0"
+                                                 Cursor="IBeam"
+                                                 SelectionBrush="{StaticResource AtlasCyanGlowBrush}"/>
+                                    </StackPanel>
+                                </ContentControl>
+                            </Grid>
+
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                    <Setter TargetName="Bubble" Property="Style" Value="{DynamicResource Style.ChatBubbleUser}"/>
+                                    <Setter TargetName="SenderLabel" Property="Text" Value="{Binding DataContext.UserDisplayName, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                    <Setter TargetName="SenderLabel" Property="Foreground" Value="{StaticResource Brush.AccentOrange}"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Typing indicator -->
+                <Border Margin="0,0,0,12"
+                        Padding="12,10"
+                        HorizontalAlignment="Left"
+                        Background="#1e293b"
+                        BorderBrush="#3322D3EE"
+                        BorderThickness="1"
+                        CornerRadius="10">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsTyping}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="Atlas is thinking..."
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="11"
+                               Foreground="#94a3b8"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Input -->
+        <Border Grid.Row="2"
+                Background="Transparent"
+                Padding="14,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- attachments row (shown only when attachments exist) -->
+                <ItemsControl Grid.Row="0"
+                              ItemsSource="{Binding Attachments}">
+                    <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasAttachments}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ItemsControl.Style>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Margin="0,0,0,10"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#1A0F172A"
+                                    BorderBrush="#331E293B"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="10,6"
+                                    Margin="0,0,8,8">
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock Text="{Binding Converter={StaticResource FileNameConverter}}"
+                                               FontFamily="{DynamicResource AtlasFontMono}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                               MaxWidth="280"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,0,8,0"/>
+                                    <Button Style="{StaticResource Style.IconButtonPill}"
+                                            Width="22"
+                                            Height="22"
+                                            Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="&#xE711;"
+                                                   FontFamily="{StaticResource AtlasFontIcon}"
+                                                   FontSize="12"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                    </Button>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- voice debug pill (shown only when voice debug is active) -->
+                <ContentControl Grid.Row="1"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,10">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl" BasedOn="{StaticResource NeonStatusPillStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsVoiceDebugVisible}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                    <TextBlock Text="{Binding VoiceDebugText}"
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="11"
+                               Foreground="{DynamicResource AtlasTextMutedBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                </ContentControl>
+
+                <!-- compact command bar (pill) -->
+                <Grid Grid.Row="2" HorizontalAlignment="Left" Margin="0">
+                    <Border x:Name="InputBloom"
+                            IsHitTestVisible="False"
+                            Height="78"
+                            MinWidth="392"
+                            MaxWidth="620"
+                            CornerRadius="32"
+                            Margin="-26,-20,-26,-28"
+                            Opacity="0.58"
+                            Background="{StaticResource InputBloomBrush.Cyan}"
+                            VerticalAlignment="Center">
+                        <Border.Width>
+                            <Binding ElementName="RootGrid" Path="ActualWidth" Converter="{StaticResource WidthMultiplier}" ConverterParameter="0.402"/>
+                        </Border.Width>
+                        <Border.Effect>
+                            <BlurEffect Radius="30"/>
+                        </Border.Effect>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Idle}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Cyan}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomIdle">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.35"
+                                                                     To="0.55"
+                                                                     Duration="0:0:2.8">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomIdle"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Listening}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Cyan}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomListening">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.45"
+                                                                     To="0.75"
+                                                                     Duration="0:0:1.6">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomListening"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Thinking}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Purple}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomThinking">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.40"
+                                                                     To="0.62"
+                                                                     Duration="0:0:2.2">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)"
+                                                                     From="22"
+                                                                     To="28"
+                                                                     Duration="0:0:2.2">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomThinking"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Typing}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Purple}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomTyping">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.32"
+                                                                     To="0.48"
+                                                                     Duration="0:0:0.9">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomTyping"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Talking}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Cyan}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomTalking">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.42"
+                                                                     To="0.62"
+                                                                     Duration="0:0:2.0">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomTalking"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Working}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Orange}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomWorking">
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="0.36"
+                                                                     To="0.52"
+                                                                     Duration="0:0:2.2">
+                                                        <DoubleAnimation.EasingFunction>
+                                                            <SineEase EasingMode="EaseInOut"/>
+                                                        </DoubleAnimation.EasingFunction>
+                                                    </DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomWorking"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Error}">
+                                        <Setter Property="Background" Value="{StaticResource InputBloomBrush.Red}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="BloomError">
+                                                <Storyboard FillBehavior="HoldEnd">
+                                                    <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                                        <EasingDoubleKeyFrame Value="0.30" KeyTime="0:0:0"/>
+                                                        <EasingDoubleKeyFrame Value="0.72" KeyTime="0:0:0.18">
+                                                            <EasingDoubleKeyFrame.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut"/>
+                                                            </EasingDoubleKeyFrame.EasingFunction>
+                                                        </EasingDoubleKeyFrame>
+                                                        <EasingDoubleKeyFrame Value="0.30" KeyTime="0:0:0.36">
+                                                            <EasingDoubleKeyFrame.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut"/>
+                                                            </EasingDoubleKeyFrame.EasingFunction>
+                                                        </EasingDoubleKeyFrame>
+                                                        <EasingDoubleKeyFrame Value="0.64" KeyTime="0:0:0.54">
+                                                            <EasingDoubleKeyFrame.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut"/>
+                                                            </EasingDoubleKeyFrame.EasingFunction>
+                                                        </EasingDoubleKeyFrame>
+                                                        <EasingDoubleKeyFrame Value="0.34" KeyTime="0:0:0.9">
+                                                            <EasingDoubleKeyFrame.EasingFunction>
+                                                                <SineEase EasingMode="EaseInOut"/>
+                                                            </EasingDoubleKeyFrame.EasingFunction>
+                                                        </EasingDoubleKeyFrame>
+                                                    </DoubleAnimationUsingKeyFrames>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="BloomError"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
+
+                    <Border x:Name="InputGlowFrame"
+                            IsHitTestVisible="False"
+                            Height="74"
+                            MinWidth="392"
+                            MaxWidth="620"
+                            CornerRadius="30"
+                            BorderThickness="1.5"
+                            BorderBrush="#AA22D3EE"
+                            Background="#12060D14"
+                            VerticalAlignment="Center"
+                            Margin="0,0,0,0">
+                        <Border.Width>
+                            <Binding ElementName="RootGrid" Path="ActualWidth" Converter="{StaticResource WidthMultiplier}" ConverterParameter="0.402"/>
+                        </Border.Width>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#22D3EE"
+                                              BlurRadius="22"
+                                              ShadowDepth="0"
+                                              Opacity="0.55"/>
+                        </Border.Effect>
+                    </Border>
+
+                    <ContentControl x:Name="InputPill"
+                                    Style="{StaticResource Style.ChatInputPill}"
+                                    Height="74"
+                                    MinWidth="392"
+                                    MaxWidth="620">
+                        <ContentControl.Width>
+                            <Binding ElementName="RootGrid" Path="ActualWidth" Converter="{StaticResource WidthMultiplier}" ConverterParameter="0.402"/>
+                        </ContentControl.Width>
+
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- mic -->
+                            <Button Grid.Column="0"
+                                    Width="28" Height="28"
+                                    Command="{Binding ToggleMicCommand}"
+                                    ToolTip="Mic">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource Style.IconButtonPill}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsListening}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.AccentCyan}"/>
+                                                <Setter Property="Background" Value="#141E293B"/>
+                                                <Setter Property="Effect" Value="{StaticResource Effect.GlowCyanSubtle}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="&#xE720;"
+                                           FontFamily="{StaticResource AtlasFontIcon}"
+                                           FontSize="14"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Button>
+
+                            <!-- attach -->
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource Style.IconButtonPill}"
+                                    Width="28" Height="28"
+                                    Command="{Binding AttachCommand}"
+                                    ToolTip="Attach">
+                                <TextBlock Text="&#xE723;"
+                                           FontFamily="{StaticResource AtlasFontIcon}"
+                                           FontSize="14"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Button>
+
+                            <!-- settings (models / voices / lotties) + personality -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <ToggleButton x:Name="SettingsToggle"
+                                              Style="{StaticResource Style.IconToggleButtonPill}"
+                                              Width="32" Height="32"
+                                              ToolTip="Settings">
+                                    <TextBlock Text="&#xE713;"
+                                               FontFamily="{StaticResource AtlasFontIcon}"
+                                               FontSize="15"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
+                                </ToggleButton>
+
+                                <ToggleButton x:Name="PersonalityToggle"
+                                              Style="{StaticResource Style.IconToggleButtonPill}"
+                                              Width="32" Height="32"
+                                              Margin="4,0,0,0"
+                                              ToolTip="Personality">
+                                    <TextBlock Text="&#xE77B;"
+                                               FontFamily="{StaticResource AtlasFontIcon}"
+                                               FontSize="15"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"/>
+                                </ToggleButton>
+                            </StackPanel>
+
+                            <!-- text + hint overlay -->
+                                                        <Grid Grid.Column="3" Margin="10,0,10,0" ClipToBounds="True">
+                                                                 <TextBox x:Name="InputBox"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                         CaretBrush="{StaticResource Brush.AccentCyan}"
+                                         SelectionBrush="{StaticResource AtlasCyanGlowBrush}"
+                                         FontFamily="{DynamicResource AtlasFontMono}"
+                                                                                     FontSize="15"
+                                         FontWeight="SemiBold"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalContentAlignment="Center"
+                                                                                                                                                                         Padding="0,2"
+                                         Text="{Binding InputMessage, UpdateSourceTrigger=PropertyChanged}"
+                                         IsEnabled="{Binding IsInputEnabled}"
+                                         AllowDrop="True"
+                                         PreviewDragOver="InputBox_PreviewDragOver"
+                                         Drop="InputBox_Drop"
+                                         DataObject.Pasting="InputBox_Paste"
+                                         PreviewKeyDown="InputBox_PreviewKeyDown"/>
+
+                                 <TextBlock Text="{Binding InputHintText}"
+                                           FontFamily="{DynamicResource AtlasFontMono}"
+                                               FontSize="14"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource Brush.AccentCyan}"
+                                           Opacity="0.85"
+                                           IsHitTestVisible="False"
+                                           VerticalAlignment="Center"
+                                           Margin="12,0,0,0"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           MaxWidth="{Binding ElementName=InputBox, Path=ActualWidth}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding InputMessage}" Value=""/>
+                                                        <Condition Binding="{Binding IsInputHintVisible}" Value="True"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <!-- send (embedded) -->
+                                <Button Grid.Column="4"
+                                    Width="62"
+                                    Height="50"
+                                    Margin="10,0,0,0"
+                                    Command="{Binding SendCommand}"
+                                    ToolTip="Send"
+                                    Background="#0B0F14"
+                                    BorderBrush="{StaticResource Brush.AccentCyan}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    Effect="{StaticResource NeonGlowEffect}">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="22">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#141E293B"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#1F293B"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter Property="Opacity" Value="0.55"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+
+                                    <TextBlock Text="&#xE724;"
+                                           FontFamily="{StaticResource AtlasFontIcon}"
+                                           FontSize="16"
+                                           Foreground="{StaticResource Brush.AccentCyan}"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Button>
+                        </Grid>
+                    </ContentControl>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Grid x:Name="SettingsOverlay" Grid.Row="0" Grid.RowSpan="3" Panel.ZIndex="2000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsChecked, ElementName=SettingsToggle}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Rectangle Fill="#01000000" MouseDown="SettingsOverlay_MouseDown"/>
+            <Border Background="#CC0B0F14"
+                    BorderBrush="{StaticResource Brush.AccentCyan}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="14"
+                    MinWidth="360"
+                    Effect="{StaticResource NeonGlowEffect}"
+                    MouseDown="SettingsContent_MouseDown"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="96,0,0,96">
+                <DockPanel LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" LastChildFill="False" Margin="0,0,0,10">
+                        <TextBlock Text="SETTINGS"
+                                   FontFamily="{DynamicResource AtlasFontMono}"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                   DockPanel.Dock="Left"/>
+                        <Button Content="✕"
+                                Width="26"
+                                Height="26"
+                                Margin="10,0,0,0"
+                                Background="Transparent"
+                                BorderBrush="#331E293B"
+                                BorderThickness="1"
+                                Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                Click="CloseSettingsButton_Click"
+                                DockPanel.Dock="Right">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="13">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#141E293B"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#241E293B"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.55"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </DockPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
+                        <StackPanel>
+                            <TextBlock Text="AI"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="0,0,0,6"/>
+
+                            <TextBlock Text="Provider"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <ComboBox Style="{StaticResource AtlasComboBox}"
+                                      ItemsSource="{Binding AvailableAiProviders}"
+                                      SelectedItem="{Binding SelectedAiProvider, Mode=TwoWay}"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,10"/>
+
+                            <TextBlock Text="Model"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <ComboBox Style="{StaticResource AtlasComboBox}"
+                                      ItemsSource="{Binding AvailableModels}"
+                                      SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayName"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,10"/>
+
+                            <CheckBox IsChecked="{Binding AutoModeEnabled, Mode=TwoWay}"
+                                      Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                      Content="Auto mode"
+                                      Margin="0,0,0,12"/>
+
+                            <Border Height="1"
+                                    Background="Transparent"
+                                    BorderBrush="#1AFFFFFF"
+                                    BorderThickness="0,0,0,1"
+                                    Style="{StaticResource NeonBorderStyle.Delay1_6}"
+                                    Margin="0,0,0,12"/>
+
+                            <TextBlock Text="VOICE"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="0,0,0,6"/>
+
+                            <CheckBox IsChecked="{Binding SpeechEnabled, Mode=TwoWay}"
+                                      Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                      Content="Voice"
+                                      Margin="0,0,0,10"/>
+
+                            <TextBlock Text="Voice provider"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <ComboBox Style="{StaticResource AtlasComboBox}"
+                                      ItemsSource="{Binding AvailableVoiceProviders}"
+                                      SelectedItem="{Binding SelectedVoiceProvider, Mode=TwoWay}"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,12"/>
+
+                            <TextBlock Text="Voice"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <DockPanel Margin="0,6,0,12" LastChildFill="False">
+                                <ComboBox Style="{StaticResource AtlasComboBox}"
+                                          ItemsSource="{Binding AvailableVoices}"
+                                          SelectedItem="{Binding SelectedVoice, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName"
+                                          DropDownOpened="SettingsCombo_DropDownOpened"
+                                          DropDownClosed="SettingsCombo_DropDownClosed"
+                                          MinWidth="240"
+                                          DockPanel.Dock="Left"/>
+                            </DockPanel>
+
+                            <Border Height="1"
+                                    Background="Transparent"
+                                    BorderBrush="#1AFFFFFF"
+                                    BorderThickness="0,0,0,1"
+                                    Style="{StaticResource NeonBorderStyle.Delay0_8}"
+                                    Margin="0,2,0,12"/>
+
+                            <TextBlock Text="HEADER LOTTIE"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="0,0,0,6"/>
+
+                            <ComboBox Style="{StaticResource AtlasComboBox}"
+                                      ItemsSource="{Binding AvailableHeaderLotties}"
+                                      SelectedItem="{Binding SelectedHeaderLottie, Mode=TwoWay}"
+                                      DisplayMemberPath="Label"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,0,0,0"/>
+
+                            <Border Height="1"
+                                    Background="Transparent"
+                                    BorderBrush="#1AFFFFFF"
+                                    BorderThickness="0,0,0,1"
+                                    Style="{StaticResource NeonBorderStyle.Delay1_6}"
+                                    Margin="0,12,0,12"/>
+
+                            <TextBlock Text="WALLPAPER"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="0,0,0,6"/>
+
+                            <TextBlock Text="Mode"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <ComboBox Style="{StaticResource AtlasComboBox}"
+                                      ItemsSource="{Binding AvailableWallpaperModes}"
+                                      SelectedItem="{Binding SelectedWallpaperMode, Mode=TwoWay}"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,10"/>
+
+                            <TextBlock Text="Selection"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+
+                            <ComboBox ItemsSource="{Binding AvailableVideoWallpapers}"
+                                      SelectedItem="{Binding SelectedVideoWallpaper, Mode=TwoWay}"
+                                      DisplayMemberPath="Label"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,8">
+                                <ComboBox.Style>
+                                    <Style TargetType="ComboBox" BasedOn="{StaticResource AtlasComboBox}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsVideoWallpaperMode}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.Style>
+                            </ComboBox>
+
+                            <ComboBox ItemsSource="{Binding AvailableStillWallpapers}"
+                                      SelectedItem="{Binding SelectedStillWallpaper, Mode=TwoWay}"
+                                      DisplayMemberPath="Label"
+                                      DropDownOpened="SettingsCombo_DropDownOpened"
+                                      DropDownClosed="SettingsCombo_DropDownClosed"
+                                      Margin="0,6,0,8">
+                                <ComboBox.Style>
+                                    <Style TargetType="ComboBox" BasedOn="{StaticResource AtlasComboBox}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStillWallpaperMode}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ComboBox.Style>
+                            </ComboBox>
+
+                            <Button Content="Add..."
+                                    Command="{Binding AddWallpaperCommand}"
+                                    HorizontalAlignment="Left"
+                                    Padding="12,6"
+                                    Background="#0B0F14"
+                                    BorderBrush="#5522D3EE"
+                                    BorderThickness="2"
+                                    Cursor="Hand"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="PersonalityOverlay" Grid.Row="0" Grid.RowSpan="3" Panel.ZIndex="2000">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsChecked, ElementName=PersonalityToggle}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Rectangle Fill="#01000000" MouseDown="PersonalityOverlay_MouseDown"/>
+            <Border Background="#CC0B0F14"
+                    BorderBrush="{StaticResource Brush.AccentCyan}"
+                    BorderThickness="1"
+                    CornerRadius="14"
+                    Padding="14"
+                    MinWidth="320"
+                    Effect="{StaticResource NeonGlowEffect}"
+                    MouseDown="SettingsContent_MouseDown"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="136,0,0,96">
+                <DockPanel LastChildFill="True">
+                    <DockPanel DockPanel.Dock="Top" LastChildFill="False" Margin="0,0,0,10">
+                        <TextBlock Text="PERSONALITY"
+                                   FontFamily="{DynamicResource AtlasFontMono}"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                   DockPanel.Dock="Left"/>
+                        <Button Content="✕"
+                                Width="26"
+                                Height="26"
+                                Margin="10,0,0,0"
+                                Background="Transparent"
+                                BorderBrush="#331E293B"
+                                BorderThickness="1"
+                                Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                                Click="ClosePersonalityButton_Click"
+                                DockPanel.Dock="Right">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="Bd"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="13">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#141E293B"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#241E293B"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.55"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </DockPanel>
+                    <StackPanel>
+                        <ComboBox Style="{StaticResource AtlasComboBox}"
+                                  ItemsSource="{Binding AvailableChatPersonalities}"
+                                  SelectedItem="{Binding SelectedChatPersonality, Mode=TwoWay}"
+                                  DropDownOpened="SettingsCombo_DropDownOpened"
+                                  DropDownClosed="SettingsCombo_DropDownClosed"
+                                  Margin="0,0,0,12"/>
+
+                        <DockPanel Margin="0,0,0,6">
+                            <TextBlock Text="Banter Level"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                            <TextBlock DockPanel.Dock="Right"
+                                       Text="{Binding BanterLevel}"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="11"
+                                       Foreground="{StaticResource Brush.AccentCyan}"/>
+                        </DockPanel>
+
+                        <Slider Minimum="1"
+                                Maximum="5"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding BanterLevel, Mode=TwoWay}"
+                                Margin="0,0,0,10"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding AllowPlayfulRoast, Mode=TwoWay}"
+                                      Content="Roast"/>
+                            <CheckBox IsChecked="{Binding AllowProfanity, Mode=TwoWay}"
+                                      Content="Profanity"
+                                      Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+

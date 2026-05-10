@@ -1,0 +1,123 @@
+# =============================================================
+#  Atlas.OS  —  .gitignore
+#  Updated 2026-05-10
+# =============================================================
+
+# ── Build outputs ──────────────────────────────────────────
+bin/
+obj/
+publish/
+
+# ── IDE / editor ───────────────────────────────────────────
+.vs/
+.idea/
+# Only ignore the rope project subfolder — keep launch.json / tasks.json
+.vscode/.ropeproject/
+
+# ── Dependencies ───────────────────────────────────────────
+**/node_modules/
+
+# ── dist folders ───────────────────────────────────────────
+# Source Figma dist folders are loaded directly at runtime by the WPF host.
+# ALL of the following app dist folders are required at runtime and CANNOT
+# be safely excluded:
+#   Addon Manager, AI Security Command Center Dashboard, AI_Smart_Home,
+#   Design AI Quiz Night Section, djcode, Email,
+#   Futuristic AI Command Center (6), Futuristic AI File Explorer,
+#   Futuristic API Management Dashboard, Futuristic Discovery Section Design (1),
+#   Futuristic Karaoke Player, Media Streamer, Mediahub, Music_MediaHub,
+#   Premium Social Media Creator App (1)
+#
+# The bin-time copies (bin/x64/Figma/*/dist) are already excluded via bin/.
+# Do NOT add **/dist/ here.
+
+# ── Logs ───────────────────────────────────────────────────
+logs/
+*.log
+*.binlog
+
+# ── User / local settings ──────────────────────────────────
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.cache
+
+# ── Temp / scratch ─────────────────────────────────────────
+*.tmp
+*.bak
+
+# ── Archives ───────────────────────────────────────────────
+*.zip
+*.rar
+
+# ── Backup snapshots ───────────────────────────────────────
+Atlas.OS_BACKUP_WORKING_X64_*/
+Atlas.OS_BACKUP*/
+
+# ── WebView2 runtime cache ─────────────────────────────────
+*.WebView2/
+
+# ── Secrets / OAuth credentials — NEVER commit ─────────────
+Secrets/
+
+# ── Backup snapshots (workspace-level) ─────────────────────
+Backups/
+
+# ── Third-party binaries — ffmpeg ──────────────────────────
+ffmpeg/
+
+# ── Assets — surgical exclusions ──────────────────────────
+# Tracked: Icons/, MediaPlayer/Buttons/, DownloadManager/,
+#          Animations/, Sound_Reactive/, Other_Logos/, Wallpaper/
+# Ignored: Video_Wallpaper/, Startup_Video/, Logos/, Header/
+
+Assets/Video_Wallpaper/
+Assets/Startup_Video/
+Assets/Logos/
+Assets/Header/
+
+# ── Third-party reference binaries ────────────────────────
+Reference/
+.tools/
+
+# ── NuGet / package restore ────────────────────────────────
+packages/
+*.nupkg
+
+# ── Test results / coverage ────────────────────────────────
+TestResults/
+coverage/
+
+# ── OS junk ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Secrets / API keys — NEVER commit ──────────────────────
+.env
+appsettings.Development.json
+appsettings.Local.json
+**/ai_keys.json
+**/integration_keys.json
+**/claude_key.txt
+**/openai_key.txt
+**/settings.txt
+.kiro/settings/mcp.json
+FIGMA_MCP_STATUS.md
+mcp_config_fix.json
+mcp_config_fixed.json
+mcp_test_config.json
+
+# ── Additional secret / token files ────────────────────────
+from repo*
+mcp_config_final.json
+*mcp*config*.json
+.env
+.env*
+*token*.json
+*token*.txt
+*token*.key
+*secret*.json
+*secret*.txt
+*secret*.key

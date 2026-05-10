@@ -1,0 +1,28 @@
+<UserControl x:Class="AtlasAI.Modules.ApiManagement.ApiManagementHostView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             Background="Transparent">
+    <Grid Background="Transparent">
+        <wv2:WebView2 x:Name="ApiWebView" Margin="0" />
+
+        <Border x:Name="MissingUiOverlay"
+                Background="#CC0A0E14"
+                Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="720">
+                <TextBlock Text="API &amp; Network Management UI not built"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource AtlasCyanBrush}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Build the Figma dashboard (dist) and restart Atlas."
+                           Margin="0,10,0,0"
+                           FontSize="14"
+                           Foreground="{DynamicResource AtlasTextSecondaryBrush}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
+

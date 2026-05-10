@@ -1,0 +1,67 @@
+<Window x:Class="AtlasAI.Modules.Downloader.RealDebridConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configure Real-Debrid" 
+        Height="250" 
+        Width="500"
+        WindowStartupLocation="CenterOwner"
+        Background="#0a0e12"
+        ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" 
+                   Text="Real-Debrid API Token" 
+                   Foreground="#22d3ee" 
+                   FontSize="16" 
+                   FontWeight="Bold"
+                   Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="1" 
+                   TextWrapping="Wrap"
+                   Foreground="#94a3b8"
+                   Margin="0,0,0,15">
+            Enter your Real-Debrid API token to unrestrict premium links.
+            <LineBreak/>
+            Get your token from: https://real-debrid.com/apitoken
+        </TextBlock>
+
+        <PasswordBox x:Name="TokenBox"
+                     Grid.Row="2"
+                     Height="35"
+                     Padding="10,5"
+                     Background="#1e293b"
+                     Foreground="#e2e8f0"
+                     BorderBrush="#334155"
+                     BorderThickness="1"
+                     FontFamily="Consolas"
+                     FontSize="12"/>
+
+        <StackPanel Grid.Row="4" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right"
+                    Margin="0,15,0,0">
+            <Button Content="Cancel" 
+                    Width="80" 
+                    Height="32"
+                    Margin="0,0,10,0"
+                    Background="#1e293b"
+                    Foreground="#94a3b8"
+                    BorderBrush="#334155"
+                    Click="Cancel_Click"/>
+            <Button Content="Save" 
+                    Width="80" 
+                    Height="32"
+                    Background="#0e7490"
+                    Foreground="White"
+                    BorderBrush="#06b6d4"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

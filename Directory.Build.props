@@ -1,0 +1,14 @@
+<Project>
+  <!-- 
+    Directory.Build.props - Imported before all project files
+    Sets unique intermediate output paths to prevent conflicts between
+    AtlasAI (main), AtlasAI.Personal, and AtlasAI.Public builds
+  -->
+  
+  <PropertyGroup>
+    <!-- Set unique intermediate paths based on project name -->
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'AtlasAI'">obj\AtlasAI\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'AtlasAI.Personal'">obj\Personal\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'AtlasAI.Public'">obj\Public\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

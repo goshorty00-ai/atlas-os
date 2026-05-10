@@ -1,0 +1,69 @@
+<Window x:Class="AtlasAI.UI.DebugOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Atlas Debug" 
+        Width="320" Height="280"
+        WindowStyle="ToolWindow"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Background="#1a1a2e"
+        Foreground="#e0e0e0"
+        FontFamily="Consolas"
+        FontSize="11">
+    
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="🔧 Debug Overlay" FontSize="13" FontWeight="Bold" Foreground="#22d3ee" Margin="0,0,0,10"/>
+        
+        <!-- Voice State -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Voice State:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="VoiceStateText" Text="--" Foreground="#22d3ee"/>
+        </StackPanel>
+        
+        <!-- Last Intent -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Last Intent:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="LastIntentText" Text="--" Foreground="#a78bfa" TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+        </StackPanel>
+        
+        <!-- Pipeline -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Pipeline:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="PipelineText" Text="--" Foreground="#34d399"/>
+        </StackPanel>
+        
+        <!-- Online Mode -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Online Mode:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="OnlineModeText" Text="--" Foreground="#fbbf24"/>
+        </StackPanel>
+        
+        <!-- Follow-up Timer -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="Follow-up:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="FollowUpText" Text="--" Foreground="#f472b6"/>
+        </StackPanel>
+        
+        <!-- Quality Gate -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,4">
+            <TextBlock Text="QualityGate:" Width="100" Foreground="#888"/>
+            <TextBlock x:Name="QualityGateText" Text="--" Foreground="#60a5fa"/>
+        </StackPanel>
+        
+        <!-- Last Update -->
+        <TextBlock Grid.Row="7" x:Name="LastUpdateText" Text="Updated: --" Foreground="#555" FontSize="9" VerticalAlignment="Bottom"/>
+    </Grid>
+</Window>

@@ -1,0 +1,277 @@
+<!-- Figma Component: MediaCard -->
+<!-- Design URL: https://www.figma.com/make/d4uCeNSISrzcORhzKRF76b/Atlas.MediaCentre.Main (Copy) -->
+<UserControl x:Class="AtlasAI.Controls.MediaCardControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="200"
+             Height="300"
+             Cursor="Hand">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Theme/Colors.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <Border Name="CardBorder"
+            Background="{StaticResource AtlasGlassBrush}"
+            BorderBrush="{StaticResource AtlasGlassBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+        <Border.Effect>
+            <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.3" />
+        </Border.Effect>
+        
+        <Grid>
+            <!-- Poster Image -->
+            <Border Name="PosterBorder"
+                    CornerRadius="12"
+                    ClipToBounds="True">
+                <Image Name="PosterImage"
+                       Stretch="UniformToFill" />
+            </Border>
+            
+            <!-- Gradient Overlay -->
+            <Border CornerRadius="12">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                        <GradientStop Color="Transparent" Offset="0" />
+                        <GradientStop Color="Transparent" Offset="0.5" />
+                        <GradientStop Color="#80000000" Offset="0.8" />
+                        <GradientStop Color="#CC000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            
+            <!-- Progress Bar (if applicable) -->
+            <Border Name="ProgressBarContainer"
+                    Height="4"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,0,80"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Border Background="#30FFFFFF" />
+                    <Border Name="ProgressBar"
+                            Background="{StaticResource AtlasCyanBrush}"
+                            HorizontalAlignment="Left">
+                        <Border.Effect>
+                            <DropShadowEffect Color="{StaticResource AtlasCyan}"
+                                              BlurRadius="8"
+                                              ShadowDepth="0"
+                                              Opacity="0.6" />
+                        </Border.Effect>
+                    </Border>
+                </Grid>
+            </Border>
+            
+            <!-- Info Overlay -->
+            <StackPanel VerticalAlignment="Bottom"
+                        Margin="12,0,12,12">
+                
+                <!-- Rating Badge -->
+                <Border Name="RatingBadge"
+                        Background="{StaticResource AtlasGlassMediumBrush}"
+                        BorderBrush="{StaticResource AtlasCyanBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="8,4"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+                              Fill="{StaticResource AtlasCyanBrush}"
+                              Width="12"
+                              Height="12"
+                              Margin="0,0,4,0" />
+                        <TextBlock Name="RatingText"
+                                   Text="8.7"
+                                   Foreground="{StaticResource AtlasTextPrimaryBrush}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
+                
+                <!-- Genre Badge -->
+                <Border Name="GenreBadge"
+                        Background="{StaticResource AtlasVioletBrush}"
+                        CornerRadius="4"
+                        Padding="6,3"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,8"
+                        Visibility="Collapsed">
+                    <TextBlock Name="GenreText"
+                               Text="Sci-Fi"
+                               Foreground="{StaticResource AtlasTextPrimaryBrush}"
+                               FontSize="9"
+                               FontWeight="Bold" />
+                </Border>
+                
+                <!-- Title -->
+                <TextBlock Name="TitleText"
+                           Text="Media Title"
+                           Foreground="{StaticResource AtlasTextPrimaryBrush}"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap"
+                           MaxHeight="40"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="0,0,0,4" />
+                
+                <!-- Metadata -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Name="YearText"
+                               Text="2025"
+                               Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                               FontSize="11"
+                               Margin="0,0,8,0" />
+                    <TextBlock Name="MetadataText"
+                               Text="• 2h 18m"
+                               Foreground="{StaticResource AtlasTextSecondaryBrush}"
+                               FontSize="11" />
+                </StackPanel>
+            </StackPanel>
+            
+            <!-- Recent Highlight -->
+            <Border Name="RecentHighlight"
+                    BorderBrush="{StaticResource AtlasCyanBrush}"
+                    BorderThickness="2"
+                    CornerRadius="12"
+                    Visibility="Collapsed"
+                    IsHitTestVisible="False">
+                <Border.Effect>
+                    <DropShadowEffect Color="{StaticResource AtlasCyan}" BlurRadius="15" Opacity="0.5"/>
+                </Border.Effect>
+                <Border Background="{StaticResource AtlasCyanBrush}"
+                        CornerRadius="0,12,0,8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Padding="8,4">
+                    <TextBlock Text="JUST WATCHED" 
+                               Foreground="{StaticResource AtlasBgDeepBrush}" 
+                               FontSize="9" 
+                               FontWeight="Bold"/>
+                </Border>
+            </Border>
+
+            <!-- Hover Overlay -->
+            <Border Name="HoverOverlay"
+                    Background="#CC000000"
+                    CornerRadius="12"
+                    Opacity="0">
+                <Border.Effect>
+                    <DropShadowEffect Color="{StaticResource AtlasCyan}"
+                                      BlurRadius="20"
+                                      ShadowDepth="0"
+                                      Opacity="0.4" />
+                </Border.Effect>
+                
+                <Grid>
+                    <!-- Center Content -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        
+                        <!-- Resume Play Button -->
+                        <Grid HorizontalAlignment="Center" Margin="0,0,0,8">
+                            <!-- Ring Background -->
+                            <Ellipse Width="48" Height="48" Stroke="#30FFFFFF" StrokeThickness="3" />
+                            
+                            <!-- Progress Ring -->
+                            <Path Name="ProgressRing"
+                                  Stroke="{StaticResource AtlasCyanBrush}"
+                                  StrokeThickness="3"
+                                  Width="48" Height="48"
+                                  StrokeEndLineCap="Round"
+                                  Data="M 24,0 A 24,24 0 0 1 24,48 A 24,24 0 0 1 24,0"
+                                  StrokeDashArray="0 100" />
+                            
+                            <!-- Play Icon -->
+                            <Path Data="M18,14 L34,24 L18,34 Z"
+                                  Fill="White"
+                                  Width="48"
+                                  Height="48"
+                                  Stretch="None"
+                                  Margin="2,0,0,0" />
+                        </Grid>
+
+                        <!-- "Resume" Label -->
+                        <TextBlock Text="Resume"
+                                   Foreground="White"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,2" />
+
+                        <!-- Episode Context (e.g. "Continue S02E04") -->
+                        <TextBlock Name="EpisodeContextText"
+                                   Text="Continue S02E04"
+                                   Foreground="{StaticResource AtlasCyanBrush}"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   Visibility="Collapsed" />
+
+                        <!-- Time Remaining -->
+                        <TextBlock Name="RuntimeRemainingText"
+                                   Text="18 minutes left"
+                                   Foreground="White"
+                                   FontSize="10"
+                                   Opacity="0.7"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+    
+    <!-- Triggers for hover animation -->
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="MouseEnter">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="0.15"
+                                     Duration="0:0:0.15">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="CardBorder"
+                                     Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                     To="30"
+                                     Duration="0:0:0.15">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+        <EventTrigger RoutedEvent="MouseLeave">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="0"
+                                     Duration="0:0:0.15">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="CardBorder"
+                                     Storyboard.TargetProperty="(Border.Effect).(DropShadowEffect.BlurRadius)"
+                                     To="20"
+                                     Duration="0:0:0.15">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+</UserControl>

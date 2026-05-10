@@ -1,0 +1,19 @@
+/* Futuristic Font for Smart Home Interface */
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap");
+
+body {
+  font-family: "Exo 2", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Orbitron", sans-serif;
+}
+
+.font-mono {
+  font-family: "Orbitron", monospace;
+}

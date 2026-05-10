@@ -1,0 +1,368 @@
+<Page x:Class="AtlasAI.UI.Pages.FuturisticSecurityDashboard"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      mc:Ignorable="d"
+      d:DesignHeight="700" d:DesignWidth="900"
+      Background="#0A0C14"
+      Loaded="Page_Loaded"
+      Unloaded="Page_Unloaded">
+
+    <Page.Resources>
+        <SolidColorBrush x:Key="CyanBrush" Color="#22D3EE"/>
+        <SolidColorBrush x:Key="VioletBrush" Color="#8B5CF6"/>
+        <SolidColorBrush x:Key="GreenBrush" Color="#22C55E"/>
+        <SolidColorBrush x:Key="WarningBrush" Color="#FBB724"/>
+        <SolidColorBrush x:Key="CardBg" Color="#B312121A"/>
+        <SolidColorBrush x:Key="DeepBg" Color="#0A0C14"/>
+        <SolidColorBrush x:Key="BorderCyan" Color="#3322D3EE"/>
+        
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#CC22D3EE"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        
+        <Style x:Key="SmallLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#666"/>
+            <Setter Property="FontSize" Value="8"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#000000" Offset="0"/>
+                <GradientStop Color="#2B0000" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        
+        <!-- Scanlines -->
+        <Rectangle Opacity="0.03" IsHitTestVisible="False">
+            <Rectangle.Fill>
+                <DrawingBrush TileMode="Tile" Viewport="0,0,4,4" ViewportUnits="Absolute">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing Brush="#22D3EE">
+                            <GeometryDrawing.Geometry>
+                                <RectangleGeometry Rect="0,2,4,1"/>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+            <!-- HEADER -->
+            <Border Grid.Row="0" Background="#CC0A0C14" BorderBrush="#4D22D3EE" BorderThickness="0,0,0,1">
+                <Border.Effect>
+                    <DropShadowEffect Color="#22D3EE" BlurRadius="10" ShadowDepth="0" Opacity="0.3"/>
+                </Border.Effect>
+                <Grid Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="◆" Foreground="{StaticResource CyanBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <TextBlock Text="ATLAS AI SECURITY AGENT" Foreground="{StaticResource CyanBrush}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock Text="◆" Foreground="{StaticResource CyanBrush}" FontSize="12" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                            <Ellipse x:Name="Dot1" Width="8" Height="8" Fill="{StaticResource CyanBrush}" Margin="0,0,4,0" Opacity="0.5"/>
+                            <Ellipse x:Name="Dot2" Width="8" Height="8" Fill="{StaticResource CyanBrush}" Margin="0,0,4,0" Opacity="0.5"/>
+                            <Ellipse x:Name="Dot3" Width="8" Height="8" Fill="{StaticResource CyanBrush}" Opacity="0.5"/>
+                        </StackPanel>
+                        
+                        <Border Background="#1A22C55E" BorderBrush="#4D22C55E" BorderThickness="1" CornerRadius="12" Padding="12,4">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse x:Name="ThreatDot" Width="6" Height="6" Fill="{StaticResource GreenBrush}" Margin="0,0,8,0"/>
+                                <TextBlock Text="THREAT_LEVEL: 0x00" Foreground="{StaticResource GreenBrush}" FontSize="10" FontFamily="Consolas"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- AI DECISION PIPELINE -->
+            <Border Grid.Row="1" Margin="16,8,16,0" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <StackPanel>
+                    <TextBlock Text="AI DECISION PIPELINE" Style="{StaticResource CardTitle}"/>
+                    <ItemsControl x:Name="PipelineSteps">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <TextBlock x:Name="PipelineStatus" Text="AUTONOMOUS PROCESSING CYCLE ACTIVE" Foreground="#B322D3EE" FontSize="9" FontFamily="Consolas" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+
+            <!-- MAIN CONTENT - 2 Column (no left dials) -->
+            <Grid Grid.Row="2" Margin="16,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- CENTER: Scanner + System Log -->
+                <Grid Grid.Column="0" Margin="0,0,8,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="180"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Diagnostic Scanner -->
+                    <Border Grid.Row="0" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8">
+                        <Grid>
+                            <!-- Corner brackets -->
+                            <Path Data="M0,20 L0,0 L20,0" Stroke="#6622D3EE" StrokeThickness="2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"/>
+                            <Path Data="M0,0 L20,0 L20,20" Stroke="#6622D3EE" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"/>
+                            <Path Data="M0,0 L0,20 L20,20" Stroke="#6622D3EE" StrokeThickness="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8"/>
+                            <Path Data="M0,20 L20,20 L20,0" Stroke="#6622D3EE" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8"/>
+                            
+                            <!-- Scanner visualization -->
+                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- Outer rotating ring -->
+                                <Ellipse x:Name="OuterRing" Width="280" Height="280" Stroke="#4D22D3EE" StrokeThickness="2" StrokeDashArray="4,2"/>
+                                
+                                <!-- Concentric rings -->
+                                <Ellipse Width="240" Height="240" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                <Ellipse Width="200" Height="200" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                <Ellipse Width="160" Height="160" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                
+                                <!-- Inner core -->
+                                <Border Width="140" Height="140" CornerRadius="70" Background="#E60A0C14" BorderBrush="#4D22D3EE" BorderThickness="1">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#22D3EE" BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+                                    </Border.Effect>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock x:Name="ScanIcon" Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="32" Foreground="{StaticResource CyanBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="ProgressText" Text="47%" Foreground="{StaticResource CyanBrush}" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                        <TextBlock Text="ANALYZING" Foreground="#CC22D3EE" FontSize="10" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="COGNITIVE_SUBSTRATE_SCAN" Foreground="#8022D3EE" FontSize="8" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- System Log -->
+                    <Border Grid.Row="1" Margin="0,8,0,0" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8" Padding="12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="SYSTEM LOG" Style="{StaticResource CardTitle}"/>
+                            <ScrollViewer Grid.Row="1" x:Name="LogScroller" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="LogEntries">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                <TextBlock Text="{Binding Icon}" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{Binding IconColor}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock FontFamily="Consolas" FontSize="11">
+                                                    <Run Text="[" Foreground="#6622D3EE"/><Run Text="{Binding Timestamp}" Foreground="#6622D3EE"/><Run Text="]" Foreground="#6622D3EE"/>
+                                                    <Run Text=" [" Foreground="#808B5CF6"/><Run Text="{Binding Tag}" Foreground="#808B5CF6"/><Run Text="]" Foreground="#808B5CF6"/>
+                                                    <Run Text=" "/><Run Text="{Binding Message}" Foreground="{Binding MessageColor}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- RIGHT PANEL -->
+                <StackPanel Grid.Column="1">
+                    <!-- Security Mode Selector -->
+                    <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="SECURITY POSTURE" Style="{StaticResource CardTitle}"/>
+                            <RadioButton x:Name="ModePassive" GroupName="SecurityMode" Content="PASSIVE MONITOR" Foreground="{StaticResource CyanBrush}" FontSize="9" FontFamily="Consolas" Margin="0,4"/>
+                            <RadioButton x:Name="ModeActive" GroupName="SecurityMode" Content="ACTIVE DEFENSE" Foreground="{StaticResource GreenBrush}" FontSize="9" FontFamily="Consolas" Margin="0,4" IsChecked="True"/>
+                            <RadioButton x:Name="ModeLockdown" GroupName="SecurityMode" Content="LOCKDOWN" Foreground="{StaticResource WarningBrush}" FontSize="9" FontFamily="Consolas" Margin="0,4"/>
+                            <RadioButton x:Name="ModeAutonomous" GroupName="SecurityMode" Content="AUTONOMOUS [DISABLED]" Foreground="#666" FontSize="9" FontFamily="Consolas" Margin="0,4" IsEnabled="False"/>
+                            <TextBlock x:Name="ModeStatus" Text="MODE: ACTIVE DEFENSE" Foreground="{StaticResource GreenBrush}" FontSize="9" FontFamily="Consolas" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Threat Radar -->
+                    <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="PREDICTIVE THREAT ANALYSIS" Style="{StaticResource CardTitle}"/>
+                            <Canvas x:Name="RadarCanvas" Width="140" Height="140" HorizontalAlignment="Center">
+                                <!-- Radar circles -->
+                                <Ellipse Width="140" Height="140" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                <Ellipse Width="100" Height="100" Stroke="#2622D3EE" StrokeThickness="1" Canvas.Left="20" Canvas.Top="20"/>
+                                <Ellipse Width="60" Height="60" Stroke="#2622D3EE" StrokeThickness="1" Canvas.Left="40" Canvas.Top="40"/>
+                                <Ellipse Width="20" Height="20" Stroke="#2622D3EE" StrokeThickness="1" Canvas.Left="60" Canvas.Top="60"/>
+                                <!-- Crosshairs -->
+                                <Line X1="70" Y1="0" X2="70" Y2="140" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                <Line X1="0" Y1="70" X2="140" Y2="70" Stroke="#2622D3EE" StrokeThickness="1"/>
+                                <!-- Sweep line -->
+                                <Line x:Name="RadarSweep" X1="70" Y1="70" X2="70" Y2="0" Stroke="#CC22D3EE" StrokeThickness="2">
+                                    <Line.Effect>
+                                        <DropShadowEffect Color="#22D3EE" BlurRadius="4" ShadowDepth="0"/>
+                                    </Line.Effect>
+                                </Line>
+                                <!-- Center dot -->
+                                <Ellipse Width="6" Height="6" Fill="{StaticResource CyanBrush}" Canvas.Left="67" Canvas.Top="67"/>
+                            </Canvas>
+                            <StackPanel HorizontalAlignment="Center" Margin="0,8,0,0">
+                                <TextBlock Text="THREAT LEVEL" Foreground="#666" FontSize="8" HorizontalAlignment="Center"/>
+                                <TextBlock Text="0" Foreground="{StaticResource GreenBrush}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                                <Ellipse x:Name="RadarStatusDot" Width="6" Height="6" Fill="{StaticResource GreenBrush}" Margin="0,0,6,0"/>
+                                <TextBlock Text="ALL CLEAR – RUNNING" Foreground="{StaticResource GreenBrush}" FontSize="9" FontFamily="Consolas"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Status Modules -->
+                    <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderCyan}" BorderThickness="1" CornerRadius="8" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="SYSTEM RESOURCE USAGE" Style="{StaticResource CardTitle}"/>
+                            
+                            <!-- CPU -->
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="CPU" Foreground="#94A3B8" FontSize="10"/>
+                                <Border Grid.Column="1" Height="8" Background="#1A22D3EE" CornerRadius="4">
+                                    <Border x:Name="CpuBar" Width="30" Height="8" Background="{StaticResource CyanBrush}" CornerRadius="4" HorizontalAlignment="Left"/>
+                                </Border>
+                                <TextBlock x:Name="CpuText" Grid.Column="2" Text="18%" Foreground="{StaticResource CyanBrush}" FontSize="10" HorizontalAlignment="Right"/>
+                            </Grid>
+                            
+                            <!-- RAM -->
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="RAM" Foreground="#94A3B8" FontSize="10"/>
+                                <Border Grid.Column="1" Height="8" Background="#1A8B5CF6" CornerRadius="4">
+                                    <Border x:Name="RamBar" Width="60" Height="8" Background="{StaticResource VioletBrush}" CornerRadius="4" HorizontalAlignment="Left"/>
+                                </Border>
+                                <TextBlock x:Name="RamText" Grid.Column="2" Text="45%" Foreground="{StaticResource VioletBrush}" FontSize="10" HorizontalAlignment="Right"/>
+                            </Grid>
+                            
+                            <!-- GPU -->
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="50"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="GPU" Foreground="#94A3B8" FontSize="10"/>
+                                <Border Grid.Column="1" Height="8" Background="#1A22C55E" CornerRadius="4">
+                                    <Border x:Name="GpuBar" Width="90" Height="8" Background="{StaticResource GreenBrush}" CornerRadius="4" HorizontalAlignment="Left"/>
+                                </Border>
+                                <TextBlock x:Name="GpuText" Grid.Column="2" Text="66%" Foreground="{StaticResource GreenBrush}" FontSize="10" HorizontalAlignment="Right"/>
+                            </Grid>
+                            
+                            <!-- Micro metrics -->
+                            <UniformGrid Rows="2" Columns="2" Margin="0,12,0,0">
+                                <Border Background="#0A0C14" BorderBrush="#1A22D3EE" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,4,4">
+                                    <StackPanel>
+                                        <TextBlock Text="CORE_TEMP" Style="{StaticResource SmallLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="62" Foreground="{StaticResource CyanBrush}" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="°C" Foreground="#666" FontSize="8" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#0A0C14" BorderBrush="#1A22D3EE" BorderThickness="1" CornerRadius="4" Padding="8" Margin="4,0,0,4">
+                                    <StackPanel>
+                                        <TextBlock Text="FAN_DELTA" Style="{StaticResource SmallLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="1420" Foreground="{StaticResource VioletBrush}" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="rpm" Foreground="#666" FontSize="8" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#0A0C14" BorderBrush="#1A22D3EE" BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,4,4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="PWR_DRAW" Style="{StaticResource SmallLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="185" Foreground="{StaticResource GreenBrush}" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="W" Foreground="#666" FontSize="8" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#0A0C14" BorderBrush="#1A22D3EE" BorderThickness="1" CornerRadius="4" Padding="8" Margin="4,4,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="CLK_FREQ" Style="{StaticResource SmallLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="3.8" Foreground="{StaticResource CyanBrush}" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock Text="GHz" Foreground="#666" FontSize="8" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- STATUS BAR -->
+            <Border Grid.Row="3" Background="#CC0A0C14" BorderBrush="#4D22D3EE" BorderThickness="0,1,0,0">
+                <Grid Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="StatusText" Text="COGNITIVE_INTEGRITY_SCAN: ACTIVE" Foreground="{StaticResource CyanBrush}" FontSize="11" FontFamily="Consolas"/>
+                        <StackPanel Orientation="Horizontal" Margin="16,0,0,0">
+                            <Rectangle x:Name="Tick1" Width="2" Height="16" Fill="#4D22D3EE" Margin="1,0"/>
+                            <Rectangle x:Name="Tick2" Width="2" Height="16" Fill="#4D22D3EE" Margin="1,0"/>
+                            <Rectangle x:Name="Tick3" Width="2" Height="16" Fill="#4D22D3EE" Margin="1,0"/>
+                            <Rectangle x:Name="Tick4" Width="2" Height="16" Fill="#4D22D3EE" Margin="1,0"/>
+                            <Rectangle x:Name="Tick5" Width="2" Height="16" Fill="{StaticResource CyanBrush}" Margin="1,0"/>
+                            <Rectangle x:Name="Tick6" Width="2" Height="16" Fill="{StaticResource CyanBrush}" Margin="1,0"/>
+                            <Rectangle x:Name="Tick7" Width="2" Height="16" Fill="{StaticResource CyanBrush}" Margin="1,0"/>
+                            <Rectangle x:Name="Tick8" Width="2" Height="16" Fill="{StaticResource CyanBrush}" Margin="1,0"/>
+                            <Rectangle x:Name="Tick9" Width="2" Height="16" Fill="{StaticResource CyanBrush}" Margin="1,0"/>
+                            <Rectangle x:Name="Tick10" Width="2" Height="16" Fill="#4D22D3EE" Margin="1,0"/>
+                        </StackPanel>
+                        <TextBlock x:Name="HexProgress" Text="0x2F" Foreground="{StaticResource VioletBrush}" FontSize="11" FontFamily="Consolas" Margin="16,0,0,0"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="AI_HEARTBEAT" Foreground="#444" FontSize="8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Canvas Width="64" Height="24">
+                            <Polyline x:Name="HeartbeatLine" Points="0,12 10,12 14,6 18,18 22,12 26,12 30,8 34,16 38,12 48,12 52,6 56,18 60,12 64,12" 
+                                      Stroke="#998B5CF6" StrokeThickness="2" StrokeLineJoin="Round"/>
+                        </Canvas>
+                        <Ellipse x:Name="HeartbeatDot" Width="8" Height="8" Fill="{StaticResource VioletBrush}" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

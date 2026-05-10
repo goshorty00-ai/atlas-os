@@ -1,0 +1,813 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:core="clr-namespace:AtlasAI.Core">
+
+    <!--
+        AI Chat (Jarvis glass) theme resources
+        Keep glow subtle to avoid the "white bloom everywhere" problem.
+    -->
+
+    <!-- Brushes (names requested) -->
+    <SolidColorBrush x:Key="Brush.AccentCyan" Color="{StaticResource AtlasCyan}"/>
+    <SolidColorBrush x:Key="Brush.AccentOrange" Color="{StaticResource AtlasOrangeDim}"/>
+
+    <SolidColorBrush x:Key="Brush.GlassBg" Color="#1A0F172A"/>
+    <SolidColorBrush x:Key="Brush.GlassBgStrong" Color="#260F172A"/>
+
+    <LinearGradientBrush x:Key="Brush.ChatInputPillBg" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#0B0F14" Offset="0"/>
+        <GradientStop Color="#0B1220" Offset="0.55"/>
+        <GradientStop Color="#071018" Offset="1"/>
+    </LinearGradientBrush>
+
+    <DropShadowEffect x:Key="Effect.GlowCyanInput" Color="#22D3EE" BlurRadius="26" ShadowDepth="0" Opacity="0.62"/>
+
+    <!-- Bubble glass with subtle inner highlight (top-left brighter, bottom-right darker) -->
+    <LinearGradientBrush x:Key="Brush.GlassBubble" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#1AFFFFFF" Offset="0"/>
+        <GradientStop Color="#990F1E2A" Offset="0.18"/>
+        <GradientStop Color="#880B1724" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="Brush.GlassBubbleUser" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#14FFFFFF" Offset="0"/>
+        <GradientStop Color="#99161B22" Offset="0.22"/>
+        <GradientStop Color="#88161B22" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Effects (names requested) -->
+    <DropShadowEffect x:Key="Effect.GlowCyanSubtle" Color="#00E5FF" BlurRadius="8" ShadowDepth="0" Opacity="0.25"/>
+    <DropShadowEffect x:Key="Effect.GlowOrangeSubtle" Color="#FF8C42" BlurRadius="8" ShadowDepth="0" Opacity="0.22"/>
+
+    <!-- Text (no blur glow) -->
+    <Style x:Key="NeonOutlineText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#F2F6FA"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Styles (names requested) -->
+    <Style x:Key="Style.IconButtonPill" TargetType="Button">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="10">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#141E293B"/>
+                            <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#241E293B"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <SolidColorBrush x:Key="PresenceBrush.Cyan" Color="#22D3EE"/>
+    <SolidColorBrush x:Key="PresenceBrush.Purple" Color="#A855F7"/>
+    <SolidColorBrush x:Key="PresenceBrush.Orange" Color="#F97316"/>
+    <SolidColorBrush x:Key="PresenceBrush.Green" Color="#22C55E"/>
+    <SolidColorBrush x:Key="PresenceBrush.Red" Color="#EF4444"/>
+
+    <Style x:Key="NeonInputBorderStyle" TargetType="ContentControl">
+        <Setter Property="Background" Value="{StaticResource Brush.ChatInputPillBg}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1.5"
+                            CornerRadius="20"
+                            Padding="10,6">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="Stroke" Color="#22D3EE" Opacity="0.9"/>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="18" ShadowDepth="0" Opacity="0.28"/>
+                        </Border.Effect>
+                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Idle}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="IdlePulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" To="18" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.18"
+                                                         To="0.30"
+                                                         Duration="0:0:2.8">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="IdlePulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Listening}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ListeningPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.28"
+                                                         To="0.56"
+                                                         Duration="0:0:1.6">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="18"
+                                                         To="24"
+                                                         Duration="0:0:1.6">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ListeningPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Thinking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ThinkingWave">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="16"
+                                                         To="24"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.20"
+                                                         To="0.40"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ThinkingWave"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Typing}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TypingFlickerSoft">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.18"
+                                                         To="0.28"
+                                                         Duration="0:0:0.9">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TypingFlickerSoft"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Talking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TalkingBreath">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.30"
+                                                         To="0.46"
+                                                         Duration="0:0:2.0">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="18"
+                                                         To="24"
+                                                         Duration="0:0:2.0">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TalkingBreath"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Working}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="WorkingPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.18"
+                                                         To="0.30"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="WorkingPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Error}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ErrorBlink">
+                                    <Storyboard FillBehavior="HoldEnd">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)">
+                                            <EasingDoubleKeyFrame Value="0.22" KeyTime="0:0:0"/>
+                                            <EasingDoubleKeyFrame Value="0.60" KeyTime="0:0:0.18">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.22" KeyTime="0:0:0.36">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.55" KeyTime="0:0:0.54">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.24" KeyTime="0:0:0.9">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ErrorBlink"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Style.ChatInputPill" TargetType="ContentControl" BasedOn="{StaticResource NeonInputBorderStyle}" />
+
+    <Style x:Key="Style.ChatBubbleAtlas" TargetType="ContentControl">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Bd" CornerRadius="16"
+                            Padding="20,20"
+                            MinHeight="60"
+                            BorderThickness="1.2"
+                            Background="{StaticResource Brush.GlassBubble}">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="Stroke" Color="#22D3EE" Opacity="0.9"/>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="16" ShadowDepth="0" Opacity="0.35"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Idle}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="IdlePulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.16"
+                                                         To="0.26"
+                                                         Duration="0:0:2.8">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="IdlePulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Listening}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ListeningPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.20"
+                                                         To="0.38"
+                                                         Duration="0:0:1.6">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ListeningPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Thinking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ThinkingWave">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="14"
+                                                         To="20"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.14"
+                                                         To="0.30"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ThinkingWave"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Typing}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TypingFlickerSoft">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.12"
+                                                         To="0.22"
+                                                         Duration="0:0:0.9">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TypingFlickerSoft"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Talking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TalkingBreath">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.20"
+                                                         To="0.34"
+                                                         Duration="0:0:2.0">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TalkingBreath"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Working}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="WorkingPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.14"
+                                                         To="0.26"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="WorkingPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Error}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ErrorBlink">
+                                    <Storyboard FillBehavior="HoldEnd">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)">
+                                            <EasingDoubleKeyFrame Value="0.18" KeyTime="0:0:0"/>
+                                            <EasingDoubleKeyFrame Value="0.50" KeyTime="0:0:0.18">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.18" KeyTime="0:0:0.36">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.24" KeyTime="0:0:0.9">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ErrorBlink"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Style.IconToggleButtonPill" TargetType="ToggleButton">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="10">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#141E293B"/>
+                            <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#241E293B"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1A0F172A"/>
+                            <Setter Property="Foreground" Value="{StaticResource Brush.AccentCyan}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Style.ChatBubbleUser" TargetType="ContentControl">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Bd" CornerRadius="16"
+                            Padding="20,20"
+                            MinHeight="60"
+                            BorderThickness="1.2"
+                            Background="{StaticResource Brush.GlassBubbleUser}">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="Stroke" Color="#F97316" Opacity="0.9"/>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#F97316" BlurRadius="14" ShadowDepth="0" Opacity="0.16"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Working}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="WorkingPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.14"
+                                                         To="0.24"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="WorkingPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding DataContext.CurrentMode, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static core:PresenceMode.Error}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="UserErrorSet">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.16" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="UserErrorSet"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NeonStatusPillStyle" TargetType="ContentControl">
+        <Setter Property="Background" Value="#1A0B0F14"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10,4">
+                        <Border.BorderBrush>
+                            <SolidColorBrush x:Name="Stroke" Color="#22D3EE" Opacity="0.55"/>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="14" ShadowDepth="0" Opacity="0.18"/>
+                        </Border.Effect>
+                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Listening}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillListening">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.18" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillListening"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Thinking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillThinking">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.18" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillThinking"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Typing}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillTyping">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.18" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillTyping"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Talking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillTalking">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.18" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillTalking"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Working}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillWorking">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.18" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillWorking"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Error}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="PillError">
+                                    <Storyboard>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Bd" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)" To="0.22" Duration="0:0:0"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="PillError"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Additional global overrides for popups/scrollbars to avoid white surfaces -->
+    <Style TargetType="Popup">
+        <Setter Property="AllowsTransparency" Value="False"/>
+        <Setter Property="PopupAnimation" Value="Fade"/>
+    </Style>
+
+    <!-- Readable menus / dropdowns (override any washed-out surfaces) -->
+    <Style x:Key="Style.GlassContextMenu" TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Background" Value="#CC0B0F14"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="BorderBrush" Value="#331E293B"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="12"
+                            Padding="{TemplateBinding Padding}">
+                        <ScrollViewer CanContentScroll="True">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ContextMenu" BasedOn="{StaticResource Style.GlassContextMenu}" />
+
+    <Style TargetType="MenuItem">
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Style.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="#1422D3EE"/>
+                <Setter Property="BorderBrush" Value="#3322D3EE"/>
+                <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{StaticResource AtlasTextDisabledBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="ScrollViewer">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+    </Style>
+
+    <Style TargetType="Thumb">
+        <Setter Property="Background" Value="#331E293B"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="6"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="10"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="Transparent">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.Thumb>
+                                <Thumb/>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

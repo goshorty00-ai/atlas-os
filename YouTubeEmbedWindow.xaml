@@ -1,0 +1,54 @@
+<Window x:Class="AtlasAI.YouTubeEmbedWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Trailer"
+        Width="1200"
+        Height="720"
+        WindowStartupLocation="CenterOwner"
+        Background="#0A0E14"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResize"
+        ShowInTaskbar="True"
+        KeyDown="Window_KeyDown">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#66000000" MouseLeftButtonDown="TopBar_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="TitleText"
+                           Text="TRAILER"
+                           Foreground="{DynamicResource AtlasTextPrimaryBrush}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"
+                           Opacity="0.85"/>
+
+                <Button Grid.Column="1"
+                        Click="CloseButton_Click"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Width="40"
+                        Height="40">
+                    <TextBlock Text="✕"
+                               Foreground="{DynamicResource AtlasCyanBrush}"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <wv2:WebView2 x:Name="Browser" Grid.Row="1"/>
+    </Grid>
+</Window>

@@ -1,0 +1,194 @@
+<Window x:Class="AtlasAI.UI.AtlasDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Atlas"
+        Height="250" Width="500"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Icon to Unicode converter -->
+        <Style x:Key="IconText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="40"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,20,0"/>
+        </Style>
+
+        <!-- Button styles -->
+        <Style x:Key="DialogButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource NeoGlassElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource NeoTextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource NeoBorderGlass}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="24,10"/>
+            <Setter Property="FontFamily" Value="{StaticResource NeoFontFamily}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource NeoGlassSurface}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource NeoBorderNeon}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource NeoGlass14}"/>
+                            </Trigger>
+                            <Trigger Property="IsDefault" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#3300e5ff" Offset="0"/>
+                                            <GradientStop Color="#337c3aed" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource NeoBorderActive}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Glass overlay with blur effect -->
+    <Border Background="{StaticResource NeoBgDeep}"
+            BorderBrush="{StaticResource NeoBorderActive}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="0">
+        <Border.Effect>
+            <DropShadowEffect Color="#00e5ff" BlurRadius="30" ShadowDepth="0" Opacity="0.4"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="70"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar with close button -->
+            <Border Grid.Row="0" 
+                    Background="{StaticResource NeoGlass12}"
+                    BorderBrush="{StaticResource NeoBorderGlass}"
+                    BorderThickness="0,0,0,1"
+                    CornerRadius="12,12,0,0"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid>
+                    <TextBlock x:Name="TitleText"
+                               Text="Atlas"
+                               FontFamily="{StaticResource NeoFontFamily}"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource NeoTextPrimary}"
+                               VerticalAlignment="Center"
+                               Margin="20,0,0,0"/>
+
+                    <!-- Close button -->
+                    <Button Content="✕"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Width="40"
+                            Height="40"
+                            Margin="0,0,5,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="{StaticResource NeoTextSecondary}"
+                            FontSize="20"
+                            Cursor="Hand"
+                            Click="CloseButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="border" Background="Transparent" CornerRadius="6">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="border" Property="Background" Value="#20FFFFFF"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource NeoTextPrimary}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Content area with icon and message -->
+            <Grid Grid.Row="1" Margin="30,20,30,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Icon -->
+                <TextBlock x:Name="IconText"
+                           Grid.Column="0"
+                           Style="{StaticResource IconText}"
+                           Visibility="Collapsed"/>
+
+                <!-- Message -->
+                <ScrollViewer Grid.Column="1" 
+                            VerticalScrollBarVisibility="Auto"
+                            HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock x:Name="MessageText"
+                               Text="Message"
+                               FontFamily="{StaticResource NeoFontFamily}"
+                               FontSize="14"
+                               Foreground="{StaticResource NeoTextSecondary}"
+                               TextWrapping="Wrap"
+                               LineHeight="22"/>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- "Don't show again" checkbox -->
+            <CheckBox x:Name="DontShowAgainCheckbox"
+                      Grid.Row="2"
+                      Content="Don't show this again"
+                      FontFamily="{StaticResource NeoFontFamily}"
+                      FontSize="12"
+                      Foreground="{StaticResource NeoTextTertiary}"
+                      Margin="30,0,30,10"
+                      Visibility="Collapsed"/>
+
+            <!-- Buttons -->
+            <StackPanel x:Name="ButtonPanel"
+                        Grid.Row="3"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Margin="30,0,30,20">
+                <!-- Buttons will be added dynamically -->
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

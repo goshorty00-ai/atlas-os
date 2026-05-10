@@ -1,0 +1,320 @@
+<UserControl x:Class="AtlasAI.UI.InspectorPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AtlasAI.UI"
+             Width="300">
+    
+    <UserControl.Resources>
+        <!-- Glassmorphism Card Style -->
+        <Style x:Key="GlassCard" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1a1f2e" Offset="0"/>
+                        <GradientStop Color="#141922" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#2a3142"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#00d4aa" BlurRadius="8" ShadowDepth="0" Opacity="0.15"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Section Header Style -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#00d4aa"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        
+        <!-- Label Style -->
+        <Style x:Key="LabelText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#6e7681"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        
+        <!-- Value Style -->
+        <Style x:Key="ValueText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#e6edf3"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        
+        <!-- Cyan Slider Style -->
+        <Style x:Key="CyanSlider" TargetType="Slider">
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="1"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="0,4,0,12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Border Height="4" CornerRadius="2" Background="#21262d" VerticalAlignment="Center"/>
+                            <Border Height="4" CornerRadius="2" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                    Width="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static local:SliderWidthConverter.Instance}}">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Color="#00d4aa" Offset="0"/>
+                                        <GradientStop Color="#00d4ff" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Track x:Name="PART_Track">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="16" Height="16" Fill="#00d4aa" Stroke="#0d1117" StrokeThickness="2">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect Color="#00d4aa" BlurRadius="6" ShadowDepth="0" Opacity="0.5"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Toggle Switch Style -->
+        <Style x:Key="CyanToggle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Grid>
+                            <Border x:Name="Track" CornerRadius="12" Background="#21262d" BorderBrush="#30363d" BorderThickness="1"/>
+                            <Ellipse x:Name="Thumb" Width="18" Height="18" Fill="#8b949e" HorizontalAlignment="Left" Margin="3,0,0,0">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform x:Name="ThumbTranslate" X="0"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="#00d4aa"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#00d4aa"/>
+                                <Setter TargetName="Thumb" Property="Fill" Value="White"/>
+                                <Setter TargetName="Thumb" Property="Margin" Value="23,0,0,0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Scan Button Style -->
+        <Style x:Key="ScanButton" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#00d4aa" Offset="0"/>
+                        <GradientStop Color="#00a8cc" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="#0d1117"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#00d4aa" BlurRadius="12" ShadowDepth="0" Opacity="0.4"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <Border Background="#0d1117" BorderBrush="#1e2530" BorderThickness="1,0,0,0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
+            <StackPanel>
+                
+                <!-- Header -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="INSPECTOR" FontSize="11" FontWeight="SemiBold" 
+                               Foreground="#6e7681" VerticalAlignment="Center"/>
+                    <Button x:Name="CloseBtn" Grid.Column="1" Content="✕" Click="CloseBtn_Click"
+                            Width="28" Height="28" Background="Transparent" Foreground="#8b949e"
+                            BorderThickness="0" Cursor="Hand" FontSize="12"/>
+                </Grid>
+                
+                <!-- ═══════════════════════════════════════════════════════════════
+                     ACTIVE CONTEXT SECTION
+                ═══════════════════════════════════════════════════════════════ -->
+                <Border Style="{StaticResource GlassCard}">
+                    <StackPanel>
+                        <TextBlock Text="ACTIVE CONTEXT" Style="{StaticResource SectionHeader}"/>
+                        
+                        <!-- App Icon and Name Row -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- App Icon -->
+                            <Border Width="36" Height="36" CornerRadius="8" Background="#21262d" Margin="0,0,10,0">
+                                <TextBlock x:Name="AppIcon" Text="📁" FontSize="18" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            
+                            <!-- App Name and Process -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="AppNameText" Text="File Explorer" 
+                                           Style="{StaticResource ValueText}" FontWeight="Medium"/>
+                                <TextBlock x:Name="ProcessNameText" Text="explorer.exe" 
+                                           FontSize="10" Foreground="#6e7681"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- File Path -->
+                        <TextBlock Text="Path" Style="{StaticResource LabelText}"/>
+                        <TextBlock x:Name="FilePathText" Text="C:\Users\..." 
+                                   Style="{StaticResource ValueText}" FontSize="11"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                   ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                        
+                        <!-- Window Title -->
+                        <TextBlock Text="Window" Style="{StaticResource LabelText}" Margin="0,8,0,4"/>
+                        <TextBlock x:Name="WindowTitleText" Text="Downloads" 
+                                   Style="{StaticResource ValueText}" FontSize="11"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- ═══════════════════════════════════════════════════════════════
+                     SECURITY SCAN SECTION
+                ═══════════════════════════════════════════════════════════════ -->
+                <Border Style="{StaticResource GlassCard}">
+                    <StackPanel>
+                        <TextBlock Text="SECURITY SCAN" Style="{StaticResource SectionHeader}"/>
+                        
+                        <!-- Status Badge -->
+                        <Border x:Name="SecurityBadge" CornerRadius="6" Padding="10,6" 
+                                HorizontalAlignment="Left" Margin="0,0,0,12">
+                            <Border.Background>
+                                <SolidColorBrush Color="#3fb95020"/>
+                            </Border.Background>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="#3fb950" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="SecurityStatusText" Text="SAFE" FontSize="12" 
+                                           FontWeight="SemiBold" Foreground="#3fb950"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Last Scan -->
+                        <TextBlock Text="Last Scan" Style="{StaticResource LabelText}"/>
+                        <TextBlock x:Name="LastScanText" Text="Today, 2:34 PM" 
+                                   Style="{StaticResource ValueText}" Margin="0,0,0,8"/>
+                        
+                        <!-- Definitions Updated -->
+                        <TextBlock Text="Definitions Updated" Style="{StaticResource LabelText}"/>
+                        <TextBlock x:Name="DefinitionsText" Text="Up to date" 
+                                   Style="{StaticResource ValueText}" Margin="0,0,0,12"/>
+                        
+                        <!-- Scan Now Button -->
+                        <Button x:Name="ScanNowBtn" Content="🔍 Scan Now" 
+                                Style="{StaticResource ScanButton}" Click="ScanNowBtn_Click"
+                                HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- ═══════════════════════════════════════════════════════════════
+                     TEXT-TO-SPEECH CONTROLS SECTION
+                ═══════════════════════════════════════════════════════════════ -->
+                <Border Style="{StaticResource GlassCard}">
+                    <StackPanel>
+                        <TextBlock Text="TEXT-TO-SPEECH CONTROLS" Style="{StaticResource SectionHeader}"/>
+                        
+                        <!-- Stability Slider -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Stability" Style="{StaticResource LabelText}"/>
+                            <TextBlock x:Name="StabilityValueText" Grid.Column="1" Text="0.90" 
+                                       FontSize="10" Foreground="#00d4aa"/>
+                        </Grid>
+                        <Slider x:Name="StabilitySlider" Value="0.90" Minimum="0" Maximum="1"
+                                ValueChanged="StabilitySlider_ValueChanged"/>
+                        
+                        <!-- Similarity Slider -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Similarity" Style="{StaticResource LabelText}"/>
+                            <TextBlock x:Name="SimilarityValueText" Grid.Column="1" Text="0.80" 
+                                       FontSize="10" Foreground="#00d4aa"/>
+                        </Grid>
+                        <Slider x:Name="SimilaritySlider" Value="0.80" Minimum="0" Maximum="1"
+                                ValueChanged="SimilaritySlider_ValueChanged"/>
+                        
+                        <!-- Style Slider -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Style" Style="{StaticResource LabelText}"/>
+                            <TextBlock x:Name="StyleValueText" Grid.Column="1" Text="0.05" 
+                                       FontSize="10" Foreground="#00d4aa"/>
+                        </Grid>
+                        <Slider x:Name="StyleSlider" Value="0.05" Minimum="0" Maximum="1"
+                                ValueChanged="StyleSlider_ValueChanged"/>
+                        
+                        <!-- Speaker Boost Toggle -->
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Speaker Boost" Style="{StaticResource ValueText}" 
+                                       VerticalAlignment="Center"/>
+                            <ToggleButton x:Name="SpeakerBoostToggle" Grid.Column="1" 
+                                          IsChecked="True" Style="{StaticResource CyanToggle}"
+                                          Click="SpeakerBoostToggle_Click"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

@@ -1,0 +1,432 @@
+<Window x:Class="AtlasAI.Conversation.UI.OnboardingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Welcome to Atlas AI" Height="650" Width="500"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="NoResize" ShowInTaskbar="False">
+    
+    <Border CornerRadius="16" Background="#0d1117" BorderBrush="#30363d" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect Color="#00d4aa" BlurRadius="30" ShadowDepth="0" Opacity="0.2"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Close Button - Top Right -->
+            <Button x:Name="CloseBtn" Content="✕" Click="Close_Click" 
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,8,8,0" Width="32" Height="32" Cursor="Hand"
+                    Background="Transparent" Foreground="#8b949e" BorderThickness="0"
+                    FontSize="14" FontWeight="Bold" Panel.ZIndex="100">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                CornerRadius="8" Width="32" Height="32">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#f85149"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            
+            <!-- Header -->
+            <Border Grid.Row="0" Padding="24,20" Background="#161b22" CornerRadius="16,16,0,0">
+                <StackPanel>
+                    <!-- Logo -->
+                    <Border Width="64" Height="64" CornerRadius="16" Margin="0,0,0,16"
+                            HorizontalAlignment="Center">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#3B0000" Offset="0"/>
+                                <GradientStop Color="#000000" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#00d4aa" BlurRadius="20" ShadowDepth="0" Opacity="0.5"/>
+                        </Border.Effect>
+                        <TextBlock Text="⚡" FontSize="32" HorizontalAlignment="Center" 
+                                   VerticalAlignment="Center" Foreground="#0d1117"/>
+                    </Border>
+                    
+                    <TextBlock Text="Welcome to Atlas AI" FontSize="24" FontWeight="SemiBold" 
+                               Foreground="#e6edf3" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Your intelligent desktop assistant" FontSize="14" 
+                               Foreground="#8b949e" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+            
+            <!-- Content - Step Pages -->
+            <Grid Grid.Row="1" Margin="24,20">
+                <!-- Step 1: Name -->
+                <StackPanel x:Name="Step1Panel" Visibility="Visible">
+                    <TextBlock Text="What should I call you?" FontSize="18" FontWeight="Medium" 
+                               Foreground="#e6edf3" Margin="0,0,0,8"/>
+                    <TextBlock Text="I'll use this to personalize our conversations." 
+                               FontSize="13" Foreground="#8b949e" Margin="0,0,0,16"/>
+                    
+                    <TextBox x:Name="NameInput" FontSize="16" Padding="14,12"
+                             Background="#21262d" Foreground="#e6edf3" 
+                             BorderBrush="#30363d" BorderThickness="1"
+                             CaretBrush="#00d4aa">
+                        <TextBox.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </TextBox.Resources>
+                    </TextBox>
+                    
+                    <TextBlock Text="(You can skip this - I'll call you 'sir')" 
+                               FontSize="11" Foreground="#6e7681" Margin="0,8,0,0"/>
+                </StackPanel>
+                
+                <!-- Step 2: Style -->
+                <StackPanel x:Name="Step2Panel" Visibility="Collapsed">
+                    <TextBlock Text="How should I communicate?" FontSize="18" FontWeight="Medium" 
+                               Foreground="#e6edf3" Margin="0,0,0,8"/>
+                    <TextBlock Text="Choose a conversation style that suits you best." 
+                               FontSize="13" Foreground="#8b949e" Margin="0,0,0,16"/>
+                    
+                    <StackPanel>
+                        <RadioButton x:Name="StyleFriendly" GroupName="Style" IsChecked="True"
+                                     Margin="0,0,0,8" Cursor="Hand">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border x:Name="bd" Background="#21262d" CornerRadius="8" 
+                                            Padding="16,12" BorderBrush="#30363d" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="😊 Friendly" FontSize="14" FontWeight="Medium" Foreground="#e6edf3"/>
+                                            <TextBlock Text="Warm, casual, like chatting with a helpful friend" 
+                                                       FontSize="12" Foreground="#8b949e" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="#00d4aa"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#30363d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                        
+                        <RadioButton x:Name="StyleProfessional" GroupName="Style" Margin="0,0,0,8" Cursor="Hand">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border x:Name="bd" Background="#21262d" CornerRadius="8" 
+                                            Padding="16,12" BorderBrush="#30363d" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="💼 Professional" FontSize="14" FontWeight="Medium" Foreground="#e6edf3"/>
+                                            <TextBlock Text="Business-like, formal, thorough explanations" 
+                                                       FontSize="12" Foreground="#8b949e" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="#00d4aa"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#30363d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                        
+                        <RadioButton x:Name="StyleMinimal" GroupName="Style" Margin="0,0,0,8" Cursor="Hand">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border x:Name="bd" Background="#21262d" CornerRadius="8" 
+                                            Padding="16,12" BorderBrush="#30363d" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="⚡ Minimal" FontSize="14" FontWeight="Medium" Foreground="#e6edf3"/>
+                                            <TextBlock Text="Short, direct answers - no fluff" 
+                                                       FontSize="12" Foreground="#8b949e" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="#00d4aa"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#30363d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                        
+                        <RadioButton x:Name="StyleButler" GroupName="Style" Cursor="Hand">
+                            <RadioButton.Template>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Border x:Name="bd" Background="#21262d" CornerRadius="8" 
+                                            Padding="16,12" BorderBrush="#30363d" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="🎩 Butler (JARVIS-style)" FontSize="14" FontWeight="Medium" Foreground="#e6edf3"/>
+                                            <TextBlock Text="Polite, refined, sophisticated - like a personal butler" 
+                                                       FontSize="12" Foreground="#8b949e" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="bd" Property="BorderBrush" Value="#00d4aa"/>
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#30363d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </RadioButton.Template>
+                        </RadioButton>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Step 3: Capabilities -->
+                <StackPanel x:Name="Step3Panel" Visibility="Collapsed">
+                    <TextBlock Text="Here's what I can do" FontSize="18" FontWeight="Medium" 
+                               Foreground="#e6edf3" Margin="0,0,0,16"/>
+                    
+                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Border Background="#21262d" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🎤" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Voice Control" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Say 'Atlas' to activate voice commands" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21262d" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="💻" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="System Control" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Open apps, manage files, control settings" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21262d" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🔒" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Security Scanner" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Detect malware, spyware, and threats" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21262d" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🌐" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Web Search" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Search the web, get weather, news" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21262d" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🎨" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Image Generation" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Create images with DALL-E" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21262d" CornerRadius="8" Padding="12">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🎵" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Media Control" FontSize="13" FontWeight="Medium" Foreground="#e6edf3"/>
+                                        <TextBlock Text="Control Spotify, media players" FontSize="11" Foreground="#8b949e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+                
+                <!-- Step 4: Quick Actions -->
+                <StackPanel x:Name="Step4Panel" Visibility="Collapsed">
+                    <TextBlock Text="Try it now!" FontSize="18" FontWeight="Medium" 
+                               Foreground="#e6edf3" Margin="0,0,0,8"/>
+                    <TextBlock Text="Click any of these to see Atlas in action:" 
+                               FontSize="13" Foreground="#8b949e" Margin="0,0,0,16"/>
+                    
+                    <WrapPanel>
+                        <Button Content="🌤️ What's the weather?" Click="TryWeather_Click"
+                                Background="#21262d" Foreground="#00d4aa" BorderThickness="0"
+                                Padding="12,8" Margin="0,0,8,8" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                            CornerRadius="16" Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#30363d" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa"/>
+                                            <Setter Property="Foreground" Value="#0d1117"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Button Content="📸 Take a screenshot" Click="TryScreenshot_Click"
+                                Background="#21262d" Foreground="#00d4aa" BorderThickness="0"
+                                Padding="12,8" Margin="0,0,8,8" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                            CornerRadius="16" Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#30363d" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa"/>
+                                            <Setter Property="Foreground" Value="#0d1117"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Button Content="🔍 Search the web" Click="TrySearch_Click"
+                                Background="#21262d" Foreground="#00d4aa" BorderThickness="0"
+                                Padding="12,8" Margin="0,0,8,8" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                            CornerRadius="16" Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#30363d" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa"/>
+                                            <Setter Property="Foreground" Value="#0d1117"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Button Content="🛡️ Run security scan" Click="TryScan_Click"
+                                Background="#21262d" Foreground="#00d4aa" BorderThickness="0"
+                                Padding="12,8" Margin="0,0,8,8" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                            CornerRadius="16" Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#30363d" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#00d4aa"/>
+                                            <Setter Property="Foreground" Value="#0d1117"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </WrapPanel>
+                    
+                    <TextBlock Text="Or just start chatting - I'm ready to help!" 
+                               FontSize="12" Foreground="#6e7681" Margin="0,16,0,0"/>
+                </StackPanel>
+            </Grid>
+            
+            <!-- Footer with navigation -->
+            <Border Grid.Row="2" Padding="24,16" Background="#161b22" CornerRadius="0,0,16,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Step indicators -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse x:Name="Step1Dot" Width="8" Height="8" Fill="#00d4aa" Margin="0,0,6,0"/>
+                        <Ellipse x:Name="Step2Dot" Width="8" Height="8" Fill="#30363d" Margin="0,0,6,0"/>
+                        <Ellipse x:Name="Step3Dot" Width="8" Height="8" Fill="#30363d" Margin="0,0,6,0"/>
+                        <Ellipse x:Name="Step4Dot" Width="8" Height="8" Fill="#30363d"/>
+                    </StackPanel>
+                    
+                    <!-- Navigation buttons -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button x:Name="BackButton" Content="Back" Click="Back_Click"
+                                Visibility="Collapsed" Margin="0,0,8,0"
+                                Background="Transparent" Foreground="#8b949e" 
+                                BorderThickness="0" Padding="16,10" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                            CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#21262d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Button x:Name="NextButton" Content="Next" Click="Next_Click"
+                                Padding="20,10" Cursor="Hand" BorderThickness="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#00d4aa" Offset="0"/>
+                                                <GradientStop Color="#00a8cc" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <ContentPresenter HorizontalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect Color="#00d4aa" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

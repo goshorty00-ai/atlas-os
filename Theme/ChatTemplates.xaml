@@ -1,0 +1,206 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         ATLAS AI - CHAT MESSAGE TEMPLATES
+         Premium message bubbles with modern styling
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         USER MESSAGE BUBBLE
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasUserBubble" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasUserMsgGradient}"/>
+        <Setter Property="BorderBrush" Value="#58a6ff30"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12,12,4,12"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="Margin" Value="60,4,10,4"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="MaxWidth" Value="320"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         ASSISTANT MESSAGE BUBBLE
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasAssistantBubble" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasAssistantMsgGradient}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12,12,12,4"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="Margin" Value="10,4,60,4"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="MaxWidth" Value="320"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         MESSAGE CONTAINER - Wrapper for bubble + avatar
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasUserMessageContainer" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,2"/>
+    </Style>
+    
+    <Style x:Key="AtlasAssistantMessageContainer" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="0,2"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         AVATAR BADGE - Small icon next to messages
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasAvatarBadge" TargetType="Border">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Background" Value="{DynamicResource AtlasCyanGlowBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    
+    <Style x:Key="AtlasUserAvatarBadge" TargetType="Border">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Background" Value="#58a6ff30"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBlueBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TYPING INDICATOR
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasTypingDot" TargetType="Ellipse">
+        <Setter Property="Width" Value="6"/>
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="Fill" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="Margin" Value="2,0"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         CODE BLOCK - For code snippets in messages
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasCodeBlock" TargetType="Border">
+        <Setter Property="Background" Value="#0d1117"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Margin" Value="0,8"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         SYSTEM MESSAGE - Notifications, status updates
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasSystemMessage" TargetType="Border">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Margin" Value="0,8"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         IMAGE ATTACHMENT - For screenshots/images
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasImageAttachment" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Margin" Value="0,8,0,0"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         FILE ATTACHMENT CHIP
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasFileChip" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceHoverBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Margin" Value="0,0,6,6"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TOAST NOTIFICATION
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasToast" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="MinWidth" Value="200"/>
+        <Setter Property="MaxWidth" Value="320"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="4" Opacity="0.3"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="AtlasToastSuccess" TargetType="Border" BasedOn="{StaticResource AtlasToast}">
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasSuccessBrush}"/>
+    </Style>
+    
+    <Style x:Key="AtlasToastWarning" TargetType="Border" BasedOn="{StaticResource AtlasToast}">
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasWarningBrush}"/>
+    </Style>
+    
+    <Style x:Key="AtlasToastError" TargetType="Border" BasedOn="{StaticResource AtlasToast}">
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasErrorBrush}"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         INSPECTOR PANEL WIDGETS
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasInspectorSection" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="12"/>
+        <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+    
+    <Style x:Key="AtlasInspectorHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextMutedBrush}"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         PROGRESS BAR
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasProgressBar" TargetType="ProgressBar">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Height" Value="4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid x:Name="Root">
+                        <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="2"/>
+                        <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" 
+                                CornerRadius="2" HorizontalAlignment="Left">
+                            <Grid x:Name="Animation" ClipToBounds="True"/>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+</ResourceDictionary>

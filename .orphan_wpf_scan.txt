@@ -1,0 +1,86 @@
+
+Name                         Path                                             RefCount Sample
+----                         ----                                             -------- ------
+AgentCommandPalette          Agent\UI\AgentCommandPalette.xaml                       0 
+AgentPanelControl            Coding\Controls\AgentPanelControl.xaml                  0 
+IntentPreviewControl         Coding\Controls\IntentPreviewControl.xaml               0 
+StageHistoryControl          Coding\Controls\StageHistoryControl.xaml                0 
+VerificationPanelControl     Coding\Controls\VerificationPanelControl.xaml           0 
+AIRecommendationCard         Controls\AIRecommendationCard.xaml                      0 
+AppsBrowserPopupWindow       Controls\AppsBrowserPopupWindow.xaml                    0 
+CaptchaSolverWindow          Controls\CaptchaSolverWindow.xaml                       0 
+CustomSpeechStudioControl    Controls\CustomSpeechStudioControl.xaml                 0 
+DigitalBrainControl          Controls\DigitalBrainControl.xaml                       0 
+DJBoothControl               Controls\DJBoothControl.xaml                            0 
+FeaturedHeroControl          Controls\FeaturedHeroControl.xaml                       0 
+LottieOrbControl             Controls\LottieOrbControl.xaml                          0 
+MediaCarouselControl         Controls\MediaCarouselControl.xaml                      0 
+PresenceCoreControl          Controls\PresenceCoreControl.xaml                       0 
+StatsCardControl             Controls\StatsCardControl.xaml                          0 
+ITDashboardPanel             ITManagement\UI\ITDashboardPanel.xaml                   0 
+MediaFolderConfigWindow      MediaFolderConfigWindow.xaml                            0 
+SystemGuardWindow            SecuritySuite\SystemGuardWindow.xaml                    0 
+SecuritySuiteTheme           SecuritySuite\Themes\SecuritySuiteTheme.xaml            0 
+ThreatRemediationModal       SecuritySuite\UI\ThreatRemediationModal.xaml            0 
+TestDownloadWindow           TestDownloadWindow.xaml                                 0 
+DebugOverlay                 UI\DebugOverlay.xaml                                    0 
+FirstRunWizardWindow         UI\FirstRunWizardWindow.xaml                            0 
+FuturisticSecurityDashboard  UI\Pages\FuturisticSecurityDashboard.xaml               0 
+SecurityAlertWindow          UI\SecurityAlertWindow.xaml                             0 
+SystemHealthDialog           UI\SystemHealthDialog.xaml                              0 
+SystemScannerDialog          UI\SystemScannerDialog.xaml                             0 
+VoiceDiagnosticsView         UI\VoiceDiagnosticsView.xaml                            0 
+WorkflowTimelinePanel        Workflows\UI\WorkflowTimelinePanel.xaml                 0 
+AddAvatarDialog              AddAvatarDialog.xaml                                    1 AvatarSelectionWindow.xaml.cs:142
+CaptureHistoryWindow         CaptureHistoryWindow.xaml                               1 ChatWindow.xaml.cs:6376
+CodeEditorWindow             CodeEditorWindow.xaml                                   1 ChatWindow.xaml.cs:12218
+CreateControl                Controls\CreateControl.xaml                             1 CommandCenterWindow.xaml.cs:2343
+MediaCardControl             Controls\MediaCardControl.xaml                          1 Controls\MediaCarouselControl.xaml.cs:36
+AudioVisualizerControl       Controls\MediaCentre\AudioVisualizerControl.xaml        1 Controls\MediaCenterControl.xaml:1492
+ScanOrbitControl             Controls\ScanOrbitControl.xaml                          1 ChatWindow.xaml:912
+SecurityChatPanel            Controls\SecurityChatPanel.xaml                         1 UI\Pages\SecurityPage.xaml:227
+StatusPanelControl           Controls\StatusPanelControl.xaml                        1 ChatWindow.xaml:535
+TypingIndicatorControl       Controls\TypingIndicatorControl.xaml                    1 Views\ChatView.xaml:152
+OnboardingWindow             Conversation\UI\OnboardingWindow.xaml                   1 ChatWindow.xaml.cs:14533
+DjConsoleView                DJ\DjConsoleView.xaml                                   1 CommandCenterWindow.xaml.cs:2339
+LibraryModal                 DJ\LibraryModal.xaml                                    1 DJ\DjConsoleView.xaml.cs:196
+MixerControl                 DJ\MixerControl.xaml                                    1 DJ\DjConsoleView.xaml:83
+WaveformDisplay              DJ\WaveformDisplay.xaml                                 1 DJ\DeckControl.xaml:173
+FullscreenPlayerWindow       FullscreenPlayerWindow.xaml                             1 Controls\MediaCenterControl.xaml.cs:42
+ApiManagementHostView        Modules\ApiManagement\ApiManagementHostView.xaml        1 CommandCenterWindow.xaml.cs:2341
+RealDebridConfigDialog       Modules\Downloader\RealDebridConfigDialog.xaml          1 Modules\Downloader\DownloadManager.cs:114
+AIDiagnosticWindow           SecuritySuite\AI\AIDiagnosticWindow.xaml                1 Agent\SecurityAgent.cs:102
+BrandDialog                  SocialMedia\Dialogs\BrandDialog.xaml                    1 SocialMedia\SocialMediaConsoleWindow.xaml.cs:212
+CampaignDialog               SocialMedia\Dialogs\CampaignDialog.xaml                 1 SocialMedia\SocialMediaConsoleWindow.xaml.cs:123
+ScheduleDialog               SocialMedia\Dialogs\ScheduleDialog.xaml                 1 SocialMedia\SocialMediaConsoleWindow.xaml.cs:170
+SocialMediaTheme             SocialMedia\UI\SocialMediaTheme.xaml                    1 SocialMedia\UI\SocialMediaPanel.xaml:11
+SocialMediaWindow            SocialMedia\UI\SocialMediaWindow.xaml                   1 ChatWindow.xaml.cs:17100
+AtlasDialogWindow            UI\AtlasDialogWindow.xaml                               1 Services\AtlasDialogService.cs:72
+ProcessManagerWindow         UI\ProcessManagerWindow.xaml                            1 Tools\DirectActionHandler.cs:1142
+SafetySelfTestWindow         UI\SafetySelfTestWindow.xaml                            1 SettingsWindow.xaml.cs:4554
+StartupVideoWindow           UI\StartupVideoWindow.xaml                              1 App.xaml.cs:430
+ChatHistoryView              Views\AiChat\ChatHistoryView.xaml                       1 CommandCenterWindow.xaml.cs:2333
+AddonsView                   Views\MediaCentre\AddonsView.xaml                       1 Controls\MediaCenterControl.xaml:93
+DiscoveryView                Views\MediaCentre\DiscoveryView.xaml                    1 Controls\MediaCenterControl.xaml:65
+MoviesView                   Views\MediaCentre\MoviesView.xaml                       1 Controls\MediaCenterControl.xaml:30
+UnifiedCommandPalette        Agent\UI\UnifiedCommandPalette.xaml                     2 Agent\CommandPaletteManager.cs:24 | Agent\CommandPaletteManager.cs:110
+AvatarSelectionWindow        AvatarSelectionWindow.xaml                              2 ChatWindow.xaml.cs:6105 | ChatWindow.xaml.cs:15620
+ClipboardWindow              ClipboardWindow.xaml                                    2 ChatWindow.xaml.cs:6390 | ChatWindow.xaml.cs:6391
+ChatQuickActionsControl      Coding\Controls\ChatQuickActionsControl.xaml            2 CodeEditorWindow.xaml:628 | CodeEditorWindow.xaml.cs:90
+DiffPreviewControl           Coding\Controls\DiffPreviewControl.xaml                 2 CodeEditorWindow.xaml:627 | CodeEditorWindow.xaml.cs:90
+IDEWindow                    Coding\IDEWindow.xaml                                   2 UI\Pages\CodePage.xaml.cs:26 | UI\Pages\CodePage.xaml.cs:271
+CodeControl                  Controls\CodeControl.xaml                               2 Controls\CodeBuilderViewModel.cs:1252 | UI\Pages\CodePage.xaml:66
+LeftSidebarControl           Controls\LeftSidebarControl.xaml                        2 ChatWindow.xaml:531 | CommandCenterWindow.xaml:106
+SecurityControl              Controls\SecurityControl.xaml                           2 Security\SecurityTelemetryService.cs:18 | CommandCenterWindow.xaml.cs:2342
+TopNavBarControl             Controls\TopNavBarControl.xaml                          2 ChatWindow.xaml:332 | CommandCenterWindow.xaml:60
+VoiceOrbCompositeControl     Controls\VoiceOrbCompositeControl.xaml                  2 ChatWindow.xaml:1486 | ChatWindow.xaml.cs:389
+DeckControl                  DJ\DeckControl.xaml                                     2 DJ\DjConsoleView.xaml:82 | DJ\DjConsoleView.xaml:84
+DownloaderWindow             DownloaderWindow.xaml                                   2 App.xaml.cs:421 | App.xaml.cs:501
+FloatingHudWindow            FloatingHud\FloatingHudWindow.xaml                      2 FloatingHud\FloatingHudManager.cs:34 | FloatingHud\FloatingHudManager.cs:95
+AtlasOverlayWindow           InAppAssistant\AtlasOverlayWindow.xaml                  2 InAppAssistant\InAppAssistantManager.cs:31 | InAppAssistant\InAppAssistantManager.cs:83
+SocialMediaConsoleWindow     SocialMedia\SocialMediaConsoleWindow.xaml               2 Views\AiChat\ViewModels\AiChatViewModel.cs:2545 | ChatWindow.xaml.cs:9395
+OnlineConsentDialog          UI\OnlineConsentDialog.xaml                             2 Tools\WebSearchTool.cs:41 | ChatWindow.xaml.cs:15873
+VoiceModeWindow              Views\VoiceModeWindow.xaml                              2 Controls\MediaCenterControl.xaml.cs:2724 | Views\ChatView.xaml.cs:189
+AudioReactiveWallpaperWindow Wallpaper\AudioReactiveWallpaperWindow.xaml             2 Wallpaper\WallpaperService.cs:9 | Wallpaper\WallpaperService.cs:34
+
+

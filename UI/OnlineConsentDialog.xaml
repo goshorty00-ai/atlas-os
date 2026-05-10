@@ -1,0 +1,109 @@
+<Window x:Class="AtlasAI.UI.OnlineConsentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Online Access Required"
+        Width="420" Height="280"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False">
+    
+    <Border Background="#0c0c12" CornerRadius="12" BorderBrush="#22d3ee40" BorderThickness="1">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="🌐 Allow Online Access?" 
+                           FontSize="18" FontWeight="SemiBold" 
+                           Foreground="#22d3ee"/>
+            </StackPanel>
+            
+            <!-- Body -->
+            <StackPanel Grid.Row="1" Margin="0,0,0,20">
+                <TextBlock Text="Atlas can search the internet to answer this request."
+                           Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                
+                <TextBlock Text="This includes reading public web pages and retrieving live information. Atlas will not sign in, make purchases, or change any online accounts."
+                           Foreground="#94a3b8" FontSize="13" TextWrapping="Wrap"/>
+            </StackPanel>
+            
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                <Button x:Name="AllowOnceBtn" Content="Allow Once" 
+                        Click="AllowOnce_Click"
+                        Width="110" Height="36" Margin="0,0,8,0"
+                        Background="#22d3ee" Foreground="#0c0c12" 
+                        FontWeight="SemiBold" BorderThickness="0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#3de8ff"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                
+                <Button x:Name="AllowDurationBtn" Content="Allow for This Session" 
+                        Click="AllowDuration_Click"
+                        Width="150" Height="36" Margin="0,0,8,0"
+                        Background="#22d3ee30" Foreground="#22d3ee" 
+                        FontWeight="SemiBold" BorderThickness="1" BorderBrush="#22d3ee50">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#22d3ee50"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                
+                <Button x:Name="NotNowBtn" Content="Deny" 
+                        Click="NotNow_Click"
+                        Width="80" Height="36"
+                        Background="Transparent" Foreground="#94a3b8" 
+                        BorderThickness="1" BorderBrush="#94a3b840">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#94a3b820"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+            
+            <!-- Footer Note -->
+            <TextBlock Grid.Row="3" 
+                       Text="You can change this anytime in Settings → Online Access."
+                       Foreground="#64748b" FontSize="11" 
+                       HorizontalAlignment="Center"/>
+        </Grid>
+    </Border>
+</Window>

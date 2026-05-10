@@ -1,0 +1,688 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "kill-atlas",
+			"command": "powershell",
+			"type": "process",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$p = Get-Process Atlas,Atlas_v2 -ErrorAction SilentlyContinue; if ($p) { $p | Stop-Process -Force -ErrorAction SilentlyContinue }; exit 0"
+			],
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "never",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "clean",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"clean",
+				"${workspaceFolder}/AtlasAI.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"dependsOn": [
+				"kill-atlas"
+			],
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/AtlasAI.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"dependsOn": [
+				"kill-atlas"
+			],
+			"group": "build",
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "rebuild (clean+build)",
+			"dependsOn": [
+				"clean",
+				"build"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "test",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"test",
+				"${workspaceFolder}/AtlasAI.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/AtlasAI.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"dependsOn": [
+				"kill-atlas"
+			],
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "watch",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"watch",
+				"run",
+				"--project",
+				"${workspaceFolder}/AtlasAI.csproj"
+			],
+			"isBackground": true,
+			"problemMatcher": "$msCompile",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "build-publish",
+			"dependsOn": [
+				"publish"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			}
+		},
+		{
+			"label": "launch-atlas",
+			"type": "process",
+			"command": "${workspaceFolder}\\bin\\x64\\Atlas_v2.exe",
+			"isBackground": false
+		},
+		{
+			"label": "copilot-build-atlas",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"AtlasAI.slnx",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "copilot-mediahub-build",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-mediahub-build-cd",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm.cmd run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-mediahub-deploy",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"robocopy \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\\dist\" \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Figma\\Media Streamer\\dist\" /MIR /NP & robocopy \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\\dist\" \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Media Streamer\\dist\" /MIR /NP"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-mediahub-deploy-ps",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Copy-Item -LiteralPath 'D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\\dist\\*' -Destination 'D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Figma\\Media Streamer\\dist' -Recurse -Force; Copy-Item -LiteralPath 'D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\\dist\\*' -Destination 'D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Media Streamer\\dist' -Recurse -Force"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-deploy-mediahub-script",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-deploy-mediahub-script-v2",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-mediahub-build-cd-v2",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm.cmd run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "copilot-deploy-mediahub-script-v3",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-now",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Set-Location 'D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub'; npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-now-2",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"& { Set-Location \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\"; npm run build }"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-cmd",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-cmd-now",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-now",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "list-media-streamer-dists",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"powershell -NoProfile -ExecutionPolicy Bypass -Command \"Get-ChildItem -Path 'D:\\My Apps\\AOS\\New build\\Atlas.OS' -Recurse -File -Filter index.html | Where-Object { $_.FullName -like '*Figma\\Media Streamer\\dist\\index.html' } | Sort-Object LastWriteTime -Descending | Select-Object -First 30 FullName, LastWriteTime | Format-Table -AutoSize\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "list-dists-ps",
+			"type": "shell",
+			"command": "Get-ChildItem -Path . -Recurse -File -Filter index.html | Where-Object { $_.FullName -like '*Figma\\Media Streamer\\dist\\index.html' } | Sort-Object LastWriteTime -Descending | Select-Object -First 20 FullName, LastWriteTime",
+			"isBackground": false
+		},
+		{
+			"label": "list-dists-ps-full",
+			"type": "shell",
+			"command": "Get-ChildItem -Path . -Recurse -File -Filter index.html | Where-Object { $_.FullName -like '*Figma\\Media Streamer\\dist\\index.html' } | Sort-Object LastWriteTime -Descending | Select-Object -First 20 FullName, LastWriteTime | Format-List",
+			"isBackground": false
+		},
+		{
+			"label": "sync-mediahub-legacy-hashes",
+			"type": "shell",
+			"command": "$dirs = @('D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Figma\\Media Streamer\\dist\\assets','D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Media Streamer\\dist\\assets'); foreach ($d in $dirs) { if (!(Test-Path $d)) { continue }; $new = Join-Path $d 'index-CRtZQFqx.js'; if (!(Test-Path $new)) { continue }; Get-ChildItem -Path $d -Filter 'index-*.js' | Where-Object { $_.Name -ne 'index-CRtZQFqx.js' } | ForEach-Object { Copy-Item -Path $new -Destination $_.FullName -Force } }; Write-Host 'Synced legacy hashes to index-CRtZQFqx.js'",
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-cmd-fix",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-fix",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-live",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-live",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-mix-backdrop",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-mix-backdrop",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-trailer-fix",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Set-Location \"${workspaceFolder}\\Figma\\Mediahub\"; npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-trailer-fix-cmd",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-trailer-fix",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-comingsoon-fix",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-comingsoon-fix",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-build-10day-filter",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\Figma\\Mediahub\" && npm run build"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "mediahub-deploy-10day-filter",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"copilot-deploy-mediahub.ps1"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-atlas-running",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"tasklist | findstr /I \"Atlas_v2.exe Atlas.exe\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-atlas-running-2",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"tasklist | findstr /I /C:\"Atlas_v2.exe\" /C:\"Atlas.exe\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-atlas-direct",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"\"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Atlas_v2.exe\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-atlas-startprocess-check",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$p = Start-Process -FilePath \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Atlas_v2.exe\" -PassThru; Write-Output \"StartedPID=$($p.Id)\"; Get-Process -Id $p.Id -ErrorAction SilentlyContinue | Select-Object Name,Id,Responding | Format-Table -AutoSize"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "launch-atlas-shell-path",
+			"type": "shell",
+			"command": "\"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Atlas_v2.exe\"",
+			"isBackground": false
+		},
+		{
+			"label": "launch-atlas-shell-callop",
+			"type": "shell",
+			"command": "&",
+			"args": [
+				"\"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Atlas_v2.exe\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tail-atlas-log",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content \"C:\\Users\\littl\\AppData\\Roaming\\AtlasAI\\logs\\app_log_20260510.txt\" -Tail 25"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tail-atlas-log-startup",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content \"C:\\Users\\littl\\AppData\\Roaming\\AtlasAI\\logs\\app_log_20260510.txt\" -Tail 12"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-atlas-tasklist-now",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Process Atlas,Atlas_v2 -ErrorAction SilentlyContinue | Select-Object Name,Id,StartTime | Format-Table -AutoSize"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "launch-atlas-cmd-start",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"start \"\" \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\\Atlas_v2.exe\""
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-atlas-running-cmd",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"tasklist | findstr /I Atlas_v2.exe"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tail-atlas-log-now",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content \"C:\\Users\\littl\\AppData\\Roaming\\AtlasAI\\logs\\app_log_20260510.txt\" -Tail 8"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "launch-atlas-dotnet",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"cd /d \"D:\\My Apps\\AOS\\New build\\Atlas.OS\\bin\\x64\" && dotnet Atlas_v2.dll"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "tail-atlas-log-after-dotnet",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Get-Content \"C:\\Users\\littl\\AppData\\Roaming\\AtlasAI\\logs\\app_log_20260510.txt\" -Tail 20"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "launch-x64-safe",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"launch-working-x64.ps1"
+			],
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "check-main-window-log",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"Select-String -Path \"C:\\Users\\littl\\AppData\\Roaming\\AtlasAI\\logs\\app_log_20260510.txt\" -Pattern \"20:59|Main window shown\" | Select-Object -Last 6 | ForEach-Object { $_.Line }"
+			],
+			"isBackground": false
+		}
+	]
+}

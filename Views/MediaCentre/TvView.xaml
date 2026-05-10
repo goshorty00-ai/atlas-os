@@ -1,0 +1,100 @@
+<UserControl x:Class="AtlasAI.Views.MediaCentre.TvView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,24,24">
+            <TextBlock Text="ALL SHOWS"
+                       Foreground="{StaticResource NeoTextPrimary}"
+                       FontFamily="{StaticResource NeoFontFamily}"
+                       FontSize="18" FontWeight="Bold"
+                       Margin="0,0,0,20"/>
+
+            <ItemsControl ItemsSource="{Binding LibraryItems}"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Command="{Binding DataContext.SelectPreviewItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Margin="0,0,12,12"
+                                Width="160"
+                                Cursor="Hand"
+                                PreviewMouseRightButtonUp="PosterCard_RightClickOpenMenu">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Play"
+                                              Command="{Binding PlacementTarget.Tag.PlayItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Play Next"
+                                              Command="{Binding PlacementTarget.Tag.QueueNextCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Add to Queue"
+                                              Command="{Binding PlacementTarget.Tag.AddToQueueCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Edit Item..."
+                                              Command="{Binding PlacementTarget.Tag.EditItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Change Cover..."
+                                              Command="{Binding PlacementTarget.Tag.ChangeCoverCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Rescan Metadata"
+                                              Command="{Binding PlacementTarget.Tag.RescanMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Remove from Library"
+                                              Command="{Binding PlacementTarget.Tag.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <Border Background="{StaticResource NeoGlass12}"
+                                    CornerRadius="{StaticResource NeoRadius12}"
+                                    ClipToBounds="True">
+                                <Grid>
+                                    <Image Source="{Binding CoverImage}"
+                                           Stretch="UniformToFill"
+                                           Height="240"
+                                           VerticalAlignment="Top"/>
+                                    <Border VerticalAlignment="Bottom">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0.5,1" EndPoint="0.5,0">
+                                                <GradientStop Color="#EE0A0E14" Offset="0"/>
+                                                <GradientStop Color="#000A0E14" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Margin="10,6,10,8">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="{StaticResource NeoTextPrimary}"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                <TextBlock Foreground="{StaticResource NeoTextSecondary}" FontSize="11">
+                                                    <Run Text="S"/><Run Text="{Binding SeasonNumber}"/>
+                                                    <Run Text="E"/><Run Text="{Binding EpisodeNumber}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="  " FontSize="11"/>
+                                                <TextBlock Text="{Binding Rating, StringFormat={}{0:F1}}"
+                                                           Foreground="{StaticResource NeoCyanIce}"
+                                                           FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

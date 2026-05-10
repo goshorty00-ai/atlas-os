@@ -1,0 +1,246 @@
+<Window x:Class="AtlasAI.UI.FirstRunWizardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Welcome to Atlas AI"
+        Width="560" Height="520"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Closing="Window_Closing">
+
+    <Window.Resources>
+        <FontFamily x:Key="MainFont">Segoe UI Variable, Segoe UI, Arial</FontFamily>
+        <FontFamily x:Key="MonoFont">Cascadia Code, Consolas</FontFamily>
+
+        <Style x:Key="AtlasTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#12121a"/>
+            <Setter Property="Foreground" Value="#f1f5f9"/>
+            <Setter Property="BorderBrush" Value="#22d3ee40"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="#22d3ee"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#22d3ee"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AtlasComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#12121a"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#22d3ee40"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="92"/>
+            <Setter Property="Background" Value="#22d3ee"/>
+            <Setter Property="Foreground" Value="#0c0c12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#3de8ff"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="92"/>
+            <Setter Property="Background" Value="#22d3ee30"/>
+            <Setter Property="Foreground" Value="#22d3ee"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#22d3ee50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#22d3ee50"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TertiaryButton" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="92"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#94a3b840"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#94a3b820"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#050508" CornerRadius="12" BorderBrush="#22d3ee30" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect Color="#22d3ee" BlurRadius="40" ShadowDepth="0" Opacity="0.2"/>
+        </Border.Effect>
+
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="WELCOME" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="#22d3ee"/>
+                    <TextBlock x:Name="TitleText" Text="Welcome to Atlas AI" FontFamily="{StaticResource MainFont}" FontSize="18" FontWeight="SemiBold" Foreground="#f1f5f9" Margin="0,6,0,0"/>
+                    <TextBlock x:Name="StepText" Text="Step 1/5" Foreground="#94a3b8" FontSize="12" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Content="✕" Click="Cancel_Click"
+                        Background="Transparent" Foreground="#64748b" BorderThickness="0"
+                        Width="32" Height="32" FontSize="14" Cursor="Hand"/>
+            </Grid>
+
+            <!-- Body -->
+            <Grid Grid.Row="1">
+                <!-- Step 1: Name -->
+                <StackPanel x:Name="Step1Panel" Visibility="Visible">
+                    <TextBlock Text="What should I call you?" Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="Nickname is perfect. You can change this later." Foreground="#64748b" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Name" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="NameTextBox" Style="{StaticResource AtlasTextBox}"/>
+                </StackPanel>
+
+                <!-- Step 2: Accent -->
+                <StackPanel x:Name="Step2Panel" Visibility="Collapsed">
+                    <TextBlock Text="Any accent preference?" Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="Examples: UK, US, Irish. Leave blank if you don't care." Foreground="#64748b" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Accent" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="AccentTextBox" Style="{StaticResource AtlasTextBox}"/>
+                </StackPanel>
+
+                <!-- Step 3: Banter -->
+                <StackPanel x:Name="Step3Panel" Visibility="Collapsed">
+                    <TextBlock Text="How much banter?" Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="1 = minimal, 5 = spicy." Foreground="#64748b" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Banter level" Style="{StaticResource FieldLabel}"/>
+                    <Slider x:Name="BanterSlider" Minimum="1" Maximum="5" Value="2" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    <TextBlock x:Name="BanterValueText" Text="2" Foreground="#94a3b8" FontSize="12" Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <!-- Step 4: Default mic -->
+                <StackPanel x:Name="Step4Panel" Visibility="Collapsed">
+                    <TextBlock Text="Choose your default microphone" Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="This is used for voice input." Foreground="#64748b" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Microphone" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox x:Name="MicCombo" Style="{StaticResource AtlasComboBox}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="MicCombo_SelectionChanged"/>
+                    <TextBlock x:Name="MicHintText" Text="" Foreground="#64748b" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- Step 5: Test mic -->
+                <StackPanel x:Name="Step5Panel" Visibility="Collapsed">
+                    <TextBlock Text="Test Microphone" Foreground="#e2e8f0" FontSize="14" TextWrapping="Wrap"/>
+                    <TextBlock Text="Speak normally and watch the meter." Foreground="#64748b" FontSize="12" Margin="0,6,0,16" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="Level" Style="{StaticResource FieldLabel}"/>
+                    <ProgressBar x:Name="MicLevelBar" Minimum="0" Maximum="100" Height="16" Background="#12121a" Foreground="#22d3ee"/>
+                    <TextBlock x:Name="MicLevelText" Text="0%" Foreground="#94a3b8" FontSize="12" Margin="0,8,0,0"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <Button x:Name="ToggleMicTestBtn" Content="Start Test" Style="{StaticResource SecondaryButton}" Click="ToggleMicTest_Click"/>
+                        <TextBlock x:Name="MicTestStatusText" Text="" Foreground="#64748b" FontSize="12" Margin="12,8,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- Footer buttons -->
+            <Grid Grid.Row="2" Margin="0,18,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" x:Name="BackBtn" Content="Back" Style="{StaticResource TertiaryButton}" Click="Back_Click"/>
+                <Button Grid.Column="2" x:Name="CancelBtn" Content="Cancel" Style="{StaticResource TertiaryButton}" Click="Cancel_Click" Margin="0,0,10,0"/>
+                <Button Grid.Column="3" x:Name="NextBtn" Content="Next" Style="{StaticResource SecondaryButton}" Click="Next_Click" Margin="0,0,10,0"/>
+                <Button Grid.Column="4" x:Name="FinishBtn" Content="Finish" Style="{StaticResource PrimaryButton}" Click="Finish_Click"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

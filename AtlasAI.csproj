@@ -1,0 +1,471 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <WarningLevel>0</WarningLevel>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseAppHost>true</UseAppHost>
+    <SelfContained>true</SelfContained>
+    <AssemblyName>Atlas_v2</AssemblyName>
+    <AssemblyTitle>Atlas</AssemblyTitle>
+    <ApplicationTitle>Atlas</ApplicationTitle>
+    <Product>Atlas</Product>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <!-- Use a single, stable output folder for now (build/run/publish) -->
+    <OutputPath>$(MSBuildProjectDirectory)\bin\x64\</OutputPath>
+    <PublishDir>$(MSBuildProjectDirectory)\bin\x64\</PublishDir>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>atlas.ico</ApplicationIcon>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AtlasPersonal Condition="'$(AtlasPersonal)' == ''">true</AtlasPersonal>
+    <!-- Debug builds should be fast and stable by default. Enable embedded UI build explicitly with -p:BuildEmbeddedUi=true when needed. -->
+    <BuildEmbeddedUi Condition="'$(BuildEmbeddedUi)' == '' and '$(Configuration)' != 'Release'">false</BuildEmbeddedUi>
+    <EmbeddedUiDir>$(MSBuildProjectDirectory)\Figma\Futuristic AI Command Center (6)</EmbeddedUiDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AtlasPersonal)' == 'true'">
+    <DefineConstants>$(DefineConstants);ATLAS_PERSONAL;PERSONAL_BUILD</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AtlasPersonal)' != 'true'">
+    <DefineConstants>$(DefineConstants);ATLAS_PUBLIC</DefineConstants>
+  </PropertyGroup>
+  
+  <!-- Only use single file for Release builds -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <!-- Required so embedded UI files (dist) are available at runtime -->
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  </PropertyGroup>
+  
+  <!-- Exclude separate project folders to avoid duplicate compilation -->
+  <ItemGroup>
+    <Compile Remove="_trae_backup\**\*.cs" />
+    <Compile Remove="_trae_backup/**/*.cs" />
+    <Page Remove="_trae_backup\**\*.xaml" />
+    <Page Remove="_trae_backup/**/*.xaml" />
+    <ApplicationDefinition Remove="_trae_backup\**\*.xaml" />
+    <ApplicationDefinition Remove="_trae_backup/**/*.xaml" />
+    <None Remove="_trae_backup\**\*" />
+    <None Remove="_trae_backup/**/*" />
+
+    <Compile Remove="_buildtmp\**\*.cs" />
+    <Compile Remove="_buildtmp/**/*.cs" />
+    <None Remove="_buildtmp\**\*" />
+    <None Remove="_buildtmp/**/*" />
+
+    <Compile Remove="_builds\**\*.cs" />
+    <Compile Remove="_builds/**/*.cs" />
+    <None Remove="_builds\**\*" />
+    <None Remove="_builds/**/*" />
+
+    <Compile Remove="AtlasAIChatWindow\**\*.cs" />
+    <Compile Remove="AtlasAIChatWindow/**/*.cs" />
+    <Page Remove="AtlasAIChatWindow\*.xaml" />
+    <Page Remove="AtlasAIChatWindow/*.xaml" />
+    <Page Remove="AtlasAIChatWindow\**\*.xaml" />
+    <Page Remove="AtlasAIChatWindow/**/*.xaml" />
+    <ApplicationDefinition Remove="AtlasAIChatWindow\App.xaml" />
+    <None Remove="AtlasAIChatWindow\**\*" />
+
+    <!-- Ensure exclusion also matches forward-slash item paths (some tooling normalizes this way) -->
+    <None Remove="AtlasAIChatWindow/**/*" />
+
+    <Compile Remove="WPFApplication\**\*.cs" />
+    <Compile Remove="WPFApplication/**/*.cs" />
+    <Page Remove="WPFApplication\**\*.xaml" />
+    <Page Remove="WPFApplication/**/*.xaml" />
+    <ApplicationDefinition Remove="WPFApplication\App.xaml" />
+    <None Remove="WPFApplication\**\*" />
+    <None Remove="WPFApplication/**/*" />
+
+    <Compile Remove="AtlasAI.Build/**/*.cs" />
+    <Compile Remove="AtlasAI.Core/**/*.cs" />
+    <Compile Remove="AtlasAI.UI/**/*.cs" />
+    <Compile Remove="AtlasAI.Personal/**/*.cs" />
+    <Compile Remove="AtlasAI.Public/**/*.cs" />
+    <Compile Remove="AtlasAI.Modules.*/**/*.cs" />
+    <Compile Remove="Tests/**/*.cs" />
+    <Compile Remove="ManualSettingsTest.cs" />
+    <Compile Remove="UI/Pages/CreatePage.xaml.cs" />
+    
+    <Page Remove="AtlasAI.Build/**/*.xaml" />
+    <Page Remove="AtlasAI.Core/**/*.xaml" />
+    <Page Remove="AtlasAI.UI/**/*.xaml" />
+    <Page Remove="AtlasAI.Personal/**/*.xaml" />
+    <Page Remove="AtlasAI.Public/**/*.xaml" />
+    <Page Remove="AtlasAI.Modules.*/**/*.xaml" />
+    <Page Remove="UI/Pages/CreatePage.xaml" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="LibVLCSharp.WPF" Version="3.8.5" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.20" />
+    <PackageReference Include="FFME.Windows" Version="4.4.350" />
+    <PackageReference Include="LottieSharp" Version="2.4.3" />
+    <PackageReference Include="System.Speech" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+    <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="SoundTouch.Net" Version="2.3.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="TaskScheduler" Version="2.11.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2420.47" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <!-- Document generation -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.1" />
+    <!-- Roslyn for symbol indexing -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.8.0" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Animations\Lottie\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="Assets\Animations\MediaCenter_Showtime\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Figma\Futuristic API Management Dashboard\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="Figma\Futuristic Karaoke Player\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <!-- Media Streamer is built via Vite; dist is included dynamically (see IncludeEmbeddedMediaStreamerUi) -->
+    <Content Include="Figma\Create new feature\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="Figma\AI_Smart_Home\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="Figma\Premium Social Media Creator App (1)\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+    <Content Include="Figma\Email\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Figma\Create new feature\dist\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Command Center wallpapers -->
+    <Content Include="Assets\Wallpaper\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Video_Wallpaper\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Startup_Video\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="atlas.ico" />
+    <Resource Include="Assets\Header\*.png" />
+    <Content Include="Assets\Logos\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="Assets\Logos\*.png" />
+    <Content Include="Assets\Other_Logos\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="Assets\Other_Logos\*.png" />
+    <Content Include="atlas.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Lottie Animations -->
+    <Content Include="Animations\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Security Suite Assets -->
+    <Content Include="SecuritySuite\Assets\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- UI Icon Assets -->
+    <Content Include="Assets\Icons\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Download Manager Icon Assets -->
+    <Content Include="Assets\DownloadManager\**\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\MediaPlayer\Buttons\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- FFmpeg Binaries -->
+    <Content Include="ffmpeg\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- yt-dlp Binaries -->
+    <Content Include="yt-dlp\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="BuildEmbeddedUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(EmbeddedUiDir)\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(EmbeddedUiDir)" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(EmbeddedUiDir)" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(EmbeddedUiDir)" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedMusicUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Create new feature\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded music UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Create new feature" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Create new feature" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Create new feature" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedApiManagementUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Futuristic API Management Dashboard\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded API management UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic API Management Dashboard" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic API Management Dashboard" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic API Management Dashboard" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedSocialCreatorUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Premium Social Media Creator App (1)\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded social creator UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Premium Social Media Creator App (1)" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Premium Social Media Creator App (1)" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Premium Social Media Creator App (1)" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedMediaStreamerUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Mediahub\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded mediahub UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Mediahub" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Mediahub" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Mediahub" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedSmartHomeUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\AI_Smart_Home\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded smart home UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\AI_Smart_Home" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\AI_Smart_Home" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\AI_Smart_Home" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedAddonManagerUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Addon Manager\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded addon manager UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Addon Manager" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Addon Manager" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Addon Manager" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedFileExplorerUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded file explorer UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="BuildEmbeddedDjUi" BeforeTargets="Build"
+          Condition="'$(BuildEmbeddedUi)' == 'true' and Exists('$(MSBuildProjectDirectory)\Figma\djcode\package.json')">
+    <Message Importance="high" Text="[Atlas] Building embedded DJ UI (Vite)…" />
+
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\djcode" Command="cmd /c npm --version" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\djcode" Command="cmd /c if not exist node_modules npm install" ContinueOnError="WarnAndContinue" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\Figma\djcode" Command="cmd /c npm run build" ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="RemoveLegacyRootDebugOutput" AfterTargets="Build"
+          Condition="Exists('$(MSBuildProjectDirectory)\bin\Debug')">
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\bin\Debug" />
+  </Target>
+
+  <!--
+    IMPORTANT:
+    The Vite build regenerates hashed filenames in dist/. If we include dist/** as Content at project-evaluation time,
+    MSBuild can capture a stale file list and then fail copying missing files (MSB3030) after npm build rewrites dist.
+    To avoid that, include the Command Center dist content dynamically right before output-copy items are gathered.
+  -->
+  <Target Name="IncludeEmbeddedCommandCenterUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\Futuristic AI Command Center (6)\dist\index.html')">
+      <Content Include="Figma\Futuristic AI Command Center (6)\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedMediaStreamerUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\Mediahub\dist\index.html')">
+      <Content Include="Figma\Mediahub\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedSmartHomeUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\AI_Smart_Home\dist\index.html')">
+      <Content Include="Figma\AI_Smart_Home\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedAddonManagerUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\Addon Manager\dist\index.html')">
+      <Content Include="Figma\Addon Manager\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedFileExplorerUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer\dist\index.html')">
+      <Content Include="Figma\Futuristic AI File Explorer\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedDjUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\djcode\dist\index.html')">
+      <Content Include="Figma\djcode\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeEmbeddedQuizUi" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Figma\Design AI Quiz Night Section\dist\index.html')">
+      <Content Include="Figma\Design AI Quiz Night Section\dist\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>false</ExcludeFromSingleFile>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyReactBuildToOutput" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- SolutionDir is not set when building the project directly (e.g., run-dev.ps1). -->
+      <ReactDistDir>$(MSBuildProjectDirectory)\Figma\Mediahub\dist</ReactDistDir>
+      <!-- Copy into both the app-local Figma folder and WebView2 data folder so the runtime always sees the latest UI. -->
+      <RuntimeWebViewDir>$(TargetDir)Figma\Media Streamer\dist</RuntimeWebViewDir>
+      <PublishWebViewDir>$(TargetDir)Atlas_v2.exe.WebView2</PublishWebViewDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Copying React build to $(RuntimeWebViewDir) and $(PublishWebViewDir)" />
+    <RemoveDir Directories="$(RuntimeWebViewDir);$(PublishWebViewDir)" />
+    <MakeDir Directories="$(RuntimeWebViewDir);$(PublishWebViewDir)" />
+    <ItemGroup>
+      <ReactFiles Include="$(ReactDistDir)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ReactFiles)" DestinationFolder="$(RuntimeWebViewDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(ReactFiles)" DestinationFolder="$(PublishWebViewDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyDjBuildToOutput" AfterTargets="Build"
+          Condition="Exists('$(MSBuildProjectDirectory)\Figma\djcode\dist\index.html')">
+    <PropertyGroup>
+      <DjDistDir>$(MSBuildProjectDirectory)\Figma\djcode\dist</DjDistDir>
+      <DjRuntimeDir>$(TargetDir)Figma\djcode\dist</DjRuntimeDir>
+      <DjWebViewDir>$(TargetDir)Atlas_v2.exe.WebView2\djcode\dist</DjWebViewDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Copying DJ build to $(DjRuntimeDir) and $(DjWebViewDir)" />
+    <RemoveDir Directories="$(DjRuntimeDir);$(DjWebViewDir)" />
+    <MakeDir Directories="$(DjRuntimeDir);$(DjWebViewDir)" />
+    <ItemGroup>
+      <DjFiles Include="$(DjDistDir)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DjFiles)" DestinationFolder="$(DjRuntimeDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(DjFiles)" DestinationFolder="$(DjWebViewDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyFileExplorerBuildToOutput" AfterTargets="Build"
+          Condition="Exists('$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer\dist\index.html')">
+    <PropertyGroup>
+      <FileExplorerDistDir>$(MSBuildProjectDirectory)\Figma\Futuristic AI File Explorer\dist</FileExplorerDistDir>
+      <FileExplorerRuntimeDir>$(TargetDir)Figma\Futuristic AI File Explorer\dist</FileExplorerRuntimeDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Copying File Explorer build to $(FileExplorerRuntimeDir)" />
+    <RemoveDir Directories="$(FileExplorerRuntimeDir)" />
+    <MakeDir Directories="$(FileExplorerRuntimeDir)" />
+    <ItemGroup>
+      <FileExplorerFiles Include="$(FileExplorerDistDir)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FileExplorerFiles)" DestinationFolder="$(FileExplorerRuntimeDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+  </Target>
+
+  <Target Name="CopyQuizBuildToOutput" AfterTargets="Build"
+          Condition="Exists('$(MSBuildProjectDirectory)\Figma\Design AI Quiz Night Section\dist\index.html')">
+    <PropertyGroup>
+      <QuizDistDir>$(MSBuildProjectDirectory)\Figma\Design AI Quiz Night Section\dist</QuizDistDir>
+      <QuizRuntimeDir>$(TargetDir)Figma\Design AI Quiz Night Section\dist</QuizRuntimeDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Copying AI Quiz build to $(QuizRuntimeDir)" />
+    <RemoveDir Directories="$(QuizRuntimeDir)" />
+    <MakeDir Directories="$(QuizRuntimeDir)" />
+    <ItemGroup>
+      <QuizFiles Include="$(QuizDistDir)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(QuizFiles)" DestinationFolder="$(QuizRuntimeDir)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+  </Target>
+</Project>
+

@@ -1,0 +1,912 @@
+<UserControl x:Class="AtlasAI.Controls.CodeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:AtlasAI.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="720"
+             d:DesignWidth="1280"
+             Background="Transparent"
+             PreviewKeyDown="CodeControl_PreviewKeyDown"
+             MouseDown="CodeControl_MouseDown">
+
+    <UserControl.Resources>
+        <local:ProgressToDashOffsetConverter x:Key="ProgressToDashOffsetConverter"/>
+        <local:BuilderComponentTypeLabelConverter x:Key="BuilderComponentTypeLabelConverter"/>
+        <local:BuilderComponentStatusLabelConverter x:Key="BuilderComponentStatusLabelConverter"/>
+        <local:BuilderComponentAccentBrushConverter x:Key="BuilderComponentAccentBrushConverter"/>
+        <local:BuilderComponentBackgroundBrushConverter x:Key="BuilderComponentBackgroundBrushConverter"/>
+        <local:BuilderComponentBorderBrushConverter x:Key="BuilderComponentBorderBrushConverter"/>
+        <local:BuilderMessageHeaderConverter x:Key="BuilderMessageHeaderConverter"/>
+        <local:BuilderMessageHeaderBrushConverter x:Key="BuilderMessageHeaderBrushConverter"/>
+        <local:BuilderMessageContainerBrushConverter x:Key="BuilderMessageContainerBrushConverter"/>
+        <local:BuilderMessageBorderBrushConverter x:Key="BuilderMessageBorderBrushConverter"/>
+        <local:BuilderMessageForegroundBrushConverter x:Key="BuilderMessageForegroundBrushConverter"/>
+        <local:BuilderMessageAlignmentConverter x:Key="BuilderMessageAlignmentConverter"/>
+        <local:BuilderProgressWidthConverter x:Key="ProgressWidthConverter"/>
+        <local:ProgressToScaleXConverter x:Key="ProgressToScaleXConverter"/>
+        <local:ComponentTypeIconConverter x:Key="ComponentTypeIconConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <LinearGradientBrush x:Key="CyanOrangeCyanGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="{DynamicResource AtlasCyan}" Offset="0"/>
+            <GradientStop Color="{DynamicResource AtlasWarning}" Offset="0.5"/>
+            <GradientStop Color="{DynamicResource AtlasCyan}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="ProgressBarGradientStatic" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="{DynamicResource AtlasCyan}" Offset="0"/>
+            <GradientStop Color="{DynamicResource AtlasWarning}" Offset="0.5"/>
+            <GradientStop Color="{DynamicResource AtlasCyan}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style x:Key="MonoTitle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
+        <Geometry x:Key="LayersGeometry">M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5</Geometry>
+        <Geometry x:Key="SparklesGeometry">M12 2l1.2 4.2L17.5 7.5l-4.3 1.3L12 13l-1.2-4.2L6.5 7.5l4.3-1.3L12 2z M19 12l.7 2.4L22 15l-2.3.7L19 18l-.7-2.3L16 15l2.3-.6L19 12z M5 12l.7 2.4L8 15l-2.3.7L5 18l-.7-2.3L2 15l2.3-.6L5 12z</Geometry>
+        <Geometry x:Key="ActivityGeometry">M4 12h4l2-7 4 14 2-7h4</Geometry>
+        <Geometry x:Key="LayoutGeometry">M3 3h18v18H3V3z M3 9h18 M9 3v18</Geometry>
+        <Geometry x:Key="CpuGeometry">M9 2v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2v-2h-2V6a2 2 0 0 0-2-2h-2V2h-2v2h-2V2H9z M8 8h8v8H8V8z</Geometry>
+        <Geometry x:Key="DatabaseGeometry">M12 2c-4.4 0-8 1.3-8 3v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5c0-1.7-3.6-3-8-3z M4 5c0 1.7 3.6 3 8 3s8-1.3 8-3 M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3 M4 19c0 1.7 3.6 3 8 3s8-1.3 8-3</Geometry>
+        <Geometry x:Key="WifiGeometry">M5 8c4.7-4.7 12.3-4.7 17 0 M8.5 11.5c2.8-2.8 7.2-2.8 10 0 M12 15a2 2 0 0 1 2 2 2 2 0 0 1-4 0 2 2 0 0 1 2-2</Geometry>
+        <Geometry x:Key="RefreshCwGeometry">M21 12a9 9 0 0 1-15.4 6.4 M3 12a9 9 0 0 1 15.4-6.4 M21 3v6h-6 M3 21v-6h6</Geometry>
+        <Geometry x:Key="CheckCircleGeometry">M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z M8 12l2.5 2.5L16 9</Geometry>
+        <Geometry x:Key="SendGeometry">M22 2L11 13 M22 2l-7 20-4-9-9-4 20-7z</Geometry>
+
+        <Style x:Key="IconPathBase" TargetType="Path">
+            <Setter Property="Stroke" Value="{DynamicResource AtlasCyanBrush}"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+            <Setter Property="StrokeLineJoin" Value="Round"/>
+            <Setter Property="StrokeStartLineCap" Value="Round"/>
+            <Setter Property="StrokeEndLineCap" Value="Round"/>
+            <Setter Property="Fill" Value="Transparent"/>
+        </Style>
+
+        <Style x:Key="ComponentCardBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource BuilderComponentBackgroundBrushConverter}">
+                        <Binding Path="Type"/>
+                        <Binding Path="Status"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource BuilderComponentBorderBrushConverter}">
+                        <Binding Path="Type"/>
+                        <Binding Path="Status"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="0" ShadowDepth="0" Opacity="0"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="Building">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard RepeatBehavior="Forever">
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                 From="0" To="20" Duration="0:0:1"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                 From="0" To="0.35" Duration="0:0:1"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                 From="20" To="0" BeginTime="0:0:1" Duration="0:0:1"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                 From="0.35" To="0" BeginTime="0:0:1" Duration="0:0:1"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NeonSendButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource AtlasGlassMediumBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AtlasCyanGlowBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <Grid>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AtlasGlassSolidBrush}"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="12" ShadowDepth="0" Opacity="0.3"/>
+                        </Setter.Value>
+                    </Setter>
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1.05" Duration="0:0:0.12"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1.05" Duration="0:0:0.12"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1" Duration="0:0:0.12"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1" Duration="0:0:0.12"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Effect" Value="{x:Null}"/>
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="0.95" Duration="0:0:0.08"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="0.95" Duration="0:0:0.08"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                 To="1" Duration="0:0:0.08"/>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                 To="1" Duration="0:0:0.08"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NeonTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource AtlasGlassSolidBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AtlasGlassBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource AtlasCyanBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource AtlasCyanGlowBrush}"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="0" ShadowDepth="0" Opacity="0"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AtlasAccentGradient}"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="24" ShadowDepth="0" Opacity="0.5"/>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Background" Value="{DynamicResource AtlasGlassMediumBrush}"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AtlasGlassMediumBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProjectFilesTreeItemStyle" TargetType="TreeViewItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,1,0,1"/>
+            <Setter Property="Padding" Value="4,2,4,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AtlasGlassMediumBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Storyboard x:Key="Rotate4sLinear" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                             From="0" To="360" Duration="0:0:4"/>
+        </Storyboard>
+
+        <Storyboard x:Key="PulseSparkles" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.5" To="0" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="0.5" BeginTime="0:0:1" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="1" To="1.3" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="1" To="1.3" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="1.3" To="1" BeginTime="0:0:1" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="1.3" To="1" BeginTime="0:0:1" Duration="0:0:1"/>
+        </Storyboard>
+
+        <Storyboard x:Key="PulseOpacity2s" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.5" To="1" Duration="0:0:1"/>
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0.5" BeginTime="0:0:1" Duration="0:0:1"/>
+        </Storyboard>
+
+        <Storyboard x:Key="ShiftProgressGradient" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="PhaseGradientShift"
+                             Storyboard.TargetProperty="X"
+                             From="0" To="1" Duration="0:0:2"/>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border Background="{DynamicResource AtlasSpaceGradient}"/>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="384"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0" Margin="24,16,16,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" BorderBrush="{DynamicResource AtlasGlassBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="32" Height="32" Margin="0,0,16,0" RenderTransformOrigin="0.5,0.5">
+                                <Grid.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Grid.RenderTransform>
+                                <Grid.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource Rotate4sLinear}"/>
+                                    </EventTrigger>
+                                </Grid.Triggers>
+                                <Path Style="{StaticResource IconPathBase}" Data="{StaticResource LayersGeometry}" Stroke="{DynamicResource AtlasCyanBrush}"/>
+                                <Path Data="{StaticResource SparklesGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasWarningBrush}" Opacity="0.5">
+                                    <Path.RenderTransform>
+                                        <ScaleTransform ScaleX="1" ScaleY="1"/>
+                                    </Path.RenderTransform>
+                                    <Path.RenderTransformOrigin>0.5,0.5</Path.RenderTransformOrigin>
+                                    <Path.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard Storyboard="{StaticResource PulseSparkles}"/>
+                                        </EventTrigger>
+                                    </Path.Triggers>
+                                </Path>
+                            </Grid>
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource MonoTitle}"
+                                           Text="AUTONOMOUS AI BUILDER"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource AtlasCyanBrush}"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Style="{StaticResource MonoTitle}"
+                                           Text="{Binding BuildSubtitle}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Grid Grid.Column="1" Width="96" Height="96" Margin="0,0,0,0">
+                            <Ellipse Width="96" Height="96" Stroke="{DynamicResource AtlasGlassBorderBrush}" StrokeThickness="6" Fill="Transparent"/>
+                            <Ellipse Width="96" Height="96"
+                                     Stroke="{StaticResource CyanOrangeCyanGradient}"
+                                     StrokeThickness="6"
+                                     Fill="Transparent"
+                                     StrokeDashArray="251.2 251.2"
+                                     StrokeDashOffset="{Binding BuildProgress, Converter={StaticResource ProgressToDashOffsetConverter}, ConverterParameter=251.2}"
+                                     StrokeStartLineCap="Round"
+                                     StrokeEndLineCap="Round"
+                                     RenderTransformOrigin="0.5,0.5">
+                                <Ellipse.RenderTransform>
+                                    <RotateTransform Angle="-90"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                            <TextBlock Style="{StaticResource MonoTitle}"
+                                       Text="{Binding BuildProgressInt, StringFormat={}{0}%}"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource AtlasCyanBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" Margin="0,16,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Style="{StaticResource MonoTitle}"
+                                       Text="{Binding BuildPhase}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AtlasWarningBrush}"
+                                       VerticalAlignment="Center"/>
+
+                            <Border Grid.Column="2" Background="Transparent" VerticalAlignment="Center">
+                                <Path Data="{StaticResource ActivityGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasCyanBrush}" Width="16" Height="16" Opacity="0.75">
+                                    <Path.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard Storyboard="{StaticResource PulseOpacity2s}"/>
+                                        </EventTrigger>
+                                    </Path.Triggers>
+                                </Path>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Height="4" Margin="0,0,0,24" x:Name="PhaseProgressHost">
+                            <Border Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="2"/>
+                            <Border CornerRadius="2" HorizontalAlignment="Left">
+                                <Border.Width>
+                                    <MultiBinding Converter="{StaticResource ProgressWidthConverter}">
+                                        <Binding ElementName="PhaseProgressHost" Path="ActualWidth"/>
+                                        <Binding Path="BuildProgress"/>
+                                        <Binding Source="100"/>
+                                    </MultiBinding>
+                                </Border.Width>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <LinearGradientBrush.RelativeTransform>
+                                            <TranslateTransform x:Name="PhaseGradientShift" X="0"/>
+                                        </LinearGradientBrush.RelativeTransform>
+                                        <GradientStop Color="{DynamicResource AtlasCyan}" Offset="0"/>
+                                        <GradientStop Color="{DynamicResource AtlasWarning}" Offset="0.5"/>
+                                        <GradientStop Color="{DynamicResource AtlasCyan}" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                                <Border.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource ShiftProgressGradient}"/>
+                                    </EventTrigger>
+                                </Border.Triggers>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Style="{StaticResource MonoTitle}"
+                                       Text="COMPONENT ASSEMBLY"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="0,0,0,12"/>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding Components}" AlternationCount="2">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="2"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Margin" Value="0,0,16,16"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                                    <Setter Property="Margin" Value="16,0,0,16"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource ComponentCardBorder}">
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid Grid.Row="0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Path Width="16" Height="16" Style="{StaticResource IconPathBase}">
+                                                                <Path.Stroke>
+                                                                    <MultiBinding Converter="{StaticResource BuilderComponentAccentBrushConverter}">
+                                                                        <Binding Path="Type"/>
+                                                                        <Binding Path="Status"/>
+                                                                    </MultiBinding>
+                                                                </Path.Stroke>
+                                                                <Path.Data>
+                                                                    <Binding Path="Type" Converter="{StaticResource ComponentTypeIconConverter}"/>
+                                                                </Path.Data>
+                                                            </Path>
+                                                            <StackPanel Margin="10,0,0,0">
+                                                                <TextBlock Style="{StaticResource MonoTitle}" Text="{Binding Name}" FontSize="12" Foreground="{DynamicResource AtlasTextPrimaryBrush}"/>
+                                                                <TextBlock Style="{StaticResource MonoTitle}"
+                                                                           Text="{Binding Type, Converter={StaticResource BuilderComponentTypeLabelConverter}}"
+                                                                           FontSize="10"
+                                                                           Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                                                           Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </StackPanel>
+
+                                                        <Grid Grid.Column="1" Width="18" Height="18">
+                                                            <Path x:Name="StatusCompleteIcon" Data="{StaticResource CheckCircleGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasSuccessBrush}" Visibility="Collapsed"/>
+                                                            <Path x:Name="StatusSpinnerIcon" Data="{StaticResource RefreshCwGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasCyanBrush}" Visibility="Collapsed">
+                                                                <Path.RenderTransform>
+                                                                    <RotateTransform Angle="0"/>
+                                                                </Path.RenderTransform>
+                                                                <Path.RenderTransformOrigin>0.5,0.5</Path.RenderTransformOrigin>
+                                                                <Path.Triggers>
+                                                                    <EventTrigger RoutedEvent="Loaded">
+                                                                        <BeginStoryboard>
+                                                                            <Storyboard RepeatBehavior="Forever">
+                                                                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                                 From="0" To="360" Duration="0:0:1"/>
+                                                                            </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                    </EventTrigger>
+                                                                </Path.Triggers>
+                                                            </Path>
+                                                        </Grid>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="1" Margin="0,12,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Style="{StaticResource MonoTitle}"
+                                                                   Text="{Binding Status, Converter={StaticResource BuilderComponentStatusLabelConverter}}"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                                        <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}"
+                                                                   Text="{Binding Progress, StringFormat={}{0:0}%}"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource AtlasCyanBrush}"/>
+                                                    </Grid>
+
+                                                    <Border Grid.Row="2" Height="4" Margin="0,8,0,0" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="2">
+                                                        <Border x:Name="CardProgressFill" Height="4" HorizontalAlignment="Left" CornerRadius="2">
+                                                            <Border.Background>
+                                                                <MultiBinding Converter="{StaticResource BuilderComponentAccentBrushConverter}">
+                                                                    <Binding Path="Type"/>
+                                                                    <Binding Path="Status"/>
+                                                                </MultiBinding>
+                                                            </Border.Background>
+                                                            <Border.Width>
+                                                                <MultiBinding Converter="{StaticResource ProgressWidthConverter}">
+                                                                    <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualWidth"/>
+                                                                    <Binding Path="Progress"/>
+                                                                    <Binding Source="100"/>
+                                                                </MultiBinding>
+                                                            </Border.Width>
+                                                        </Border>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Building">
+                                                    <Setter TargetName="StatusSpinnerIcon" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Complete">
+                                                    <Setter TargetName="StatusCompleteIcon" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2"
+                        Background="{DynamicResource AtlasBgMediumBrush}"
+                        BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="24"
+                        Margin="0,32,0,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource MonoTitle}"
+                                   Text="APPLICATION ARCHITECTURE"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource AtlasCyanBrush}"
+                                   Margin="0,0,0,16"/>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,14">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="Presentation Layer" FontSize="12" Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}" Text="{Binding PresentationCount, StringFormat={}{0} components}" FontSize="12" Foreground="{DynamicResource AtlasTextDisabledBrush}"/>
+                                <Border Grid.Row="1" Grid.ColumnSpan="2" Height="8" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="4" Margin="0,8,0,0">
+                                    <Border Background="{DynamicResource AtlasCyanBrush}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding PresentationProgress, Converter={StaticResource ProgressToScaleXConverter}}" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Margin="0,0,0,14">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="Business Logic" FontSize="12" Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}" Text="{Binding BusinessLogicCount, StringFormat={}{0} components}" FontSize="12" Foreground="{DynamicResource AtlasTextDisabledBrush}"/>
+                                <Border Grid.Row="1" Grid.ColumnSpan="2" Height="8" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="4" Margin="0,8,0,0">
+                                    <Border Background="{DynamicResource AtlasWarningBrush}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding BusinessLogicProgress, Converter={StaticResource ProgressToScaleXConverter}}" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Margin="0,0,0,14">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="Data Access" FontSize="12" Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}" Text="{Binding DataAccessCount, StringFormat={}{0} components}" FontSize="12" Foreground="{DynamicResource AtlasTextDisabledBrush}"/>
+                                <Border Grid.Row="1" Grid.ColumnSpan="2" Height="8" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="4" Margin="0,8,0,0">
+                                    <Border Background="{DynamicResource AtlasSuccessBrush}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding DataAccessProgress, Converter={StaticResource ProgressToScaleXConverter}}" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="3">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="Infrastructure" FontSize="12" Foreground="{DynamicResource AtlasTextMutedBrush}"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}" Text="{Binding InfrastructureCount, StringFormat={}{0} components}" FontSize="12" Foreground="{DynamicResource AtlasTextDisabledBrush}"/>
+                                <Border Grid.Row="1" Grid.ColumnSpan="2" Height="8" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="4" Margin="0,8,0,0">
+                                    <Border Background="{DynamicResource AtlasPurpleBrush}" CornerRadius="4" RenderTransformOrigin="0,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform ScaleX="{Binding InfrastructureProgress, Converter={StaticResource ProgressToScaleXConverter}}" ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                    </Border>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Column="1" Margin="0,16,24,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Background="{DynamicResource AtlasGlassSolidBrush}"
+                        BorderBrush="{DynamicResource AtlasBorderFocusBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource MonoTitle}" Text="PROJECT FILES" FontSize="12" Foreground="{DynamicResource AtlasCyanBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Column="1" Style="{StaticResource MonoTitle}" Text="{Binding WorkspaceRoot}" FontSize="10" Foreground="{DynamicResource AtlasTextMutedBrush}" TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                        </Grid>
+                        <Border x:Name="SearchBorder"
+                                Grid.Row="1"
+                                Background="{DynamicResource AtlasGlassSolidBrush}"
+                                BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AtlasAccentGradient}"/>
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="18" ShadowDepth="0" Opacity="0.35"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsKeyboardFocusWithin, ElementName=ProjectFileSearchBox}" Value="True">
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="28" ShadowDepth="0" Opacity="0.6"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <TextBox x:Name="ProjectFileSearchBox"
+                                         Style="{StaticResource NeonTextBox}"
+                                         FontSize="13"
+                                         TextChanged="ProjectFileSearchBox_TextChanged"/>
+                                <TextBlock IsHitTestVisible="False"
+                                           Text="Search files…"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                           Margin="10,0,0,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=ProjectFileSearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="2"
+                                Background="{DynamicResource AtlasGlassSolidBrush}"
+                                BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="8">
+                            <Grid>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <TreeView x:Name="ProjectFilesTree"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              Foreground="{DynamicResource AtlasTextSecondaryBrush}"
+                                              FontFamily="Consolas"
+                                              FontSize="12"
+                                          ItemContainerStyle="{StaticResource ProjectFilesTreeItemStyle}"
+                                              SelectedItemChanged="ProjectFilesTree_SelectedItemChanged"/>
+                                </ScrollViewer>
+                                <Border x:Name="ProjectFileSearchResultsHost"
+                                        Background="{DynamicResource AtlasGlassSolidBrush}"
+                                        BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="6"
+                                        Visibility="Collapsed">
+                                    <ListBox x:Name="ProjectFileSearchResults"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{DynamicResource AtlasTextSecondaryBrush}"
+                                             FontFamily="Consolas"
+                                             FontSize="12"
+                                             MouseDoubleClick="ProjectFileSearchResults_MouseDoubleClick"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" BorderBrush="{DynamicResource AtlasGlassBorderBrush}" BorderThickness="0,0,0,1" Padding="0,16,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="20" Height="20" RenderTransformOrigin="0.5,0.5">
+                                <Grid.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Grid.RenderTransform>
+                                <Grid.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource Rotate4sLinear}"/>
+                                    </EventTrigger>
+                                </Grid.Triggers>
+                                <Path Data="{StaticResource SparklesGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasCyanBrush}"/>
+                            </Grid>
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="BUILDER AI ASSISTANT" FontSize="14" Foreground="{DynamicResource AtlasCyanBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Style="{StaticResource MonoTitle}" Text="Communicate with autonomous builder" FontSize="12" Foreground="{DynamicResource AtlasTextMutedBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="2"
+                        Background="{DynamicResource AtlasGlassSolidBrush}"
+                        BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10"
+                        Margin="0,16,0,16">
+                    <Grid>
+                        <ScrollViewer x:Name="ChatScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <TextBox x:Name="OutputLogBox"
+                                     Text="{Binding OutputLog, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource AtlasTextSecondaryBrush}"
+                                     FontFamily="Consolas"
+                                     FontSize="12"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     MouseMove="OutputLogBox_MouseMove"
+                                     MouseLeave="OutputLogBox_MouseLeave"
+                                     MouseDoubleClick="OutputLogBox_MouseDoubleClick"/>
+                        </ScrollViewer>
+                        <TextBlock Text="Output will appear here when something runs…"
+                                   Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                   FontFamily="Consolas"
+                                   FontSize="12"
+                                   IsHitTestVisible="False"
+                                   Margin="4"
+                                   VerticalAlignment="Top">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding OutputLog}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="ChatInputBorder"
+                        Grid.Row="3"
+                        Background="{DynamicResource AtlasGlassSolidBrush}"
+                        BorderBrush="{DynamicResource AtlasGlassBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="8"
+                        MinHeight="46"
+                        Margin="0,0,0,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AtlasAccentGradient}"/>
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="18" ShadowDepth="0" Opacity="0.35"/>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, ElementName=ChatInputBox}" Value="True">
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="28" ShadowDepth="0" Opacity="0.6"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Row="0">
+                            <TextBox x:Name="ChatInputBox"
+                                     Text="{Binding ChatInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource NeonTextBox}"
+                                     FontSize="14"
+                                     Focusable="True"
+                                     IsTabStop="True"
+                                     VerticalContentAlignment="Center"
+                                     KeyDown="ChatInputBox_KeyDown"/>
+                            <TextBlock IsHitTestVisible="False"
+                                       Text="Ask the builder AI..."
+                                       FontFamily="Consolas"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AtlasTextMutedBrush}"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=ChatInputBox}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Style="{StaticResource NeonSendButton}"
+                                Command="{Binding SendMessageCommand}"
+                                Margin="6,0,0,0">
+                            <Path Data="{StaticResource SendGeometry}" Style="{StaticResource IconPathBase}" Stroke="{DynamicResource AtlasCyanBrush}" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

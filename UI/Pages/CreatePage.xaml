@@ -1,0 +1,14 @@
+<UserControl x:Class="AtlasAI.UI.Pages.CreatePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:social="clr-namespace:AtlasAI.SocialMedia.UI"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800"
+             Background="Transparent"
+             Loaded="UserControl_Loaded">
+    
+    <!-- Host for SocialMediaPanel content -->
+    <Border x:Name="ContentHost" Background="#08080c" CornerRadius="8" Margin="8"/>
+</UserControl>

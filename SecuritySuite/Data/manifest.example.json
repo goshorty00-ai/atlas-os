@@ -1,0 +1,10 @@
+{
+  "version": "2024.12.31.1",
+  "packageUrl": "https://atlas-ai-security.example.com/defs/atlas-defs-2024.12.31.1.zip",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "signature": "BASE64_ED25519_SIGNATURE_HERE",
+  "releaseDate": "2024-12-31T00:00:00Z",
+  "signatureCount": 125000,
+  "engineVersion": "1.2.0",
+  "releaseNotes": "- Added 500 new malware signatures\n- Improved detection for ransomware variants\n- Updated PUP definitions\n- Performance improvements"
+}

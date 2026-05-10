@@ -1,0 +1,191 @@
+<UserControl x:Class="AtlasAI.Controls.ScanOrbitControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="400"
+             x:Name="ScanOrbitRoot">
+    
+    <UserControl.Resources>
+        <!-- Scan Icon Button Style -->
+        <Style x:Key="ScanIconStyle" TargetType="Border">
+            <Setter Property="Width" Value="48"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="CornerRadius" Value="24"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#22d3ee"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#22d3ee" BlurRadius="12" ShadowDepth="0" Opacity="0.6"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    
+    <!-- Main container - orbiting icons around center -->
+    <Grid x:Name="OrbitContainer" Width="400" Height="400">
+        
+        <!-- Orbit ring visual (subtle) -->
+        <Ellipse Width="320" Height="320" Stroke="#22d3ee15" StrokeThickness="1" 
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Ellipse Width="322" Height="322" Stroke="#22d3ee08" StrokeThickness="1" StrokeDashArray="4,4"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        
+        <!-- Rotating container for scan icons -->
+        <Canvas x:Name="OrbitCanvas" Width="400" Height="400" 
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                RenderTransformOrigin="0.5,0.5">
+            <Canvas.RenderTransform>
+                <RotateTransform x:Name="OrbitRotation" Angle="0"/>
+            </Canvas.RenderTransform>
+            
+            <!-- HDD Scan Icon (0°) -->
+            <Border x:Name="HddScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="176" Canvas.Top="20"
+                    MouseLeftButtonDown="HddScan_Click" ToolTip="Scan Hard Drives">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="HddCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="💾" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- CPU Scan Icon (45°) -->
+            <Border x:Name="CpuScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="289" Canvas.Top="63"
+                    MouseLeftButtonDown="CpuScan_Click" ToolTip="Scan CPU">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="CpuCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="🔲" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- RAM Scan Icon (90°) -->
+            <Border x:Name="RamScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="332" Canvas.Top="176"
+                    MouseLeftButtonDown="RamScan_Click" ToolTip="Scan Memory">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="RamCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="🧠" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Network Scan Icon (135°) -->
+            <Border x:Name="NetworkScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="289" Canvas.Top="289"
+                    MouseLeftButtonDown="NetworkScan_Click" ToolTip="Scan Network">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="NetworkCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="🌐" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Processes Scan Icon (180°) -->
+            <Border x:Name="ProcessScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="176" Canvas.Top="332"
+                    MouseLeftButtonDown="ProcessScan_Click" ToolTip="Scan Processes">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="ProcessCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="⚡" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Registry Scan Icon (225°) -->
+            <Border x:Name="RegistryScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="63" Canvas.Top="289"
+                    MouseLeftButtonDown="RegistryScan_Click" ToolTip="Scan Registry">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="RegistryCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="📋" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Startup Scan Icon (270°) -->
+            <Border x:Name="StartupScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="20" Canvas.Top="176"
+                    MouseLeftButtonDown="StartupScan_Click" ToolTip="Scan Startup Items">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="StartupCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="🚀" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Security Scan Icon (315°) -->
+            <Border x:Name="SecurityScanBtn" Style="{StaticResource ScanIconStyle}"
+                    Canvas.Left="63" Canvas.Top="63"
+                    MouseLeftButtonDown="SecurityScan_Click" ToolTip="Full Security Scan">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#403B0000" Offset="0"/>
+                        <GradientStop Color="#201A0000" Offset="0.6"/>
+                        <GradientStop Color="#10000000" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <RotateTransform x:Name="SecurityCounterRotate" Angle="0"/>
+                </Border.RenderTransform>
+                <TextBlock Text="🛡" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </Canvas>
+        
+        <!-- Scan status text -->
+        <TextBlock x:Name="ScanStatusText" Text="" FontSize="10" Foreground="#22d3ee"
+                   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"
+                   FontFamily="Consolas" FontWeight="SemiBold">
+            <TextBlock.Effect>
+                <DropShadowEffect Color="#22d3ee" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+            </TextBlock.Effect>
+        </TextBlock>
+    </Grid>
+</UserControl>

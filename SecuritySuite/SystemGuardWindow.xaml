@@ -1,0 +1,294 @@
+<Window x:Class="AtlasAI.SecuritySuite.SystemGuardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AI System Guard" Height="900" Width="1500"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <FontFamily x:Key="TechFont">Segoe UI, Arial</FontFamily>
+        <FontFamily x:Key="MonoFont">Cascadia Code, Consolas</FontFamily>
+    </Window.Resources>
+    
+    <Border CornerRadius="12" BorderThickness="1" BorderBrush="#3322D3EE">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#050810" Offset="0"/>
+                <GradientStop Color="#0A1020" Offset="0.5"/>
+                <GradientStop Color="#050810" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.Effect>
+            <DropShadowEffect Color="#22D3EE" BlurRadius="30" ShadowDepth="0" Opacity="0.3"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <!-- HEADER -->
+            <Border Grid.Row="0" Background="#CC050810" BorderBrush="#3322D3EE" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseDown">
+                <Grid Margin="16,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Ellipse Width="10" Height="10" Fill="#22D3EE" Margin="0,0,10,0">
+                            <Ellipse.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="10" ShadowDepth="0"/></Ellipse.Effect>
+                        </Ellipse>
+                        <TextBlock Text="AI SYSTEM GUARD" Foreground="#22D3EE" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusText" Text=" • MONITORING" Foreground="#22C55E" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock x:Name="TimeText" Text="00:00:00" Foreground="#64748B" FontFamily="{StaticResource MonoFont}" FontSize="11" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <Button Click="Minimize_Click" Width="36" Height="36" Background="Transparent" BorderThickness="0" Content="─" Foreground="#64748B" FontSize="14" Cursor="Hand" ToolTip="Minimize"/>
+                        <Button Click="Maximize_Click" Width="36" Height="36" Background="Transparent" BorderThickness="0" Content="☐" Foreground="#64748B" FontSize="14" Cursor="Hand" ToolTip="Maximize/Restore" x:Name="MaximizeBtn"/>
+                        <Button Click="Close_Click" Width="36" Height="36" Background="Transparent" BorderThickness="0" Content="✕" Foreground="#EF4444" FontSize="14" Cursor="Hand" ToolTip="Close"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+            <!-- MAIN CONTENT -->
+            <Grid Grid.Row="1" Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="380"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- LEFT: System Metrics -->
+                <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- CPU Gauge -->
+                        <Border Background="#0D22D3EE" BorderBrush="#3322D3EE" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Canvas Width="70" Height="70">
+                                    <Ellipse Width="70" Height="70" Stroke="#1A22D3EE" StrokeThickness="6"/>
+                                    <Ellipse x:Name="CpuRing" Width="70" Height="70" Stroke="#22D3EE" StrokeThickness="6" StrokeDashArray="4 10">
+                                        <Ellipse.Effect><DropShadowEffect Color="#22D3EE" BlurRadius="8" ShadowDepth="0"/></Ellipse.Effect>
+                                    </Ellipse>
+                                    <TextBlock x:Name="CpuPercent" Text="0%" Canvas.Left="18" Canvas.Top="22" Foreground="#22D3EE" FontSize="16" FontWeight="Bold"/>
+                                </Canvas>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock Text="CPU USAGE" Foreground="#22D3EE" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="CpuName" Text="Loading..." Foreground="#64748B" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                    <Canvas x:Name="CpuGraph" Height="30" Margin="0,6,0,0" Background="#0D22D3EE"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- RAM Gauge -->
+                        <Border Background="#0DFF6B00" BorderBrush="#33FF6B00" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Canvas Width="70" Height="70">
+                                    <Ellipse Width="70" Height="70" Stroke="#1AFF6B00" StrokeThickness="6"/>
+                                    <Ellipse x:Name="RamRing" Width="70" Height="70" Stroke="#FF6B00" StrokeThickness="6" StrokeDashArray="5 10">
+                                        <Ellipse.Effect><DropShadowEffect Color="#FF6B00" BlurRadius="8" ShadowDepth="0"/></Ellipse.Effect>
+                                    </Ellipse>
+                                    <TextBlock x:Name="RamPercent" Text="0%" Canvas.Left="18" Canvas.Top="22" Foreground="#FF6B00" FontSize="16" FontWeight="Bold"/>
+                                </Canvas>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock Text="MEMORY" Foreground="#FF6B00" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="RamInfo" Text="0 / 0 GB" Foreground="#64748B" FontSize="9"/>
+                                    <Canvas x:Name="RamGraph" Height="30" Margin="0,6,0,0" Background="#0DFF6B00"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- GPU Gauge -->
+                        <Border Background="#0D8B5CF6" BorderBrush="#338B5CF6" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Canvas Width="70" Height="70">
+                                    <Ellipse Width="70" Height="70" Stroke="#1A8B5CF6" StrokeThickness="6"/>
+                                    <Ellipse x:Name="GpuRing" Width="70" Height="70" Stroke="#8B5CF6" StrokeThickness="6" StrokeDashArray="3 10">
+                                        <Ellipse.Effect><DropShadowEffect Color="#8B5CF6" BlurRadius="8" ShadowDepth="0"/></Ellipse.Effect>
+                                    </Ellipse>
+                                    <TextBlock x:Name="GpuPercent" Text="0%" Canvas.Left="18" Canvas.Top="22" Foreground="#8B5CF6" FontSize="16" FontWeight="Bold"/>
+                                </Canvas>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
+                                    <TextBlock Text="GPU USAGE" Foreground="#8B5CF6" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="GpuName" Text="Loading..." Foreground="#64748B" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="GpuTemp" Text="Temp: --°C" Foreground="#64748B" FontSize="9" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Disk Usage -->
+                        <Border Background="#0D22C55E" BorderBrush="#3322C55E" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                            <StackPanel>
+                                <TextBlock Text="STORAGE" Foreground="#22C55E" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                <StackPanel x:Name="DiskList"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Network -->
+                        <Border Background="#0D3B82F6" BorderBrush="#333B82F6" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,8,12">
+                            <StackPanel>
+                                <TextBlock Text="NETWORK" Foreground="#3B82F6" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="↓ DOWNLOAD" Foreground="#64748B" FontSize="8"/>
+                                        <TextBlock x:Name="NetDown" Text="0 KB/s" Foreground="#22C55E" FontSize="12" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="↑ UPLOAD" Foreground="#64748B" FontSize="8"/>
+                                        <TextBlock x:Name="NetUp" Text="0 KB/s" Foreground="#F59E0B" FontSize="12" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+                
+                <!-- CENTER: Activity Feed & Process Monitor -->
+                <Grid Grid.Column="1" Margin="8,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- System Activity -->
+                    <Border Background="#0D22D3EE" BorderBrush="#3322D3EE" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Ellipse Width="8" Height="8" Fill="#22C55E" Margin="0,0,8,0"/>
+                                <TextBlock Text="SYSTEM ACTIVITY" Foreground="#22D3EE" FontSize="11" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <ScrollViewer Height="180" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="ActivityFeed"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Process Monitor -->
+                    <Border Grid.Row="1" Background="#0D22D3EE" BorderBrush="#3322D3EE" BorderThickness="1" CornerRadius="8" Padding="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="TOP PROCESSES" Foreground="#22D3EE" FontSize="11" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="ProcessCount" Text=" (0 running)" Foreground="#64748B" FontSize="10"/>
+                            </StackPanel>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="ProcessList"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+                
+                <!-- RIGHT: AI Chat (Collapsible) -->
+                <Grid Grid.Column="2" Margin="8,0,0,0">
+                    <!-- Toggle Button (always visible) -->
+                    <Button x:Name="ChatToggleBtn" Click="ToggleChat_Click" 
+                            Width="32" Height="100" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Background="#1A8B5CF6" BorderThickness="0" Cursor="Hand" ToolTip="Toggle Chat Panel"
+                            Visibility="{Binding ElementName=ChatPanel, Path=Visibility, Converter={x:Null}}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="#1A8B5CF6" CornerRadius="0,8,8,0" BorderBrush="#338B5CF6" BorderThickness="0,1,1,1">
+                                                <TextBlock Text="💬" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#338B5CF6"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    <!-- Chat Panel -->
+                    <Border x:Name="ChatPanel" Background="#0D8B5CF6" BorderBrush="#338B5CF6" BorderThickness="1" CornerRadius="8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- AI Header with Hide Button -->
+                            <Border Background="#1A8B5CF6" Padding="12" CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="36" Height="36" CornerRadius="18" Background="#338B5CF6">
+                                            <TextBlock Text="🤖" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="ATLAS GUARD" Foreground="#F1F5F9" FontSize="11" FontWeight="SemiBold"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse x:Name="AiStatusDot" Width="6" Height="6" Fill="#22C55E" Margin="0,0,6,0"/>
+                                                <TextBlock x:Name="AiStatus" Text="Watching your system" Foreground="#94A3B8" FontSize="9"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Name="VoiceBtn" Click="Voice_Click" Width="32" Height="32" Background="Transparent" 
+                                                BorderThickness="0" Cursor="Hand" ToolTip="Voice Input">
+                                            <TextBlock x:Name="VoiceIcon" Text="🎤" FontSize="14"/>
+                                        </Button>
+                                        <Button Click="HideChat_Click" Width="32" Height="32" Background="Transparent" 
+                                                BorderThickness="0" Cursor="Hand" ToolTip="Hide Chat">
+                                            <TextBlock Text="◀" FontSize="12" Foreground="#64748B"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Chat Messages -->
+                            <ScrollViewer Grid.Row="1" x:Name="ChatScroll" VerticalScrollBarVisibility="Auto" Padding="12">
+                                <StackPanel x:Name="ChatMessages"/>
+                            </ScrollViewer>
+                            
+                            <!-- Chat Input -->
+                            <Border Grid.Row="2" Background="#1A8B5CF6" Padding="12" CornerRadius="0,0,8,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="ChatInput" Background="#0D050810" Foreground="#F1F5F9" BorderBrush="#338B5CF6" 
+                                             BorderThickness="1" Padding="12,8" FontSize="12" VerticalContentAlignment="Center"
+                                             KeyDown="ChatInput_KeyDown">
+                                        <TextBox.Resources>
+                                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                                        </TextBox.Resources>
+                                    </TextBox>
+                                    <Button Grid.Column="1" Content="Send" Click="SendChat_Click" Margin="8,0,0,0" Padding="16,8"
+                                            Background="#8B5CF6" Foreground="White" BorderThickness="0" Cursor="Hand">
+                                        <Button.Resources>
+                                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,184 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         ATLAS AI - TYPOGRAPHY SYSTEM
+         Clean, modern typography using Segoe UI Variable with fallbacks
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         FONT FAMILIES
+    ───────────────────────────────────────────────────────────────────────── -->
+    <FontFamily x:Key="AtlasFontPrimary">Segoe UI Variable, Segoe UI, Arial</FontFamily>
+    <FontFamily x:Key="AtlasFontMono">Cascadia Code, Consolas, Courier New</FontFamily>
+    <FontFamily x:Key="AtlasFontIcon">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+        <Setter Property="Effect" Value="{x:Null}"/>
+        <Style.Triggers>
+            <Trigger Property="FontFamily" Value="{StaticResource AtlasFontIcon}">
+                <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         HEADING STYLES
+    ───────────────────────────────────────────────────────────────────────── -->
+    
+    <!-- H1 - App Title -->
+    <Style x:Key="AtlasH1" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        <Setter Property="LineHeight" Value="40"/>
+    </Style>
+    
+    <!-- H2 - Section Headers -->
+    <Style x:Key="AtlasH2" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="LineHeight" Value="32"/>
+    </Style>
+    
+    <!-- H3 - Subsection Headers -->
+    <Style x:Key="AtlasH3" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="LineHeight" Value="24"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         BODY TEXT STYLES
+    ───────────────────────────────────────────────────────────────────────── -->
+    
+    <!-- Body - Primary text -->
+    <Style x:Key="AtlasBody" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    
+    <!-- Body Secondary - Muted text -->
+    <Style x:Key="AtlasBodySecondary" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    
+    <!-- Caption - Small labels -->
+    <Style x:Key="AtlasCaption" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextMutedBrush}"/>
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+    
+    <!-- Label - Form labels -->
+    <Style x:Key="AtlasLabel" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         SPECIAL TEXT STYLES
+    ───────────────────────────────────────────────────────────────────────── -->
+    
+    <!-- Status Text - Online/Offline indicators -->
+    <Style x:Key="AtlasStatus" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasSuccessBrush}"/>
+    </Style>
+    
+    <!-- Accent Text - Highlighted info -->
+    <Style x:Key="AtlasAccentText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+    </Style>
+    
+    <!-- Code Text - Monospace for code snippets -->
+    <Style x:Key="AtlasCode" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontMono}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+        <Setter Property="Padding" Value="4,2"/>
+    </Style>
+    
+    <!-- Button Text -->
+    <Style x:Key="AtlasButtonText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    
+    <!-- Chip/Badge Text -->
+    <Style x:Key="AtlasChipText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    
+    <!-- Toast Text -->
+    <Style x:Key="AtlasToastText" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         MESSAGE BUBBLE TEXT STYLES
+    ───────────────────────────────────────────────────────────────────────── -->
+    
+    <!-- User Message -->
+    <Style x:Key="AtlasUserMessage" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    
+    <!-- Assistant Message -->
+    <Style x:Key="AtlasAssistantMessage" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight" Value="20"/>
+    </Style>
+    
+    <!-- Message Timestamp -->
+    <Style x:Key="AtlasTimestamp" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontFamily" Value="{StaticResource AtlasFontPrimary}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextMutedBrush}"/>
+    </Style>
+    
+</ResourceDictionary>

@@ -1,0 +1,1321 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:core="clr-namespace:AtlasAI.Core"
+                    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════
+         ATLAS AI - CONTROL STYLES
+         Modern, premium control styles with subtle animations
+    ═══════════════════════════════════════════════════════════════════════════ -->
+
+    <DropShadowEffect x:Key="NeonGlowEffect"
+                      Color="{StaticResource AtlasCyan}"
+                      Direction="270"
+                      BlurRadius="8"
+                      ShadowDepth="0"
+                      Opacity="0.4"/>
+
+    <DropShadowEffect x:Key="AtlasNeonLineGlowEffect"
+                      Color="{StaticResource AtlasCyan}"
+                      Direction="270"
+                      BlurRadius="8"
+                      ShadowDepth="0"
+                      Opacity="0.22"/>
+
+    <LinearGradientBrush x:Key="HeaderDividerBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#0022D3EE" Offset="0"/>
+        <GradientStop Color="#0022D3EE" Offset="0.18"/>
+        <GradientStop Color="#6622D3EE" Offset="0.5"/>
+        <GradientStop Color="#0022D3EE" Offset="0.82"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="HeaderDividerHairlineBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#0022D3EE" Offset="0"/>
+        <GradientStop Color="#0022D3EE" Offset="0.18"/>
+        <GradientStop Color="#1A22D3EE" Offset="0.5"/>
+        <GradientStop Color="#0022D3EE" Offset="0.82"/>
+        <GradientStop Color="#0022D3EE" Offset="1"/>
+    </LinearGradientBrush>
+
+    <Style x:Key="NeonWindowFrameStyle" TargetType="ContentControl">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Frame"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1.5"
+                            CornerRadius="18">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush x:Name="FrameBrush" StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop x:Name="FS0" Color="#22D3EE" Offset="0"/>
+                                <GradientStop x:Name="FS1" Color="#22D3EE" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="25" ShadowDepth="0" Opacity="0.45"/>
+                        </Border.Effect>
+                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                    <DoubleAnimation Storyboard.TargetName="Glow"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     From="0.35"
+                                                     To="0.65"
+                                                     Duration="0:0:2.5">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseInOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NeonWindowFrameStyle.Sweep" TargetType="ContentControl" BasedOn="{StaticResource NeonWindowFrameStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Frame"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1.5"
+                            CornerRadius="18">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush x:Name="FrameBrush" StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop x:Name="FS0" Color="#00000000" Offset="0.0"/>
+                                <GradientStop x:Name="FS1" Color="#22D3EE" Offset="0.45"/>
+                                <GradientStop x:Name="FS2" Color="#22D3EE" Offset="0.55"/>
+                                <GradientStop x:Name="FS3" Color="#00000000" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="25" ShadowDepth="0" Opacity="0.45"/>
+                        </Border.Effect>
+                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="Glow"
+                                                     Storyboard.TargetProperty="Opacity"
+                                                     From="0.35"
+                                                     To="0.65"
+                                                     Duration="0:0:2.5"
+                                                     AutoReverse="True">
+                                        <DoubleAnimation.EasingFunction>
+                                            <SineEase EasingMode="EaseInOut"/>
+                                        </DoubleAnimation.EasingFunction>
+                                    </DoubleAnimation>
+                                    <DoubleAnimation Storyboard.TargetName="FS1"
+                                                     Storyboard.TargetProperty="Offset"
+                                                     From="0"
+                                                     To="1"
+                                                     Duration="0:0:4"/>
+                                    <DoubleAnimation Storyboard.TargetName="FS2"
+                                                     Storyboard.TargetProperty="Offset"
+                                                     From="0.1"
+                                                     To="1.1"
+                                                     Duration="0:0:4"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NeonFrameBorderStyle" TargetType="ContentControl">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border x:Name="Frame"
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="1.5"
+                            CornerRadius="18">
+                        <Border.BorderBrush>
+                            <LinearGradientBrush x:Name="FrameBrush" StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop x:Name="E0" Color="#22D3EE" Offset="0.0"/>
+                                <GradientStop x:Name="E1" Color="#22D3EE" Offset="0.33"/>
+                                <GradientStop x:Name="E2" Color="#22D3EE" Offset="0.66"/>
+                                <GradientStop x:Name="E3" Color="#22D3EE" Offset="1.0"/>
+                            </LinearGradientBrush>
+                        </Border.BorderBrush>
+                        <Border.Effect>
+                            <DropShadowEffect x:Name="Glow" Color="#22D3EE" BlurRadius="25" ShadowDepth="0" Opacity="0.28"/>
+                        </Border.Effect>
+                        <ContentPresenter Content="{TemplateBinding Content}"/>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Idle}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="IdlePulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" To="22" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.18"
+                                                         To="0.32"
+                                                         Duration="0:0:2.8">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="IdlePulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Listening}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ListeningPulse">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" To="26" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.28"
+                                                         To="0.55"
+                                                         Duration="0:0:1.6">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ListeningPulse"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Thinking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ThinkingWave">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="20"
+                                                         To="30"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.22"
+                                                         To="0.42"
+                                                         Duration="0:0:2.2">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ThinkingWave"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Typing}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TypingFlickerSoft">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#A855F7" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.22"
+                                                         To="0.34"
+                                                         Duration="0:0:0.9">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TypingFlickerSoft"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Talking}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="TalkingBreath">
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#22D3EE" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.34"
+                                                         To="0.52"
+                                                         Duration="0:0:2.0">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                                         From="22"
+                                                         To="28"
+                                                         Duration="0:0:2.0">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="TalkingBreath"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Working}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="WorkingSweep">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#00000000" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#F97316" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#00000000" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#F97316" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                                         From="0.22"
+                                                         To="0.38"
+                                                         Duration="0:0:2.2"
+                                                         AutoReverse="True">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset"
+                                                         From="0"
+                                                         To="1"
+                                                         Duration="0:0:4">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Frame"
+                                                         Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset"
+                                                         From="0.12"
+                                                         To="1.12"
+                                                         Duration="0:0:4">
+                                            <DoubleAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseInOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="WorkingSweep"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding CurrentMode}" Value="{x:Static core:PresenceMode.Error}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard x:Name="ErrorBlink">
+                                    <Storyboard FillBehavior="HoldEnd">
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Color" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Color" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Color" To="#EF4444" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Color" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[0].Offset" To="0.0" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[1].Offset" To="0.33" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[2].Offset" To="0.66" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(Border.BorderBrush).(LinearGradientBrush.GradientStops)[3].Offset" To="1.0" Duration="0:0:0"/>
+                                        <ColorAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Color)" To="#EF4444" Duration="0:0:0"/>
+                                        <DoubleAnimation Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)" To="24" Duration="0:0:0"/>
+                                        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Frame" Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)">
+                                            <EasingDoubleKeyFrame Value="0.22" KeyTime="0:0:0"/>
+                                            <EasingDoubleKeyFrame Value="0.60" KeyTime="0:0:0.18">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.22" KeyTime="0:0:0.36">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.55" KeyTime="0:0:0.54">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                            <EasingDoubleKeyFrame Value="0.26" KeyTime="0:0:0.9">
+                                                <EasingDoubleKeyFrame.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </EasingDoubleKeyFrame.EasingFunction>
+                                            </EasingDoubleKeyFrame>
+                                        </DoubleAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ErrorBlink"/>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ToolTip">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Background" Value="#CC0B0F14"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="BorderBrush" Value="#3322D3EE"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Placement" Value="Mouse"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="10"
+                            Padding="{TemplateBinding Padding}">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#22D3EE" BlurRadius="16" ShadowDepth="0" Opacity="0.18"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Global Neon Accent Pulse (subtle) -->
+    <Style x:Key="NeonBorderStyle" TargetType="Border">
+        <Setter Property="Effect" Value="{StaticResource AtlasNeonLineGlowEffect}"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                        <DoubleAnimation Storyboard.TargetProperty="(Border.BorderBrush).(Brush.Opacity)"
+                                         From="0.7"
+                                         To="1"
+                                         Duration="0:0:2.5"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Staggered variants so separators don't all pulse in sync -->
+    <Style x:Key="NeonBorderStyle.Delay0_8" TargetType="Border">
+        <Setter Property="Effect" Value="{StaticResource AtlasNeonLineGlowEffect}"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                        <DoubleAnimation Storyboard.TargetProperty="(Border.BorderBrush).(Brush.Opacity)"
+                                         BeginTime="0:0:0.8"
+                                         From="0.7"
+                                         To="1"
+                                         Duration="0:0:2.5"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="NeonBorderStyle.Delay1_6" TargetType="Border">
+        <Setter Property="Effect" Value="{StaticResource AtlasNeonLineGlowEffect}"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                        <DoubleAnimation Storyboard.TargetProperty="(Border.BorderBrush).(Brush.Opacity)"
+                                         BeginTime="0:0:1.6"
+                                         From="0.7"
+                                         To="1"
+                                         Duration="0:0:2.5"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+    
+    <Style x:Key="AtlasNeonBorder" TargetType="Border">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Effect" Value="{StaticResource AtlasNeonLineGlowEffect}"/>
+    </Style>
+
+    <Style TargetType="Border">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         PRIMARY BUTTON - Main action buttons
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasPrimaryButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AtlasSurfaceAlt}"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasAccent}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AtlasAccent}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            CornerRadius="8" Padding="{TemplateBinding Padding}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AtlasSurfaceHoverBrush}"/>
+                            <Setter TargetName="bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="{StaticResource AtlasCyan}" BlurRadius="8" ShadowDepth="0" Opacity="0.2"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AtlasSurfaceActiveBrush}"/>
+                            <Setter TargetName="bd" Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasTextDisabledBrush}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="Transparent"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         SECONDARY BUTTON - Standard actions
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasSecondaryButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AtlasBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                            CornerRadius="6" Padding="{TemplateBinding Padding}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceActiveBrush}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AtlasAccent}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         ICON BUTTON - Toolbar/header icons
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasIconButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="36"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="{DynamicResource AtlasCyan}"
+                                  BlurRadius="14"
+                                  ShadowDepth="0"
+                                  Opacity="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                            CornerRadius="6" Width="{TemplateBinding Width}" 
+                            Height="{TemplateBinding Height}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Active">
+                            <Setter TargetName="bd" Property="Background" Value="#30AA0000"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+                            <Setter TargetName="bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="{DynamicResource AtlasCyan}" BlurRadius="18" ShadowDepth="0" Opacity="1"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceActiveBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GhostBtn" TargetType="Button" BasedOn="{StaticResource AtlasIconButton}"/>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         PILL BUTTON - Quick action chips
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasPillButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceAlt}"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasAccent}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AtlasBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="16" Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AtlasSurfaceHoverBrush}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AtlasAccent}"/>
+                            <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimary}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource AtlasSurfaceActiveBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TOGGLE BUTTON - On/Off switches
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasToggleButton" TargetType="ToggleButton">
+        <Setter Property="Background" Value="{DynamicResource AtlasSurfaceHoverBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="36"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Color="{DynamicResource AtlasCyan}"
+                                  BlurRadius="14"
+                                  ShadowDepth="0"
+                                  Opacity="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" 
+                            CornerRadius="6" Width="{TemplateBinding Width}" 
+                            Height="{TemplateBinding Height}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#20AA0000"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasCyanBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceActiveBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         CHIP/BADGE - Status indicators
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasChip" TargetType="Border">
+        <Setter Property="Background" Value="#3fb95020"/>
+        <Setter Property="BorderBrush" Value="#3fb95040"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+    </Style>
+    
+    <Style x:Key="AtlasChipCyan" TargetType="Border">
+        <Setter Property="Background" Value="#00d4ff20"/>
+        <Setter Property="BorderBrush" Value="#00d4ff40"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+    </Style>
+    
+    <Style x:Key="AtlasChipWarning" TargetType="Border">
+        <Setter Property="Background" Value="#d2992220"/>
+        <Setter Property="BorderBrush" Value="#d2992240"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         CARD - Content containers
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AtlasCardGradient}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AtlasBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TEXTBOX - Input fields
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="#80110000"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="#80AA0000"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AtlasCyanBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource AtlasCyanGlowBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AtlasCyanBrush}"/>
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasSurfaceActiveBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource AtlasBorderLightBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         COMBOBOX - Dropdown selectors with dark theme
+    ───────────────────────────────────────────────────────────────────────── -->
+    
+    <!-- ComboBox Toggle Button -->
+    <ControlTemplate x:Key="AtlasComboBoxToggleButton" TargetType="ToggleButton">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="32"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="Border" Grid.ColumnSpan="2" CornerRadius="6"
+                    Background="#21262d" BorderBrush="#30363d" BorderThickness="1"/>
+            <Border Grid.Column="0" CornerRadius="6,0,0,6" Background="Transparent"/>
+            <Path x:Name="Arrow" Grid.Column="1" Fill="#8b949e" HorizontalAlignment="Center" 
+                  VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z"/>
+        </Grid>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Border" Property="BorderBrush" Value="#00d4aa"/>
+                <Setter TargetName="Arrow" Property="Fill" Value="#00d4aa"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Border" Property="BorderBrush" Value="#00d4aa"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+    
+    <!-- ComboBox TextBox for editable mode -->
+    <ControlTemplate x:Key="AtlasComboBoxTextBox" TargetType="TextBox">
+        <Border x:Name="PART_ContentHost" Focusable="False" Background="Transparent"/>
+    </ControlTemplate>
+    
+    <!-- ComboBox Item Style - DARK TEXT ON DARK BACKGROUND -->
+    <Style x:Key="AtlasComboBoxItem" TargetType="ComboBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#EAF2FF"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="bd" 
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Margin="4,2"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#12233A"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#2DE2FF"/>
+                            <Setter Property="Foreground" Value="#EAF2FF"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#12233A"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#2DE2FF"/>
+                            <Setter Property="Foreground" Value="#EAF2FF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Pill-Styled ComboBox for Media Center -->
+    <Style x:Key="AtlasPillComboBox" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource AtlasSurfaceAlt}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AtlasAccent}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AtlasComboBoxItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+
+                        <!-- Main Pill -->
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="18"
+                                Padding="{TemplateBinding Padding}"
+                                Opacity="1"
+                                SnapsToDevicePixels="True"
+                                IsHitTestVisible="False">
+                            <Grid>
+                                <ContentPresenter
+                                    Margin="0,0,24,0"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Left"
+                                     Content="{TemplateBinding SelectionBoxItem}"
+                                     ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                     ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+
+                                <!-- Arrow icon (click handled by overlay toggle below) -->
+                                <Path Data="M 0 0 L 4 4 L 8 0 Z"
+                                      Fill="{StaticResource AtlasTextSecondary}"
+                                      Stretch="Uniform"
+                                      Width="10"
+                                      Height="6"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,10,0"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Click surface: opens dropdown when clicking anywhere (pill body or arrow area) -->
+                        <ToggleButton x:Name="PART_DropDownToggle"
+                                      Focusable="False"
+                                      FocusVisualStyle="{x:Null}"
+                                      ClickMode="Press"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       Cursor="Hand"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="18"/>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <!-- Dropdown -->
+                        <Popup IsOpen="{TemplateBinding IsDropDownOpen}"
+                               Placement="Bottom"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border Background="#0B1220"
+                                    BorderBrush="#2DE2FF"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="8">
+                                <ScrollViewer Background="#0B1220"
+                                              BorderThickness="0">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Main ComboBox Style -->
+    <Style x:Key="AtlasComboBox" TargetType="ComboBox">
+        <Setter Property="Background" Value="#21262d"/>
+        <Setter Property="Foreground" Value="#e6edf3"/>
+        <Setter Property="BorderBrush" Value="#30363d"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource AtlasComboBoxItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="ToggleButton" 
+                                      Template="{StaticResource AtlasComboBoxToggleButton}"
+                                      Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                       ClickMode="Press"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       Cursor="Hand"/>
+                        <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          Margin="10,3,28,3" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#e6edf3"/>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                        <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}"
+                                 Template="{StaticResource AtlasComboBoxTextBox}"
+                                 HorizontalAlignment="Left" VerticalAlignment="Center"
+                                 Margin="10,3,28,3" Focusable="True" Background="Transparent"
+                                 Foreground="#e6edf3" CaretBrush="#00d4aa"
+                                 Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                            <Grid x:Name="DropDown" SnapsToDevicePixels="True"
+                                  MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <Border x:Name="DropDownBorder" Background="#161b22" 
+                                        BorderBrush="#30363d" BorderThickness="1" CornerRadius="6"
+                                        Margin="0,2,0,0">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="4" Opacity="0.4"/>
+                                    </Border.Effect>
+                                </Border>
+                                <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Grid>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEditable" Value="True">
+                            <Setter Property="IsTabStop" Value="False"/>
+                            <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         CONTEXT MENU - Dark neon theme
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="#CC0B0F14"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AtlasCyanBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="MaxHeight" Value="520"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"
+                            Effect="{StaticResource NeonGlowEffect}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True"
+                                      MaxHeight="{TemplateBinding MaxHeight}">
+                            <StackPanel IsItemsHost="True"
+                                        KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="MenuItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="0"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Icon"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="Shortcut"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Icon -->
+                            <ContentPresenter Grid.Column="0"
+                                              Content="{TemplateBinding Icon}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"/>
+                            
+                            <!-- Header -->
+                            <ContentPresenter Grid.Column="1"
+                                              Content="{TemplateBinding Header}"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                            
+                            <!-- Shortcut -->
+                            <TextBlock Grid.Column="2"
+                                       Text="{TemplateBinding InputGestureText}"
+                                       VerticalAlignment="Center"
+                                       Margin="20,0,0,0"
+                                       Foreground="{StaticResource AtlasTextMutedBrush}"
+                                       FontSize="11"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#2222D3EE"/>
+                            <Setter Property="Foreground" Value="{StaticResource AtlasCyanBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         SCROLLVIEWER - Custom scrollbar
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasScrollBar" TargetType="ScrollBar">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid>
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Border Background="{DynamicResource AtlasBorderBrush}" 
+                                                    CornerRadius="4" Margin="2"/>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         LISTBOX ITEM - Selectable list items
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="AtlasListBoxItem" TargetType="ListBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}" CornerRadius="4">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#10AA0000"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#20AA0000"/>
+                            <Setter Property="Foreground" Value="#AA0000"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         TAB BUTTON - Command Center tab navigation
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="TabButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0,0,0,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <ContentPresenter x:Name="content" 
+                                        HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"
+                                        Margin="{TemplateBinding Padding}"/>
+                        <Border x:Name="underline"
+                                Height="2"
+                                VerticalAlignment="Bottom"
+                                Background="#AA0000"
+                                Opacity="0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#AA0000"
+                                                BlurRadius="8"
+                                                ShadowDepth="0"
+                                                Opacity="0.6"/>
+                            </Border.Effect>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Active">
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+                            <Setter TargetName="underline" Property="Opacity" Value="1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         WINDOW CONTROL BUTTON - Minimize, Maximize, Close
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style x:Key="WindowControlButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontFamily" Value="{DynamicResource AtlasFontPrimary}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" 
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasGlassBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{DynamicResource AtlasGlassMediumBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ─────────────────────────────────────────────────────────────────────────
+         NEON CHECKBOX - Light indicator style (No checkmark)
+    ───────────────────────────────────────────────────────────────────────── -->
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource AtlasTextSecondaryBrush}"/>
+        <Setter Property="Background" Value="#333333"/>
+        <Setter Property="BorderBrush" Value="#666666"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,0,0,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <DockPanel LastChildFill="True">
+                        <!-- The Light Indicator -->
+                        <Grid DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <Border x:Name="IndicatorBorder"
+                                    Width="16" Height="16"
+                                    CornerRadius="8"
+                                    Background="Transparent"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1">
+                                <Border x:Name="InnerLight"
+                                        Width="8" Height="8"
+                                        CornerRadius="4"
+                                        Background="Transparent"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                        
+                        <!-- Content -->
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </DockPanel>
+                    
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="IndicatorBorder" Property="BorderBrush" Value="{StaticResource AtlasCyanBrush}"/>
+                            <Setter TargetName="InnerLight" Property="Background" Value="{StaticResource AtlasCyanBrush}"/>
+                            <Setter TargetName="InnerLight" Property="Effect" Value="{StaticResource NeonGlowEffect}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="IndicatorBorder" Property="BorderBrush" Value="{StaticResource AtlasTextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

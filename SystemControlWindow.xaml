@@ -1,0 +1,545 @@
+<ui:FluentWindow x:Class="AtlasAI.SystemControlWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Atlas AI - System Scanner" Height="750" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <!-- Category Item Style -->
+        <Style x:Key="CategoryItem" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#0D1B2A">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Sidebar -->
+        <Border Grid.Column="0" Background="#0A1628" Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo/Title -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8,16,8,24">
+                    <Border Width="40" Height="40" CornerRadius="8" Background="#1B4B8A" Margin="0,0,12,0">
+                        <TextBlock Text="🛡️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Atlas AI" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="System Scanner" FontSize="11" Foreground="#6B7B8C"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Navigation Icons -->
+                <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                    <Border x:Name="NavScan" Style="{StaticResource CategoryItem}" Background="#1B4B8A" MouseLeftButtonUp="NavScan_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔍" FontSize="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="Scan" Foreground="White" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="NavProtection" Style="{StaticResource CategoryItem}" MouseLeftButtonUp="NavProtection_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🛡️" FontSize="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="Protection" Foreground="#8899AA" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="NavTools" Style="{StaticResource CategoryItem}" MouseLeftButtonUp="NavTools_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔧" FontSize="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="Tools" Foreground="#8899AA" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="NavHistory" Style="{StaticResource CategoryItem}" MouseLeftButtonUp="NavHistory_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋" FontSize="18" Margin="0,0,12,0"/>
+                            <TextBlock Text="History" Foreground="#8899AA" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Scan Categories (shown during/after scan) -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="CategoryPanel" Visibility="Collapsed">
+                        <TextBlock Text="SCAN CATEGORIES" FontSize="10" Foreground="#5A6A7A" FontWeight="SemiBold" Margin="8,8,8,12"/>
+                        <!-- Categories will be populated dynamically -->
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- System Stats -->
+                <StackPanel Grid.Row="3" Margin="8,16,8,8">
+                    <TextBlock Text="SYSTEM STATUS" FontSize="10" Foreground="#5A6A7A" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="CPU" Foreground="#8899AA" FontSize="11"/>
+                        <TextBlock x:Name="CpuUsageText" Grid.Column="1" Text="--%" Foreground="White" FontSize="11"/>
+                    </Grid>
+                    <ProgressBar x:Name="CpuUsageBar" Height="4" Value="0" Margin="0,0,0,12" Background="#1A2A3A" Foreground="#3B82F6"/>
+                    
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Memory" Foreground="#8899AA" FontSize="11"/>
+                        <TextBlock x:Name="MemoryUsageText" Grid.Column="1" Text="--%" Foreground="White" FontSize="11"/>
+                    </Grid>
+                    <ProgressBar x:Name="MemoryUsageBar" Height="4" Value="0" Margin="0,0,0,12" Background="#1A2A3A" Foreground="#10B981"/>
+                    
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Disk" Foreground="#8899AA" FontSize="11"/>
+                        <TextBlock x:Name="DiskUsageText" Grid.Column="1" Text="--%" Foreground="White" FontSize="11"/>
+                    </Grid>
+                    <ProgressBar x:Name="DiskUsageBar" Height="4" Value="0" Background="#1A2A3A" Foreground="#F59E0B"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <ui:TitleBar Grid.Row="0" Title="" ShowMaximize="True" ShowMinimize="True" Background="Transparent"/>
+
+            <!-- Content Pages -->
+            <Grid Grid.Row="1" Margin="24,0,24,24">
+                
+                <!-- SCAN PAGE -->
+                <Grid x:Name="ScanPage" Visibility="Visible">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Scan Button / Progress Circle -->
+                    <Grid Grid.Row="0" x:Name="ScanButtonArea" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Main Scan Circle -->
+                        <Grid Grid.Row="0" Width="300" Height="300">
+                            <Ellipse Width="280" Height="280" Stroke="#1B4B8A" StrokeThickness="3" Fill="#0A1628"/>
+                            <Ellipse Width="260" Height="260" Stroke="#0F2847" StrokeThickness="8"/>
+                            
+                            <!-- Progress Arc (shown during scan) -->
+                            <Grid x:Name="ProgressArcContainer" Visibility="Collapsed">
+                                <Ellipse Width="260" Height="260" Stroke="#3B82F6" StrokeThickness="8" 
+                                         StrokeDashArray="4,1" RenderTransformOrigin="0.5,0.5">
+                                    <Ellipse.RenderTransform>
+                                        <RotateTransform x:Name="ProgressRotation" Angle="0"/>
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Grid>
+                            
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock x:Name="ScanButtonText" Text="SCAN" FontSize="32" FontWeight="Bold" 
+                                           Foreground="White" HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="ScanPercentText" Text="" FontSize="48" FontWeight="Bold" 
+                                           Foreground="#3B82F6" HorizontalAlignment="Center" Visibility="Collapsed"/>
+                                <TextBlock x:Name="ScanSubText" Text="Click to start full malware scan" FontSize="12" 
+                                           Foreground="#6B7B8C" HorizontalAlignment="Center" Margin="0,8,0,0" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="200"/>
+                            </StackPanel>
+                            
+                            <Border Background="Transparent" Cursor="Hand" MouseLeftButtonUp="ScanCircle_Click"/>
+                        </Grid>
+                        
+                        <!-- Norton-style Stats Panel (shown during scan) -->
+                        <Border Grid.Row="1" x:Name="ScanStatsPanel" Visibility="Collapsed" 
+                                Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,20,0,0" MinWidth="500">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <!-- Current File Being Scanned (scrolling) -->
+                                <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                                    <TextBlock Text="SCANNING:" FontSize="10" Foreground="#5A6A7A" FontWeight="SemiBold"/>
+                                    <Border Background="#0F2847" CornerRadius="4" Padding="8,6" Margin="0,4,0,0">
+                                        <TextBlock x:Name="CurrentFileText" Text="Initializing..." FontSize="11" 
+                                                   Foreground="#10B981" FontFamily="Consolas" 
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="460"/>
+                                    </Border>
+                                </StackPanel>
+                                
+                                <!-- Stats Row -->
+                                <Grid Grid.Row="1" Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Files Scanned -->
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                        <TextBlock Text="FILES SCANNED" FontSize="9" Foreground="#5A6A7A" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="FilesScannedText" Text="0" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Threats Found -->
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                        <TextBlock Text="THREATS FOUND" FontSize="9" Foreground="#5A6A7A" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="ThreatsFoundText" Text="0" FontSize="24" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Elapsed Time -->
+                                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                                        <TextBlock Text="ELAPSED TIME" FontSize="9" Foreground="#5A6A7A" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="ElapsedTimeText" Text="0:00" FontSize="24" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                                
+                                <!-- Progress Bar -->
+                                <Grid Grid.Row="2" Margin="0,0,0,16">
+                                    <ProgressBar x:Name="ScanProgressBar" Height="8" Value="0" Maximum="100" 
+                                                 Background="#1A2A3A" Foreground="#3B82F6"/>
+                                </Grid>
+                                
+                                <!-- Cancel Button -->
+                                <Button Grid.Row="3" x:Name="CancelScanButton" Content="⏹ Cancel Scan" 
+                                        Background="#EF4444" Foreground="White" Padding="24,10" 
+                                        Click="CancelScanButton_Click" HorizontalAlignment="Center" Cursor="Hand"
+                                        FontWeight="SemiBold"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Scan Results Area (shown after scan) -->
+                    <Grid x:Name="ScanResultsArea" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Results Header -->
+                        <Border Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Margin="0,0,16,0">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#10B981" Offset="0"/>
+                                            <GradientStop Color="#059669" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <TextBlock x:Name="ResultIcon" Text="✓" FontSize="24" Foreground="White" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="ResultTitle" Text="Scan Complete" FontSize="18" 
+                                               FontWeight="SemiBold" Foreground="White"/>
+                                    <TextBlock x:Name="ResultSubtitle" Text="Your system appears to be in good shape" 
+                                               FontSize="12" Foreground="#8899AA" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button x:Name="NewScanButton" Content="New Scan" Background="#1B4B8A" 
+                                            Foreground="White" Padding="16,8" Margin="0,0,8,0" Click="NewScanButton_Click"/>
+                                    <Button x:Name="AutoFixButton" Content="Fix Issues Now" Background="#EF4444" 
+                                            Foreground="White" Padding="16,8" IsEnabled="False" Click="AutoFixButton_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Results List -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="IssuesPanel">
+                                <!-- Results will be populated here -->
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- Mode Toggle -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
+                        <RadioButton x:Name="AiModeRadio" Content="AI Mode" IsChecked="True" Foreground="White" 
+                                     GroupName="ScanMode" Margin="0,0,24,0"/>
+                        <RadioButton x:Name="ManualModeRadio" Content="Manual" Foreground="#8899AA" GroupName="ScanMode"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- PROTECTION PAGE -->
+                <Grid x:Name="ProtectionPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Protection Header -->
+                    <Border Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,0,0,24">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0" Text="🛡️" FontSize="28" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Protection" FontSize="20" FontWeight="SemiBold" Foreground="White"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="ProtectionStatusText" Text="All shields are turned ON" 
+                                               FontSize="12" Foreground="#10B981"/>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Enable All Shields" Foreground="#8899AA" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <ToggleButton x:Name="MasterShieldToggle" IsChecked="True" Click="MasterShieldToggle_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Protection Cards -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Malware Shield -->
+                        <Border Grid.Column="0" Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,0,12,12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#1B4B8A" Margin="0,0,12,0">
+                                        <TextBlock Text="🦠" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Malware Shield" FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Scans and removes malicious programs" FontSize="11" Foreground="#6B7B8C"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="MalwareShieldToggle" IsChecked="True" HorizontalAlignment="Right"/>
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Text="Protection Level:" Foreground="#6B7B8C" FontSize="11" Margin="0,16,0,4"/>
+                                <Grid Grid.Row="2">
+                                    <ProgressBar Height="6" Value="100" Background="#1A2A3A" Foreground="#10B981"/>
+                                    <Ellipse Width="12" Height="12" Fill="#10B981" HorizontalAlignment="Right" Margin="0,0,-3,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Antivirus Protection -->
+                        <Border Grid.Column="1" Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="12,0,0,12">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#1B4B8A" Margin="0,0,12,0">
+                                        <TextBlock Text="🛡️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Antivirus Protection" FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Detects and blocks dangerous viruses" FontSize="11" Foreground="#6B7B8C"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="AntivirusToggle" IsChecked="True" HorizontalAlignment="Right"/>
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Text="Protection Level:" Foreground="#6B7B8C" FontSize="11" Margin="0,16,0,4"/>
+                                <Grid Grid.Row="2">
+                                    <ProgressBar Height="6" Value="100" Background="#1A2A3A" Foreground="#10B981"/>
+                                    <Ellipse Width="12" Height="12" Fill="#10B981" HorizontalAlignment="Right" Margin="0,0,-3,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Real-time Monitor -->
+                        <Border Grid.Column="0" Grid.Row="1" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,12,12,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#1B4B8A" Margin="0,0,12,0">
+                                        <TextBlock Text="👁️" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Real-time Monitor" FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Monitors system activity in real-time" FontSize="11" Foreground="#6B7B8C"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="RealtimeToggle" IsChecked="True" HorizontalAlignment="Right"/>
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Text="Protection Level:" Foreground="#6B7B8C" FontSize="11" Margin="0,16,0,4"/>
+                                <Grid Grid.Row="2">
+                                    <ProgressBar Height="6" Value="100" Background="#1A2A3A" Foreground="#10B981"/>
+                                    <Ellipse Width="12" Height="12" Fill="#10B981" HorizontalAlignment="Right" Margin="0,0,-3,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Network Protection -->
+                        <Border Grid.Column="1" Grid.Row="1" Background="#0A1628" CornerRadius="12" Padding="20" Margin="12,12,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#1B4B8A" Margin="0,0,12,0">
+                                        <TextBlock Text="🌐" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Network Protection" FontSize="14" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Blocks suspicious network activity" FontSize="11" Foreground="#6B7B8C"/>
+                                    </StackPanel>
+                                    <ToggleButton x:Name="NetworkToggle" IsChecked="True" HorizontalAlignment="Right"/>
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Text="Protection Level:" Foreground="#6B7B8C" FontSize="11" Margin="0,16,0,4"/>
+                                <Grid Grid.Row="2">
+                                    <ProgressBar Height="6" Value="100" Background="#1A2A3A" Foreground="#10B981"/>
+                                    <Ellipse Width="12" Height="12" Fill="#10B981" HorizontalAlignment="Right" Margin="0,0,-3,0"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- TOOLS PAGE -->
+                <Grid x:Name="ToolsPage" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="System Tools" FontSize="24" FontWeight="SemiBold" 
+                               Foreground="White" Margin="0,0,0,24"/>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Column="0" Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,0,8,8" 
+                                Cursor="Hand" MouseLeftButtonUp="DiskCleanupButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="🗑️" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Disk Cleanup" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="Free up disk space" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="8,0,8,8"
+                                Cursor="Hand" MouseLeftButtonUp="TaskManagerButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="📊" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Task Manager" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="Manage running apps" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Grid.Row="0" Background="#0A1628" CornerRadius="12" Padding="20" Margin="8,0,0,8"
+                                Cursor="Hand" MouseLeftButtonUp="DeviceManagerButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="⚙️" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Device Manager" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="Manage hardware" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="0" Grid.Row="1" Background="#0A1628" CornerRadius="12" Padding="20" Margin="0,8,8,0"
+                                Cursor="Hand" MouseLeftButtonUp="NetworkResetButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="🌐" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Network Reset" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="Reset network settings" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Grid.Row="1" Background="#0A1628" CornerRadius="12" Padding="20" Margin="8,8,8,0"
+                                Cursor="Hand" MouseLeftButtonUp="SystemInfoButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="ℹ️" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="System Info" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="View system details" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Grid.Row="1" Background="#0A1628" CornerRadius="12" Padding="20" Margin="8,8,0,0"
+                                Cursor="Hand" MouseLeftButtonUp="ExportReportButton_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="📄" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Export Report" FontSize="14" Foreground="White" HorizontalAlignment="Center" Margin="0,12,0,4"/>
+                                <TextBlock Text="Save scan results" FontSize="11" Foreground="#6B7B8C" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+            </Grid>
+        </Grid>
+
+        <!-- Hidden elements for compatibility -->
+        <StackPanel Visibility="Collapsed">
+            <Ellipse x:Name="HealthIndicator"/>
+            <TextBlock x:Name="HealthStatusText"/>
+            <TextBlock x:Name="IssueCountText"/>
+            <TextBlock x:Name="ScanStatusText"/>
+            <TextBlock x:Name="ProgressText"/>
+            <ProgressBar x:Name="ProgressBar"/>
+            <TextBlock x:Name="LastScanText"/>
+            <ComboBox x:Name="FilterComboBox"/>
+            <Button x:Name="ScanButton"/>
+            <Button x:Name="QuickScanButton"/>
+            <Button x:Name="ExportReportButton"/>
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

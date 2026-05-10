@@ -1,0 +1,23 @@
+<Application x:Class="AtlasAI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Theme/Colors.xaml"/>
+                <ResourceDictionary Source="Theme/Builder.xaml"/>
+                <ResourceDictionary Source="Theme/Typography.xaml"/>
+                <ResourceDictionary Source="Theme/Controls.xaml"/>
+                <ResourceDictionary Source="Theme/ChatTemplates.xaml"/>
+                <!-- ATLAS NEO Media Centre theme — tokens first, then core styles -->
+                <ResourceDictionary Source="Theme/AtlasNeoTokens.xaml"/>
+                <ResourceDictionary Source="Theme/AtlasNeoCore.xaml"/>
+                <!-- System/theme overrides to prevent washed-out menu/dropdown highlights -->
+                <ResourceDictionary Source="Theme/SystemOverrides.xaml"/>
+                <!-- AI Chat view-specific styling + popup/scrollbar dark overrides -->
+                <ResourceDictionary Source="Theme/AiChat.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,24 @@
+<Window x:Class="AtlasAI.DownloaderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:downloader="clr-namespace:AtlasAI.Modules.Downloader"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Atlas · Downloads"
+        WindowState="Maximized"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="#0A0E14"
+        ResizeMode="CanResize"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="18" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border CornerRadius="18" ClipToBounds="True" Background="#0A0E14">
+        <Grid>
+            <downloader:DownloaderHostView />
+        </Grid>
+    </Border>
+</Window>

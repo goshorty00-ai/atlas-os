@@ -1,0 +1,246 @@
+<Window x:Class="AtlasAI.UI.ProcessManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Process Manager" Height="700" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="#050508">
+    
+    <Window.Resources>
+        <!-- Tab Button Style -->
+        <Style x:Key="TabBtn" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background" Value="#22d3ee"/>
+                                <Setter Property="Foreground" Value="#050508"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1a1a24"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Action Button Style -->
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#16161f"/>
+            <Setter Property="Foreground" Value="#f1f5f9"/>
+            <Setter Property="BorderBrush" Value="#22d3ee"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#22d3ee"/>
+                                <Setter Property="Foreground" Value="#050508"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- DataGrid Style -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RowBackground" Value="#0c0c12"/>
+            <Setter Property="AlternatingRowBackground" Value="#08080c"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionMode" Value="Extended"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+        </Style>
+        
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#16161f"/>
+            <Setter Property="Foreground" Value="#22d3ee"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#22d3ee"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#f1f5f9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#8b5cf6"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1a1a24"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#f1f5f9"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#16161f" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="⚙️ Process Manager" FontSize="20" FontWeight="SemiBold" Foreground="#f1f5f9"/>
+                    <TextBlock Text="View running processes, manage startup items and scheduled tasks" 
+                               Foreground="#94a3b8" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="🔄 Refresh" Click="RefreshAll_Click" Style="{StaticResource ActionBtn}"/>
+            </Grid>
+        </Border>
+        
+        <!-- Tabs -->
+        <Border Grid.Row="1" Background="#08080c" Padding="12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <ToggleButton x:Name="TabProcesses" Content="🔧 Processes" IsChecked="True" 
+                              Click="Tab_Click" Style="{StaticResource TabBtn}"/>
+                <ToggleButton x:Name="TabStartup" Content="🚀 Startup" 
+                              Click="Tab_Click" Style="{StaticResource TabBtn}" Margin="8,0"/>
+                <ToggleButton x:Name="TabTasks" Content="📅 Scheduled Tasks" 
+                              Click="Tab_Click" Style="{StaticResource TabBtn}"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Content Area -->
+        <Grid Grid.Row="2" Background="#050508">
+            <!-- Processes Panel -->
+            <Grid x:Name="ProcessesPanel">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Search -->
+                <Border Background="#0c0c12" Padding="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ProcessSearch" TextChanged="ProcessSearch_TextChanged"
+                                 Background="#16161f" Foreground="#f1f5f9" BorderBrush="#22d3ee"
+                                 BorderThickness="1" Padding="12,8" FontSize="14"/>
+                        <CheckBox x:Name="ShowAllProcesses" Content="Show all processes" Grid.Column="1"
+                                  Foreground="#94a3b8" VerticalAlignment="Center" Margin="12,0,0,0"
+                                  Checked="ShowAllProcesses_Changed" Unchecked="ShowAllProcesses_Changed"/>
+                    </Grid>
+                </Border>
+                
+                <!-- Process List -->
+                <DataGrid x:Name="ProcessGrid" Grid.Row="1">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="180"/>
+                        <DataGridTextColumn Header="PID" Binding="{Binding PID}" Width="80"/>
+                        <DataGridTextColumn Header="Memory" Binding="{Binding Memory}" Width="100"/>
+                        <DataGridTextColumn Header="CPU" Binding="{Binding CPU}" Width="80"/>
+                        <DataGridTextColumn Header="Window Title" Binding="{Binding WindowTitle}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+            
+            <!-- Startup Panel -->
+            <Grid x:Name="StartupPanel" Visibility="Collapsed">
+                <DataGrid x:Name="StartupGrid">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="200"/>
+                        <DataGridTextColumn Header="Command" Binding="{Binding Command}" Width="*"/>
+                        <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="180"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+            
+            <!-- Tasks Panel -->
+            <Grid x:Name="TasksPanel" Visibility="Collapsed">
+                <DataGrid x:Name="TasksGrid">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Task Name" Binding="{Binding Name}" Width="350"/>
+                        <DataGridTextColumn Header="State" Binding="{Binding State}" Width="100"/>
+                        <DataGridTextColumn Header="Next Run" Binding="{Binding NextRun}" Width="180"/>
+                        <DataGridTextColumn Header="Last Run" Binding="{Binding LastRun}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+        
+        <!-- Action Bar -->
+        <Border Grid.Row="3" Background="#16161f" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock x:Name="StatusText" VerticalAlignment="Center" Foreground="#94a3b8"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="BtnKill" Content="❌ Kill Process" Click="KillProcess_Click" Style="{StaticResource ActionBtn}"/>
+                    <Button x:Name="BtnDisable" Content="🚫 Disable" Click="DisableItem_Click" 
+                            Style="{StaticResource ActionBtn}" Margin="8,0,0,0" Visibility="Collapsed"/>
+                    <Button x:Name="BtnEnable" Content="✅ Enable" Click="EnableItem_Click" 
+                            Style="{StaticResource ActionBtn}" Margin="8,0,0,0" Visibility="Collapsed"/>
+                    <Button Content="📂 Open Location" Click="OpenLocation_Click" 
+                            Style="{StaticResource ActionBtn}" Margin="8,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

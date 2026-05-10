@@ -1,0 +1,199 @@
+<UserControl x:Class="AtlasAI.Views.AiChat.ChatHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:services="clr-namespace:AtlasAI.Conversation.Services"
+             mc:Ignorable="d"
+             Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="HistoryActionButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#22D3EE"/>
+            <Setter Property="Background" Value="#172033"/>
+            <Setter Property="BorderBrush" Value="#6622D3EE"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#22D3EE" BlurRadius="14" ShadowDepth="0" Opacity="0.18"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1D2A42"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#0F172A"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HistoryDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource HistoryActionButtonStyle}">
+            <Setter Property="Foreground" Value="#FDBA74"/>
+            <Setter Property="Background" Value="#2A1016"/>
+            <Setter Property="BorderBrush" Value="#66F97316"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="18,18,18,14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="420"/>
+            <ColumnDefinition Width="18"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Background="#A60B1220"
+                BorderBrush="#3322D3EE"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="CHAT HISTORY"
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="#EAF2F8"/>
+                    <TextBlock Text="Browse every saved Atlas session and reopen any conversation."
+                               Margin="0,6,0,0"
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="11"
+                               Foreground="#94A3B8"/>
+                </StackPanel>
+
+                <Grid Grid.Row="1" Margin="0,18,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="#141B2B"
+                            BorderBrush="#3322D3EE"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,8">
+                        <TextBox x:Name="SearchBox"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="#EAF2F8"
+                                 CaretBrush="#22D3EE"
+                                 FontFamily="{DynamicResource AtlasFontMono}"
+                                 FontSize="13"
+                                 TextChanged="SearchBox_TextChanged"/>
+                    </Border>
+
+                    <Button Grid.Column="1"
+                            Style="{StaticResource HistoryActionButtonStyle}"
+                            Margin="12,0,0,0"
+                            Padding="14,8"
+                            Background="#141B2B"
+                            Click="NewChatButton_Click"
+                            Content="New Chat"/>
+                </Grid>
+
+                <TreeView x:Name="SessionTree"
+                          Grid.Row="2"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Foreground="#EAF2F8"
+                          SelectedItemChanged="SessionTree_SelectedItemChanged">
+                    <TreeView.Resources>
+                        <HierarchicalDataTemplate DataType="{x:Type local:HistoryGroup}" ItemsSource="{Binding Sessions}" xmlns:local="clr-namespace:AtlasAI.Views.AiChat">
+                            <TextBlock Text="{Binding Title}"
+                                       FontFamily="{DynamicResource AtlasFontMono}"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="#22D3EE"
+                                       Margin="0,8,0,8"/>
+                        </HierarchicalDataTemplate>
+                        <DataTemplate DataType="{x:Type services:SessionIndexEntry}">
+                            <Border Padding="10,8" Margin="0,0,0,8" Background="#101827" CornerRadius="10" BorderBrush="#221E293B" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" Foreground="#EAF2F8" TextWrapping="Wrap"/>
+                                    <TextBlock Margin="0,4,0,0" Text="{Binding LastMessageAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" FontFamily="{DynamicResource AtlasFontMono}" FontSize="11" Foreground="#94A3B8"/>
+                                    <TextBlock Margin="0,2,0,0" Text="{Binding MessageCount, StringFormat={}{0} messages}" FontFamily="{DynamicResource AtlasFontMono}" FontSize="11" Foreground="#64748B"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </TreeView.Resources>
+                </TreeView>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2"
+                Background="#9A0A101C"
+                BorderBrush="#3322D3EE"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="18">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock x:Name="SessionTitleText"
+                               Text="Select a conversation"
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="#EAF2F8"/>
+                    <TextBlock x:Name="SessionMetaText"
+                               Margin="0,6,0,0"
+                               Text="History preview appears here."
+                               FontFamily="{DynamicResource AtlasFontMono}"
+                               FontSize="11"
+                               Foreground="#94A3B8"/>
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" Margin="0,18,0,18" VerticalScrollBarVisibility="Auto" Background="Transparent">
+                    <StackPanel x:Name="PreviewStack"/>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button x:Name="OpenSessionButton"
+                            Style="{StaticResource HistoryActionButtonStyle}"
+                            Padding="16,10"
+                            Click="OpenSessionButton_Click"
+                            Content="Open In Chat"
+                            IsEnabled="False"/>
+                    <Button x:Name="DeleteSessionButton"
+                            Style="{StaticResource HistoryDangerButtonStyle}"
+                            Margin="12,0,0,0"
+                            Click="DeleteSessionButton_Click"
+                            Content="Delete"
+                            IsEnabled="False"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,9 @@
+<UserControl x:Class="AtlasAI.Controls.SecurityControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             Background="#020817">
+    <Grid Background="#020817">
+        <wv2:WebView2 x:Name="SecurityWebView" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,60 @@
+<Window x:Class="AtlasAI.SocialMedia.CampaignDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New Campaign" Height="450" Width="400"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" ResizeMode="NoResize">
+    
+    <Border Background="#0D1117" CornerRadius="12" BorderBrush="#30363D" BorderThickness="1">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Header -->
+            <TextBlock Text="Create New Campaign" Foreground="#E6EDF3" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,20"/>
+            
+            <!-- Form -->
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Campaign Name" Foreground="#7D858F" FontSize="12" Margin="0,0,0,4"/>
+                <TextBox x:Name="NameBox" Background="#21262D" Foreground="#E6EDF3" BorderBrush="#30363D" Padding="8" Margin="0,0,0,12"/>
+                
+                <TextBlock Text="Goal" Foreground="#7D858F" FontSize="12" Margin="0,0,0,4"/>
+                <ComboBox x:Name="GoalBox" SelectedIndex="0" Margin="0,0,0,12">
+                    <ComboBoxItem Content="Sales"/>
+                    <ComboBoxItem Content="Traffic"/>
+                    <ComboBoxItem Content="Followers"/>
+                    <ComboBoxItem Content="Engagement"/>
+                    <ComboBoxItem Content="Brand Awareness"/>
+                    <ComboBoxItem Content="Lead Generation"/>
+                </ComboBox>
+                
+                <TextBlock Text="Platforms" Foreground="#7D858F" FontSize="12" Margin="0,0,0,4"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <CheckBox x:Name="TikTokCheck" Content="TikTok" Foreground="#E6EDF3" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="InstagramCheck" Content="Instagram" Foreground="#E6EDF3" Margin="0,0,16,0" IsChecked="True"/>
+                    <CheckBox x:Name="FacebookCheck" Content="Facebook" Foreground="#E6EDF3" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="YouTubeCheck" Content="YouTube" Foreground="#E6EDF3"/>
+                </StackPanel>
+                
+                <TextBlock Text="Start Date" Foreground="#7D858F" FontSize="12" Margin="0,0,0,4"/>
+                <DatePicker x:Name="StartDatePicker" SelectedDate="{x:Static sys:DateTime.Today}" Margin="0,0,0,12"
+                            xmlns:sys="clr-namespace:System;assembly=mscorlib"/>
+                
+                <TextBlock Text="End Date (Optional)" Foreground="#7D858F" FontSize="12" Margin="0,0,0,4"/>
+                <DatePicker x:Name="EndDatePicker" Margin="0,0,0,12"/>
+            </StackPanel>
+            
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Padding="16,8" Margin="0,0,8,0" Click="Cancel_Click"
+                        Background="#21262D" Foreground="#E6EDF3" BorderBrush="#30363D"/>
+                <Button Content="Create Campaign" Padding="16,8" Click="Create_Click"
+                        Background="#5865F2" Foreground="#E6EDF3" BorderThickness="0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

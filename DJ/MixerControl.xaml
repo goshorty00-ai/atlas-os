@@ -1,0 +1,114 @@
+<UserControl x:Class="AtlasAI.DJ.MixerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="12">
+        <Grid.Resources>
+            <LinearGradientBrush x:Key="CrossfaderBrush" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#22D3EE" Offset="0"/>
+                <GradientStop Color="#A855F7" Offset="0.5"/>
+                <GradientStop Color="#F97316" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="VuBrush" StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#22C55E" Offset="0"/>
+                <GradientStop Color="#F59E0B" Offset="0.7"/>
+                <GradientStop Color="#EF4444" Offset="1"/>
+            </LinearGradientBrush>
+            <ControlTemplate x:Key="EmptyRepeatButton" TargetType="RepeatButton">
+                <Border Background="Transparent" />
+            </ControlTemplate>
+            <Style x:Key="MixerSlider" TargetType="Slider">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Slider">
+                            <Grid>
+                                <Track x:Name="PART_Track"
+                                       Maximum="{TemplateBinding Maximum}"
+                                       Minimum="{TemplateBinding Minimum}"
+                                       Value="{TemplateBinding Value}">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton IsEnabled="False" Template="{StaticResource EmptyRepeatButton}" />
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Width="14" Height="14">
+                                            <Thumb.Template>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Ellipse Fill="#A855F7">
+                                                        <Ellipse.Effect>
+                                                            <DropShadowEffect Color="#A855F7" BlurRadius="14" ShadowDepth="0" Opacity="0.6"/>
+                                                        </Ellipse.Effect>
+                                                    </Ellipse>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Track.Thumb>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton IsEnabled="False" Template="{StaticResource EmptyRepeatButton}" />
+                                    </Track.IncreaseRepeatButton>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Background" Value="{x:Null}"/>
+            </Style>
+        </Grid.Resources>
+        <Border CornerRadius="16" Background="#100b14" BorderBrush="#A855F7" BorderThickness="1" Padding="16">
+            <Border.Effect>
+                <DropShadowEffect Color="#A855F7" BlurRadius="20" ShadowDepth="0" Opacity="0.25"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="MIXER" Foreground="#A855F7" FontSize="16"/>
+                <TextBlock Text="CROSSFADE &amp; EFFECTS" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="11" Margin="0,2,0,0"/>
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                        <TextBlock Text="LEFT" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="10" HorizontalAlignment="Center"/>
+                        <Border Width="40" Height="128" CornerRadius="12" Background="#0f0b14" BorderBrush="#22D3EE" BorderThickness="1">
+                            <Grid>
+                                <Rectangle Fill="{StaticResource VuBrush}" VerticalAlignment="Bottom" x:Name="VuLeftFill" Height="0" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                        <TextBlock Text="-12  -6  -3  0 dB" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="10"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                        <TextBlock Text="RIGHT" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="10" HorizontalAlignment="Center"/>
+                        <Border Width="40" Height="128" CornerRadius="12" Background="#0f0b14" BorderBrush="#F97316" BorderThickness="1">
+                            <Grid>
+                                <Rectangle Fill="{StaticResource VuBrush}" VerticalAlignment="Bottom" x:Name="VuRightFill" Height="0" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="Center" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <Grid>
+                    <ProgressBar x:Name="CrossFill" Minimum="0" Maximum="100" Height="6" Foreground="{StaticResource CrossfaderBrush}" Background="#0E1A24"/>
+                    <Slider x:Name="Crossfader" Style="{StaticResource MixerSlider}" Minimum="0" Maximum="100" Value="50"/>
+                </Grid>
+                <TextBlock Text="Master" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <Slider x:Name="Master" Style="{StaticResource MixerSlider}" Minimum="0" Maximum="100" Value="80"/>
+                <TextBlock Text="Cue Mix" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <Slider x:Name="CueMix" Style="{StaticResource MixerSlider}" Minimum="0" Maximum="100" Value="50"/>
+                <TextBlock Text="Headphone" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <Slider x:Name="Headphone" Style="{StaticResource MixerSlider}" Minimum="0" Maximum="100" Value="60"/>
+                <TextBlock Text="Mic" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <Slider x:Name="Mic" Style="{StaticResource MixerSlider}" Minimum="0" Maximum="100" Value="50"/>
+                <TextBlock Text="Effects" Foreground="{DynamicResource AtlasTextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                <UniformGrid Rows="2" Columns="3" Margin="0,6,0,0">
+                    <Button x:Name="FxEcho" Content="ECHO" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                    <Button x:Name="FxReverb" Content="REVERB" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                    <Button x:Name="FxFlanger" Content="FLANGER" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                    <Button x:Name="FxDelay" Content="DELAY" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                    <Button x:Name="FxFilter" Content="FILTER" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                    <Button x:Name="FxPhaser" Content="PHASER" Height="28" Background="#14121a" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+                </UniformGrid>
+                <Button x:Name="SyncBtn" Content="SYNC DECKS" Margin="0,12,0,0" Height="36" Background="#131a23" Foreground="{DynamicResource AtlasTextPrimaryBrush}" BorderThickness="0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

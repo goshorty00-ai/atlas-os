@@ -1,0 +1,26 @@
+<UserControl x:Class="AtlasAI.UI.Pages.MemoryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800">
+    <Grid Background="#08080c">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="MEMORY" FontSize="48" Foreground="#8b5cf6" HorizontalAlignment="Center" Margin="0,0,0,16" FontWeight="Bold"/>
+            <TextBlock Text="Conversation history and learned preferences" FontSize="14" Foreground="#64748b" 
+                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        </StackPanel>
+        
+        <Border Grid.Row="1" Margin="16" Padding="16" CornerRadius="8" Background="#0c1525" BorderBrush="#308B5CF6" BorderThickness="1">
+            <Button x:Name="MediaBtn" Content="🖼️ Media Gallery" Click="MediaBtn_Click" 
+                    Background="#108B5CF6" Foreground="#8B5CF6" Padding="16,12" 
+                    FontWeight="SemiBold" HorizontalAlignment="Center"/>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,80 @@
+<UserControl x:Class="AtlasAI.Controls.ScanProgressBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:conv="clr-namespace:AtlasAI.Views.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="50"
+             d:DesignWidth="600">
+    <UserControl.Resources>
+        <conv:ProgressWidthConverter x:Key="ProgressWidthConverter"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <TextBlock Text="{Binding StatusText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Foreground="#CCFB923C"
+                       FontFamily="{Binding MonoFontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       TextTrimming="CharacterEllipsis"/>
+            <TextBlock Text="{Binding ProgressText, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Foreground="#22D3EE"
+                       FontFamily="{Binding MonoFontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontSize="11"
+                       HorizontalAlignment="Right"/>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Height="4"
+                Background="#0F172A"
+                CornerRadius="999"
+                Margin="0,10,0,0">
+            <Grid ClipToBounds="True">
+                <Rectangle x:Name="ProgressFill"
+                           Height="4"
+                           HorizontalAlignment="Left"
+                           RadiusX="999"
+                           RadiusY="999">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#22D3EE" Offset="0"/>
+                            <GradientStop Color="#FB923C" Offset="0.5"/>
+                            <GradientStop Color="#22D3EE" Offset="1"/>
+                            <LinearGradientBrush.RelativeTransform>
+                                <TranslateTransform X="0"/>
+                            </LinearGradientBrush.RelativeTransform>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                    <Rectangle.Width>
+                        <MultiBinding Converter="{StaticResource ProgressWidthConverter}">
+                            <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualWidth"/>
+                            <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="Progress"/>
+                            <Binding RelativeSource="{RelativeSource AncestorType=UserControl}" Path="Maximum"/>
+                        </MultiBinding>
+                    </Rectangle.Width>
+                </Rectangle>
+            </Grid>
+        </Border>
+
+        <Grid.Triggers>
+            <EventTrigger RoutedEvent="Loaded">
+                <BeginStoryboard>
+                    <Storyboard RepeatBehavior="Forever">
+                        <DoubleAnimation Storyboard.TargetName="ProgressFill"
+                                         Storyboard.TargetProperty="(Shape.Fill).(LinearGradientBrush.RelativeTransform).(TranslateTransform.X)"
+                                         From="0" To="1"
+                                         Duration="0:0:2"
+                                         AutoReverse="True"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Grid.Triggers>
+    </Grid>
+</UserControl>

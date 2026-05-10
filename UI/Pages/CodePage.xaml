@@ -1,0 +1,75 @@
+<UserControl x:Class="AtlasAI.UI.Pages.CodePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:AtlasAI.Controls"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="800"
+             Background="Transparent"
+             Loaded="UserControl_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border x:Name="TopBar" Grid.Row="0"
+                Margin="12,10,12,0"
+                Padding="12"
+                CornerRadius="12"
+                Background="{DynamicResource AtlasGlassSolidBrush}"
+                BorderBrush="{DynamicResource AtlasBorderFocusBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="ATLAS AI" Foreground="{DynamicResource AtlasCyanBrush}" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="ModeLabel" Text="AUTONOMOUS AI BUILDER" Foreground="{DynamicResource AtlasTextMutedBrush}" FontFamily="Consolas" FontSize="11" Margin="0,3,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="ToolsBtn"
+                            Content="TOOLS"
+                            Click="ToolsBtn_Click"
+                            Padding="14,8"
+                            Margin="0,0,10,0"
+                            Background="{DynamicResource AtlasGlassMediumBrush}"
+                            Foreground="{DynamicResource AtlasCyanBrush}"
+                            BorderBrush="{DynamicResource AtlasCyanGlowBrush}"
+                            BorderThickness="1"
+                            FontFamily="Consolas"
+                            FontSize="12"/>
+                    <Button x:Name="SwitchModeBtn"
+                            Content="&lt;/&gt; SWITCH TO IDE MODE"
+                            Click="SwitchModeBtn_Click"
+                            Padding="14,8"
+                            Background="{DynamicResource AtlasGlassMediumBrush}"
+                            Foreground="{DynamicResource AtlasWarningBrush}"
+                            BorderBrush="{DynamicResource AtlasWarningDimBrush}"
+                            BorderThickness="1"
+                            FontFamily="Consolas"
+                            FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid x:Name="ContentGrid" Grid.Row="1" Margin="0" ClipToBounds="False">
+            <Border x:Name="BuilderHost" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="12" ClipToBounds="True" BorderThickness="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <controls:CodeControl x:Name="BuilderControl" Visibility="Collapsed"/>
+                    <Border x:Name="BuilderFigmaHost" Background="{DynamicResource AtlasBgDeepBrush}" BorderThickness="0" ClipToBounds="False">
+                        <wv2:WebView2 x:Name="BuilderFigmaWebView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </Border>
+                </Grid>
+            </Border>
+            <Border x:Name="IdeHost" Background="{DynamicResource AtlasBgDeepBrush}" CornerRadius="12" Visibility="Collapsed" ClipToBounds="True" BorderThickness="0"/>
+        </Grid>
+    </Grid>
+</UserControl>

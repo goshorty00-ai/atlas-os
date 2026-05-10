@@ -1,0 +1,97 @@
+BBC Radio 1 | https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one
+BBC Radio 2 | https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two
+BBC Radio 3 | https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three
+BBC Radio 4 FM | https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm
+BBC Radio 6 Music | https://stream.live.vc.bbcmedia.co.uk/bbc_6music
+BBC Radio 1Xtra | https://stream.live.vc.bbcmedia.co.uk/bbc_1xtra
+BBC Asian Network | https://stream.live.vc.bbcmedia.co.uk/bbc_asian_network
+BBC World Service | https://stream.live.vc.bbcmedia.co.uk/bbc_world_service
+Classic FM | https://media-ice.musicradio.com/ClassicFM
+Capital FM | https://media-ice.musicradio.com/CapitalUK
+Heart FM | https://media-ice.musicradio.com/HeartUK
+Kiss FM | https://media-ice.musicradio.com/KissUK
+Magic Radio | https://media-ice.musicradio.com/Magic
+Smooth Radio | https://media-ice.musicradio.com/SmoothUK
+Absolute Radio | https://media-ice.musicradio.com/AbsoluteRadio
+TalkSPORT | https://radio.talksport.com/stream
+TalkSPORT 2 | https://radio.talksport.com/stream2
+Jazz FM | https://jazzfm.ice.infomaniak.ch/jazzfm.mp3
+Planet Rock | https://planetrockradiouk.ice.infomaniak.ch/planetrockradiouk.mp3
+Ibiza Global Radio | https://ibizaglobalradio.streaming-pro.com:8024/stream
+DI.FM Trance | https://trance.di.fm/mp3
+DI.FM House | https://house.di.fm/mp3
+DI.FM Chillout | https://chillout.di.fm/mp3
+Nightride FM | https://stream.nightride.fm/nightride.mp3
+Hot 97 | https://playerservices.streamtheworld.com/api/livestream-redirect/HOT97.mp3
+Power 105.1 | https://playerservices.streamtheworld.com/api/livestream-redirect/WPWXFM.mp3
+Z100 New York | https://playerservices.streamtheworld.com/api/livestream-redirect/WHTZFM.mp3
+KIIS FM | https://playerservices.streamtheworld.com/api/livestream-redirect/KIISFMAAC.aac
+NPR News | https://npr-ice.streamguys1.com/live.mp3
+KEXP 90.3 FM | https://kexp-mp3-128.streamguys1.com/kexp128.mp3
+WFMU Freeform | https://stream0.wfmu.org/freeform-128k
+Radio Paradise (Main Mix) | http://stream.radioparadise.com/aac-128
+Radio Paradise (Mellow Mix) | http://stream.radioparadise.com/mellow-128
+Radio Paradise (Rock Mix) | http://stream.radioparadise.com/rock-128
+Radio Paradise (Global Mix) | http://stream.radioparadise.com/global-128
+NRJ France | https://scdn.nrjaudio.fm/adwz1/fr/30001/mp3_128.mp3
+Radio Swiss Pop | https://stream.srg-ssr.ch/m/rsp/mp3_128
+Radio Swiss Jazz | https://stream.srg-ssr.ch/m/rsj/mp3_128
+Radio Swiss Classic | https://stream.srg-ssr.ch/m/rsc_de/mp3_128
+Triple J | https://live-radio01.mediahubaustralia.com/2TJW/mp3/
+Deutschlandfunk | https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3
+SomaFM : Groove Salad | https://ice5.somafm.com/groovesalad-128-mp3
+SomaFM : Drone Zone | https://ice5.somafm.com/dronezone-128-mp3
+SomaFM : Secret Agent | https://ice5.somafm.com/secretagent-128-mp3
+SomaFM : Indie Pop Rocks! | https://ice5.somafm.com/indiepop-128-mp3
+SomaFM : Beat Blender | https://ice5.somafm.com/beatblender-128-mp3
+SomaFM : DEF CON Radio | https://ice5.somafm.com/defcon-128-mp3
+SomaFM : Lush | https://ice5.somafm.com/lush-128-mp3
+SomaFM : Metal Detector | https://ice5.somafm.com/metal-128-mp3
+SomaFM : The Trip | https://ice5.somafm.com/thetrip-128-mp3
+SomaFM : Underground 80s | https://ice5.somafm.com/u80s-128-mp3
+SomaFM : SF 10-33 | https://ice5.somafm.com/sf1033-128-mp3
+SomaFM : Space Station Soma | https://ice5.somafm.com/spacestation-128-mp3
+SomaFM : cliqhop idm | https://ice5.somafm.com/cliqhop-128-mp3
+SomaFM : Digitalis | https://ice5.somafm.com/digitalis-128-mp3
+SomaFM : Fluid | https://ice5.somafm.com/fluid-128-mp3
+SomaFM : Folk Forward | https://ice5.somafm.com/folkfwd-128-mp3
+SomaFM : PopTron | https://ice5.somafm.com/poptron-128-mp3
+SomaFM : Suburbs of Goa | https://ice5.somafm.com/suburbsofgoa-128-mp3
+SomaFM : Sonic Universe | https://ice5.somafm.com/sonicuniverse-128-mp3
+SomaFM : Illinois Street Lounge | https://ice5.somafm.com/illstreet-128-mp3
+SomaFM : Boot Liquor | https://ice5.somafm.com/bootliquor-128-mp3
+SomaFM : Dub Step Beyond | https://ice5.somafm.com/dubstep-128-mp3
+SomaFM : Left Coast 70s | https://ice5.somafm.com/leftcoast70s-128-mp3
+SomaFM : Bagel Radio | https://ice5.somafm.com/bagel-128-mp3
+SomaFM : Covers | https://ice5.somafm.com/covers-128-mp3
+SomaFM : Deep Space One | https://ice5.somafm.com/deepspaceone-128-mp3
+SomaFM : ThistleRadio | https://ice5.somafm.com/thistle-128-mp3
+SomaFM : Seven Inch Soul | https://ice5.somafm.com/seveninch-128-mp3
+SomaFM : Mission Control | https://ice5.somafm.com/missioncontrol-128-mp3
+SomaFM : Synphaera Radio | https://ice5.somafm.com/synphaera-128-mp3
+SomaFM : n5MD Radio | https://ice5.somafm.com/n5md-128-mp3
+SomaFM : SomaFM Specials | https://ice5.somafm.com/specials-128-mp3
+SomaFM : SomaFM Live | https://ice5.somafm.com/live-128-mp3
+SomaFM : Dark Zone | https://ice5.somafm.com/darkzone-128-mp3
+SomaFM : Groove Salad Classic | https://ice5.somafm.com/gsclassic-128-mp3
+SomaFM : Black Rock FM | https://ice5.somafm.com/brfm-128-mp3
+DI.FM Ambient (Legacy) | http://pub1.diforfree.org:8000/di_ambient_hi
+DI.FM Drum and Bass (Legacy) | http://pub1.diforfree.org:8000/di_drumandbass_hi
+DI.FM Classic Trance (Legacy) | http://pub1.diforfree.org:8000/di_classictrance_hi
+DI.FM Breaks (Legacy) | http://pub1.diforfree.org:8000/di_breaks_hi
+DI.FM ChillHop (Legacy) | http://pub1.diforfree.org:8000/di_chillhop_hi
+DI.FM Chillout Dreams (Legacy) | http://pub1.diforfree.org:8000/di_chilloutdreams_hi
+DI.FM Chiptunes (Legacy) | http://pub1.diforfree.org:8000/di_chiptunes_hi
+DI.FM Classic EuroDance (Legacy) | http://pub1.diforfree.org:8000/di_classiceurodance_hi
+DI.FM Club Dubstep (Legacy) | http://pub1.diforfree.org:8000/di_clubdubstep_hi
+DI.FM Club Sounds (Legacy) | http://pub1.diforfree.org:8000/di_clubsounds_hi
+DI.FM Cosmic Downtempo (Legacy) | http://pub1.diforfree.org:8000/di_cosmicdowntempo_hi
+DI.FM Deep House (Legacy) | http://pub1.diforfree.org:8000/di_deephouse_hi
+DI.FM Deep Tech (Legacy) | http://pub1.diforfree.org:8000/di_deeptech_hi
+DI.FM Disco House (Legacy) | http://pub1.diforfree.org:8000/di_discohouse_hi
+DI.FM DJ Mixes (Legacy) | http://pub1.diforfree.org:8000/di_djmixes_hi
+DI.FM Downtempo Lounge (Legacy) | http://pub1.diforfree.org:8000/di_downtempolounge_hi
+DI.FM Dubstep (Legacy) | http://pub1.diforfree.org:8000/di_dubstep_hi
+DI.FM EcLectronica (Legacy) | http://pub1.diforfree.org:8000/di_eclectronica_hi
+DI.FM Big Room House (Legacy) | http://pub1.diforfree.org:8000/di_bigroomhouse_hi
+DI.FM Dark DnB (Legacy) | http://pub1.diforfree.org:8000/di_darkdnb_hi

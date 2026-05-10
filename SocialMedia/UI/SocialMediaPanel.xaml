@@ -1,0 +1,797 @@
+<UserControl x:Class="AtlasAI.SocialMedia.UI.SocialMediaPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:AtlasAI.SocialMedia.UI.ViewModels"
+             xmlns:conv="clr-namespace:AtlasAI.SocialMedia.UI.Converters"
+             Background="#0A0E14">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SocialMediaTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Visibility Converters -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- ═══════════════════════════════════════════════════════════════════════════
+             TOP BAR (48px)
+        ═══════════════════════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource SurfaceBrush}" 
+                BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="16,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Title -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📣" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="Social Media Console" Style="{StaticResource SectionText}"/>
+                        <TextBlock Text="Create • Schedule • Approve" Style="{StaticResource CaptionText}"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Center - Brand Selector + Platform Toggles -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Brand Selector -->
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="8" Padding="10,6" Margin="0,0,16,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Brand:" Foreground="{StaticResource TextSecondaryBrush}" 
+                                       FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="BrandSelector" ItemsSource="{Binding Brands}" 
+                                      SelectedItem="{Binding SelectedBrand}" Width="100"
+                                      Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Platform Toggles -->
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton x:Name="TikTokToggle" IsChecked="{Binding IsTikTokEnabled}" 
+                                      Style="{StaticResource PlatformToggle}" ToolTip="TikTok">
+                            <TextBlock Text="🎵" FontSize="16"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="InstagramToggle" IsChecked="{Binding IsInstagramEnabled}" 
+                                      Style="{StaticResource PlatformToggle}" ToolTip="Instagram" Margin="4,0,0,0">
+                            <TextBlock Text="📷" FontSize="16"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="FacebookToggle" IsChecked="{Binding IsFacebookEnabled}" 
+                                      Style="{StaticResource PlatformToggle}" ToolTip="Facebook" Margin="4,0,0,0">
+                            <TextBlock Text="📘" FontSize="16"/>
+                        </ToggleButton>
+                        <ToggleButton x:Name="YouTubeToggle" IsChecked="{Binding IsYouTubeEnabled}" 
+                                      Style="{StaticResource PlatformToggle}" ToolTip="YouTube" Margin="4,0,0,0">
+                            <TextBlock Text="▶️" FontSize="16"/>
+                        </ToggleButton>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Right - Settings -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="SettingsBtn" Style="{StaticResource IconButton}" ToolTip="Connections &amp; Rules">
+                        <TextBlock Text="⚙" FontSize="16"/>
+                    </Button>
+                    <Button x:Name="CollapseNavBtn" Command="{Binding ToggleNavCommand}" 
+                            Style="{StaticResource IconButton}" ToolTip="Toggle Navigation" Margin="4,0,0,0">
+                        <TextBlock Text="☰" FontSize="16"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- ═══════════════════════════════════════════════════════════════════════════
+             LEFT NAVIGATION (180px / 56px collapsed)
+        ═══════════════════════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="1" Grid.Column="0" Width="{Binding NavWidth}" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,0,1,0">
+            <StackPanel Margin="8,12">
+                <RadioButton x:Name="NavCampaigns" GroupName="NavGroup" IsChecked="True"
+                             Command="{Binding NavigateCommand}" CommandParameter="Campaigns"
+                             Style="{StaticResource NavButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📊" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Campaigns" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="NavCreatePost" GroupName="NavGroup"
+                             Command="{Binding NavigateCommand}" CommandParameter="Create Post"
+                             Style="{StaticResource NavButton}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✏️" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Create Post" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="NavScheduler" GroupName="NavGroup"
+                             Command="{Binding NavigateCommand}" CommandParameter="Scheduler"
+                             Style="{StaticResource NavButton}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📅" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Scheduler" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="NavLibrary" GroupName="NavGroup"
+                             Command="{Binding NavigateCommand}" CommandParameter="Content Library"
+                             Style="{StaticResource NavButton}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📚" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Content Library" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="NavAnalytics" GroupName="NavGroup"
+                             Command="{Binding NavigateCommand}" CommandParameter="Analytics"
+                             Style="{StaticResource NavButton}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📈" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Analytics" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="NavAutomations" GroupName="NavGroup"
+                             Command="{Binding NavigateCommand}" CommandParameter="Automations"
+                             Style="{StaticResource NavButton}" Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🤖" FontSize="16" Margin="0,0,10,0"/>
+                        <TextBlock Text="Automations" Visibility="{Binding IsNavCollapsed, Converter={StaticResource InverseBoolToVis}}"/>
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+        </Border>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════════
+             MAIN CONTENT AREA
+        ═══════════════════════════════════════════════════════════════════════════ -->
+        <Border Grid.Row="1" Grid.Column="1" Background="{StaticResource BackgroundBrush}">
+            <Grid>
+                <!-- CAMPAIGNS PAGE -->
+                <Grid x:Name="CampaignsPage" Visibility="Visible">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Campaign Builder Controls -->
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="Campaign Builder" Style="{StaticResource SectionText}" Margin="0,0,0,16"/>
+                                
+                                <!-- Goal -->
+                                <TextBlock Text="Goal" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding Goals}" SelectedItem="{Binding SelectedGoal}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,12"/>
+                                
+                                <!-- Platforms -->
+                                <TextBlock Text="Platforms" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <WrapPanel Margin="0,0,0,12">
+                                    <CheckBox Content="TikTok" IsChecked="{Binding IsTikTokEnabled}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,12,4"/>
+                                    <CheckBox Content="Instagram" IsChecked="{Binding IsInstagramEnabled}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,12,4"/>
+                                    <CheckBox Content="Facebook" IsChecked="{Binding IsFacebookEnabled}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,12,4"/>
+                                    <CheckBox Content="YouTube" IsChecked="{Binding IsYouTubeEnabled}" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,12,4"/>
+                                </WrapPanel>
+                                
+                                <!-- Duration -->
+                                <TextBlock Text="Duration" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding Durations}" SelectedItem="{Binding SelectedDuration}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,12"/>
+                                
+                                <!-- Tone -->
+                                <TextBlock Text="Tone" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding Tones}" SelectedItem="{Binding SelectedTone}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,12"/>
+                                
+                                <!-- CTA Style -->
+                                <TextBlock Text="CTA Style" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding CtaStyles}" SelectedItem="{Binding SelectedCta}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,16"/>
+                                
+                                <!-- Buttons -->
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Generate Campaign Plan" Command="{Binding GenerateCampaignCommand}" 
+                                            Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+                                    <Button Content="Save Template" Style="{StaticResource SecondaryButton}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                    
+                    <!-- Campaign Output Preview -->
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,16,16,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Campaign Plan Output" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <TextBlock x:Name="CampaignOutputText" Text="{Binding CampaignOutput}" 
+                                           TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}"
+                                           FontFamily="{StaticResource PrimaryFont}" FontSize="13"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+                
+                <!-- CREATE POST PAGE -->
+                <Grid x:Name="CreatePostPage" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="280"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Inputs Column -->
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="Post Settings" Style="{StaticResource SectionText}" Margin="0,0,0,16"/>
+                                
+                                <TextBlock Text="Platform" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding Platforms}" SelectedItem="{Binding PostPlatform}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,12"/>
+                                
+                                <TextBlock Text="Format" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding PostFormat}" 
+                                          Style="{StaticResource ModernComboBox}" Margin="0,0,0,12"/>
+                                
+                                <TextBlock Text="Prompt" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <TextBox Text="{Binding PostPrompt, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBox}" Height="100" 
+                                         TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,12"/>
+                                
+                                <CheckBox Content="Include Hashtags" IsChecked="{Binding IncludeHashtags}" 
+                                          Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                                <CheckBox Content="Include CTA" IsChecked="{Binding IncludeCta}" 
+                                          Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                                
+                                <TextBlock Text="Variants" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <Slider Value="{Binding VariantCount}" Minimum="1" Maximum="10" Width="150" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding VariantCount}" Foreground="{StaticResource AccentCyanBrush}" 
+                                               FontWeight="SemiBold" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <Button Content="Generate Content" Command="{Binding GeneratePostCommand}" 
+                                        Style="{StaticResource PrimaryButton}"/>
+                                
+                                <!-- Image Generation Section -->
+                                <Border BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="0,1,0,0" 
+                                        Margin="0,16,0,0" Padding="0,16,0,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                            <TextBlock Text="🎨" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="AI Image Generation" Style="{StaticResource SectionText}"/>
+                                        </StackPanel>
+                                        
+                                        <TextBlock Text="Image Prompt" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                        <TextBox x:Name="ImagePromptBox" Text="{Binding ImagePrompt, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}" Height="60" 
+                                                 TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,12"/>
+                                        
+                                        <TextBlock Text="Image Size" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                        <ComboBox x:Name="ImageSizeCombo" SelectedIndex="0" Margin="0,0,0,12"
+                                                  Background="#151B23" Foreground="#F0F4F8" BorderBrush="#2D3748"
+                                                  Padding="10,8" MinHeight="36">
+                                            <ComboBox.ItemContainerStyle>
+                                                <Style TargetType="ComboBoxItem">
+                                                    <Setter Property="Background" Value="#151B23"/>
+                                                    <Setter Property="Foreground" Value="#F0F4F8"/>
+                                                    <Setter Property="Padding" Value="10,6"/>
+                                                    <Setter Property="BorderThickness" Value="0"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ComboBoxItem">
+                                                                <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Background" Value="#1F2937"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsSelected" Value="True">
+                                                                        <Setter TargetName="Bd" Property="Background" Value="#374151"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ComboBox.ItemContainerStyle>
+                                            <ComboBoxItem Content="Square (1024x1024)" Tag="Square"/>
+                                            <ComboBoxItem Content="Portrait (1024x1792)" Tag="Portrait"/>
+                                            <ComboBoxItem Content="Landscape (1792x1024)" Tag="Landscape"/>
+                                        </ComboBox>
+                                        
+                                        <CheckBox x:Name="HighQualityCheck" Content="HD Quality" IsChecked="True"
+                                                  Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                                        
+                                        <Button x:Name="GenerateImageBtn" Content="✨ Generate Image" 
+                                                Click="GenerateImage_Click" Style="{StaticResource PrimaryButton}"/>
+                                        
+                                        <!-- Image Preview -->
+                                        <Border x:Name="ImagePreviewBorder" Visibility="Collapsed" 
+                                                Background="{StaticResource CardHoverBrush}" CornerRadius="8" 
+                                                Margin="0,12,0,0" Padding="8">
+                                            <StackPanel>
+                                                <Image x:Name="GeneratedImagePreview" MaxHeight="150" Stretch="Uniform"/>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                                                    <Button x:Name="AttachImageBtn" Content="Attach" Click="AttachImage_Click"
+                                                            Style="{StaticResource GhostButton}" Margin="0,0,8,0"/>
+                                                    <Button x:Name="SaveImageBtn" Content="Save" Click="SaveImage_Click"
+                                                            Style="{StaticResource GhostButton}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                        
+                                        <!-- Generation Status -->
+                                        <TextBlock x:Name="ImageGenStatus" Text="" Foreground="{StaticResource TextMutedBrush}" 
+                                                   FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                    
+                    <!-- Generated Draft Column -->
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Generated Draft" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock Text="Hook" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                    <TextBox Text="{Binding GeneratedHook, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+                                    
+                                    <TextBlock Text="Body" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                    <TextBox Text="{Binding GeneratedBody, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" Height="150" 
+                                             TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,12"/>
+                                    
+                                    <TextBlock Text="CTA" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                    <TextBox Text="{Binding GeneratedCta, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" Margin="0,0,0,12"/>
+                                    
+                                    <TextBlock Text="Hashtags" Style="{StaticResource LabelText}" Margin="0,0,0,6"/>
+                                    <TextBox Text="{Binding GeneratedHashtags, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                            
+                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,12,0,0">
+                                <Button Content="Save to Library" Command="{Binding SaveToLibraryCommand}" 
+                                        Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+                                <Button Content="Queue" Command="{Binding QueueForSchedulerCommand}" 
+                                        Style="{StaticResource SecondaryButton}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Preview Column -->
+                    <Border Grid.Column="2" Style="{StaticResource Card}" Margin="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Preview" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            
+                            <Border Grid.Row="1" Background="#1C242E" CornerRadius="12" Padding="16">
+                                <StackPanel>
+                                    <!-- Platform Badge -->
+                                    <Border Background="{StaticResource AccentCyanBrush}" CornerRadius="4" 
+                                            Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding PostPlatform}" FontSize="11" FontWeight="SemiBold" Foreground="#0A0E14"/>
+                                    </Border>
+                                    
+                                    <!-- Preview Content -->
+                                    <TextBlock Text="{Binding GeneratedHook}" Style="{StaticResource BodyText}" 
+                                               FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding GeneratedBody}" Style="{StaticResource BodyText}" 
+                                               TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding GeneratedCta}" Style="{StaticResource BodyText}" 
+                                               Foreground="{StaticResource AccentCyanBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding GeneratedHashtags}" Style="{StaticResource CaptionText}" 
+                                               Foreground="{StaticResource AccentPurpleBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- SCHEDULER PAGE -->
+                <Grid x:Name="SchedulerPage" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="350"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Queue List -->
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <TextBlock Text="Content Queue" Style="{StaticResource SectionText}" VerticalAlignment="Center"/>
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="8" Padding="8,4" Margin="12,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton Content="Calendar" GroupName="SchedulerView" IsChecked="True" 
+                                                     Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,12,0"/>
+                                        <RadioButton Content="Queue" GroupName="SchedulerView" 
+                                                     Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            
+                            <ListBox Grid.Row="1" ItemsSource="{Binding QueueItems}" Background="Transparent" 
+                                     BorderThickness="0" x:Name="QueueList">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource CardHoverBrush}" CornerRadius="8" 
+                                                Padding="12" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                               FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                        <TextBlock Text="{Binding Platform}" Foreground="{StaticResource AccentCyanBrush}" 
+                                                                   FontSize="11" Margin="0,0,12,0"/>
+                                                        <TextBlock Text="{Binding ScheduledTime, StringFormat='{}{0:MMM dd, h:mm tt}'}" 
+                                                                   Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <!-- Status Pill -->
+                                                <Border Grid.Column="1" CornerRadius="10" Padding="8,4" VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#3B82F620"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Approved">
+                                                                    <Setter Property="Background" Value="#10B98120"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Published">
+                                                                    <Setter Property="Background" Value="#A855F720"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Needs Approval">
+                                                                    <Setter Property="Background" Value="#F59E0B20"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Medium">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#3B82F6"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Approved">
+                                                                        <Setter Property="Foreground" Value="#10B981"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Published">
+                                                                        <Setter Property="Foreground" Value="#A855F7"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Needs Approval">
+                                                                        <Setter Property="Foreground" Value="#F59E0B"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                    
+                    <!-- Post Detail Panel -->
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,16,16,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Post Details" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            
+                            <StackPanel Grid.Row="1">
+                                <TextBlock Text="Select a post from the queue to view details" 
+                                           Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                <Button Content="Approve" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
+                                <Button Content="Reject" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                                <Button Content="Publish" Style="{StaticResource SecondaryButton}" IsEnabled="False"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+                
+                <!-- CONTENT LIBRARY PAGE -->
+                <Grid x:Name="ContentLibraryPage" Visibility="Collapsed">
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Content Library" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            
+                            <!-- Search and Filters -->
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16">
+                                <TextBox Text="{Binding LibrarySearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBox}" Width="250" Margin="0,0,12,0"/>
+                                <ComboBox ItemsSource="{Binding Platforms}" SelectedItem="{Binding LibraryPlatformFilter}" 
+                                          Style="{StaticResource ModernComboBox}" Width="120" Margin="0,0,8,0"/>
+                                <ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding LibraryTypeFilter}" 
+                                          Style="{StaticResource ModernComboBox}" Width="120" Margin="0,0,8,0"/>
+                                <CheckBox Content="Best Performing" IsChecked="{Binding ShowBestPerforming}" 
+                                          Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            
+                            <!-- Content Grid -->
+                            <ItemsControl Grid.Row="2" ItemsSource="{Binding LibraryItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" 
+                                                Padding="14" Margin="0,0,12,12" Width="220">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                           FontWeight="Medium" TextTrimming="CharacterEllipsis" Margin="0,0,0,8"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <Border Background="{StaticResource AccentCyanBrush}" CornerRadius="4" 
+                                                            Padding="6,2" Margin="0,0,6,0">
+                                                        <TextBlock Text="{Binding Platform}" FontSize="10" Foreground="#0A0E14"/>
+                                                    </Border>
+                                                    <Border Background="{StaticResource AccentPurpleBrush}" CornerRadius="4" Padding="6,2">
+                                                        <TextBlock Text="{Binding Type}" FontSize="10" Foreground="White"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MMM dd, yyyy}'}" 
+                                                           Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                    <Button Content="Open" Style="{StaticResource GhostButton}" Margin="0,0,4,0"/>
+                                                    <Button Content="Copy" Style="{StaticResource GhostButton}" Margin="0,0,4,0"/>
+                                                    <Button Content="Queue" Style="{StaticResource GhostButton}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- ANALYTICS PAGE -->
+                <Grid x:Name="AnalyticsPage" Visibility="Collapsed">
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Analytics" Style="{StaticResource SectionText}" Margin="0,0,0,16"/>
+                            
+                            <!-- KPI Cards -->
+                            <WrapPanel Grid.Row="1" Margin="0,0,0,16">
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16" Margin="0,0,12,12" Width="150">
+                                    <StackPanel>
+                                        <TextBlock Text="Engagement" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="12.4K" FontSize="24" FontWeight="Bold" Foreground="{StaticResource AccentCyanBrush}"/>
+                                        <TextBlock Text="+23% vs last week" Foreground="{StaticResource SuccessBrush}" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16" Margin="0,0,12,12" Width="150">
+                                    <StackPanel>
+                                        <TextBlock Text="Clicks" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="3.2K" FontSize="24" FontWeight="Bold" Foreground="{StaticResource AccentPurpleBrush}"/>
+                                        <TextBlock Text="+8% vs last week" Foreground="{StaticResource SuccessBrush}" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16" Margin="0,0,12,12" Width="150">
+                                    <StackPanel>
+                                        <TextBlock Text="Watch Time" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="847h" FontSize="24" FontWeight="Bold" Foreground="{StaticResource InfoBrush}"/>
+                                        <TextBlock Text="+15% vs last week" Foreground="{StaticResource SuccessBrush}" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16" Margin="0,0,12,12" Width="150">
+                                    <StackPanel>
+                                        <TextBlock Text="Saves" Style="{StaticResource LabelText}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="1.8K" FontSize="24" FontWeight="Bold" Foreground="{StaticResource WarningBrush}"/>
+                                        <TextBlock Text="-2% vs last week" Foreground="{StaticResource ErrorBrush}" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+                            
+                            <!-- Charts Placeholder + Top Hooks -->
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="300"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Chart Placeholder -->
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16" Margin="0,0,12,0">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                        <TextBlock Text="Charts Coming Soon" Style="{StaticResource SectionText}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Analytics visualization will be available in the next update" 
+                                                   Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" 
+                                                   HorizontalAlignment="Center" TextAlignment="Center" Margin="0,8,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Top Hooks -->
+                                <Border Grid.Column="1" Background="{StaticResource CardHoverBrush}" CornerRadius="10" Padding="16">
+                                    <StackPanel>
+                                        <TextBlock Text="Top Performing Hooks" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                                        <Border Background="{StaticResource CardBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="&quot;Stop scrolling if you...&quot;" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                                                <TextBlock Text="23.4K engagements" Foreground="{StaticResource AccentCyanBrush}" FontSize="11"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{StaticResource CardBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <TextBlock Text="&quot;POV: You just discovered...&quot;" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                                                <TextBlock Text="18.7K engagements" Foreground="{StaticResource AccentCyanBrush}" FontSize="11"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="{StaticResource CardBrush}" CornerRadius="6" Padding="10">
+                                            <StackPanel>
+                                                <TextBlock Text="&quot;The secret nobody tells...&quot;" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium"/>
+                                                <TextBlock Text="15.2K engagements" Foreground="{StaticResource AccentCyanBrush}" FontSize="11"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+                
+                <!-- AUTOMATIONS PAGE -->
+                <Grid x:Name="AutomationsPage" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Rules List -->
+                    <Border Style="{StaticResource Card}" Margin="16">
+                        <StackPanel>
+                            <TextBlock Text="Automation Rules" Style="{StaticResource SectionText}" Margin="0,0,0,16"/>
+                            
+                            <ItemsControl ItemsSource="{Binding AutomationRules}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource CardHoverBrush}" CornerRadius="8" 
+                                                Padding="12" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                           VerticalAlignment="Center"/>
+                                                <ToggleButton Grid.Column="1" IsChecked="{Binding IsEnabled}" Width="44" Height="24" Cursor="Hand">
+                                                    <ToggleButton.Template>
+                                                        <ControlTemplate TargetType="ToggleButton">
+                                                            <Grid>
+                                                                <Border x:Name="Track" CornerRadius="12" Background="#21262d" 
+                                                                        BorderBrush="#30363d" BorderThickness="1"/>
+                                                                <Ellipse x:Name="Thumb" Width="18" Height="18" Fill="#8b949e" 
+                                                                         HorizontalAlignment="Left" Margin="3,0,0,0"/>
+                                                            </Grid>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="Track" Property="Background" Value="#00d4aa"/>
+                                                                    <Setter TargetName="Track" Property="BorderBrush" Value="#00d4aa"/>
+                                                                    <Setter TargetName="Thumb" Property="Fill" Value="White"/>
+                                                                    <Setter TargetName="Thumb" Property="Margin" Value="23,0,0,0"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </ToggleButton.Template>
+                                                </ToggleButton>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            
+                            <!-- Safety Level -->
+                            <TextBlock Text="Safety Level" Style="{StaticResource LabelText}" Margin="0,16,0,6"/>
+                            <ComboBox Style="{StaticResource ModernComboBox}">
+                                <ComboBoxItem Content="Conservative" IsSelected="True"/>
+                                <ComboBoxItem Content="Balanced"/>
+                                <ComboBoxItem Content="Aggressive"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Automation Log -->
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Margin="0,16,16,16">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Automation Log" Style="{StaticResource SectionText}" Margin="0,0,0,12"/>
+                            
+                            <ListBox Grid.Row="1" ItemsSource="{Binding AutomationLogs}" Background="Transparent" BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource CardHoverBrush}" CornerRadius="6" 
+                                                Padding="10" Margin="0,0,0,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Action}" Foreground="{StaticResource TextPrimaryBrush}" 
+                                                               FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:MMM dd, h:mm tt}'}" 
+                                                               Foreground="{StaticResource TextMutedBrush}" FontSize="10"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Status}" Foreground="{StaticResource SuccessBrush}" 
+                                                           FontSize="11" VerticalAlignment="Center" Margin="8,0"/>
+                                                <Button Grid.Column="2" Content="Undo" Style="{StaticResource GhostButton}" 
+                                                        FontSize="11" Padding="6,4"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

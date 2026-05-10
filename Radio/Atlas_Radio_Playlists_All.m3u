@@ -1,0 +1,102 @@
+# ===============================
+# ATLAS RADIO PLAYLISTS (M3U)
+# Universal – Public Safe
+# ===============================
+
+# ---------- Universal Hits ----------
+#EXTM3U
+#EXTINF:-1,BBC Radio 1
+https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one
+#EXTINF:-1,BBC Radio 2
+https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two
+#EXTINF:-1,Capital FM
+https://media-ice.musicradio.com/CapitalUK
+#EXTINF:-1,Heart FM
+https://media-ice.musicradio.com/HeartUK
+#EXTINF:-1,Kiss FM
+https://media-ice.musicradio.com/KissUK
+#EXTINF:-1,Magic Radio
+https://media-ice.musicradio.com/Magic
+#EXTINF:-1,Smooth Radio
+https://media-ice.musicradio.com/SmoothUK
+#EXTINF:-1,Z100 New York
+https://playerservices.streamtheworld.com/api/livestream-redirect/WHTZFM.mp3
+#EXTINF:-1,KIIS FM
+https://playerservices.streamtheworld.com/api/livestream-redirect/KIISFMAAC.aac
+#EXTINF:-1,NRJ France
+https://scdn.nrjaudio.fm/adwz1/fr/30001/mp3_128.mp3
+
+# ---------- News & Talk ----------
+#EXTM3U
+#EXTINF:-1,BBC Radio 4 FM
+https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm
+#EXTINF:-1,BBC World Service
+https://stream.live.vc.bbcmedia.co.uk/bbc_world_service
+#EXTINF:-1,LBC
+https://media-ice.musicradio.com/LBCUK
+#EXTINF:-1,TalkSPORT
+https://radio.talksport.com/stream
+#EXTINF:-1,TalkSPORT 2
+https://radio.talksport.com/stream2
+#EXTINF:-1,Deutschlandfunk
+https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3
+#EXTINF:-1,NPR News
+https://npr-ice.streamguys1.com/live.mp3
+
+# ---------- Chill / Focus ----------
+#EXTM3U
+#EXTINF:-1,BBC Radio 3
+https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three
+#EXTINF:-1,Classic FM
+https://media-ice.musicradio.com/ClassicFM
+#EXTINF:-1,Scala Radio
+https://media-ice.musicradio.com/ScalaRadio
+#EXTINF:-1,Radio Swiss Pop
+https://stream.srg-ssr.ch/m/rsp/mp3_128
+#EXTINF:-1,Chillhop Radio
+https://streams.ilovemusic.de/iloveradio17.mp3
+#EXTINF:-1,LoFi Hip Hop
+https://stream.laut.fm/lofi
+#EXTINF:-1,Radio Paradise (Mellow Mix)
+https://stream.radioparadise.com/mellow-128
+
+# ---------- Dance / Electronic ----------
+#EXTM3U
+#EXTINF:-1,BBC Radio 1 Dance
+https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one_dance
+#EXTINF:-1,Ibiza Global Radio
+https://ibizaglobalradio.streaming-pro.com:8024/stream
+#EXTINF:-1,DI.FM Trance
+https://trance.di.fm/mp3
+#EXTINF:-1,DI.FM House
+https://house.di.fm/mp3
+#EXTINF:-1,DI.FM Chillout
+https://chillout.di.fm/mp3
+#EXTINF:-1,Nightride FM
+https://stream.nightride.fm/nightride.mp3
+
+# ---------- Rock / Guitar ----------
+#EXTM3U
+#EXTINF:-1,BBC Radio 6 Music
+https://stream.live.vc.bbcmedia.co.uk/bbc_6music
+#EXTINF:-1,Planet Rock
+https://planetrockradiouk.ice.infomaniak.ch/planetrockradiouk.mp3
+#EXTINF:-1,Kerrang Radio
+https://listen.kerrangradio.co.uk/kerrang
+#EXTINF:-1,Radio X
+https://media-ice.musicradio.com/RadioXUK
+#EXTINF:-1,Classic Rock Florida
+https://us2.internet-radio.com/proxy/classicrock?mp=/stream
+
+# ---------- Gaming / Synth / Retro ----------
+#EXTM3U
+#EXTINF:-1,Nightride FM
+https://stream.nightride.fm/nightride.mp3
+#EXTINF:-1,Retrowave Radio
+https://stream.retrowave.ru/retrowave.mp3
+#EXTINF:-1,80s80s Synthwave
+https://stream.80s80s.de/synthwave/mp3-128
+#EXTINF:-1,Chiptune Radio
+https://chiptune.stream.laut.fm/chiptune
+#EXTINF:-1,GameChops Radio
+https://streaming.radionomy.com/GameChops

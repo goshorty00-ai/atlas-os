@@ -1,0 +1,60 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+/* Custom utilities for the futuristic interface */
+@layer utilities {
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+  
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+}
+
+/* Custom styling for cyan sliders */
+.slider-cyan [data-slot="slider-track"] {
+  background: rgba(0, 212, 255, 0.1) !important;
+  height: 8px !important;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.slider-cyan [data-slot="slider-range"] {
+  background: linear-gradient(90deg, #00d4ff, #0066ff) !important;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.slider-cyan [data-slot="slider-thumb"] {
+  width: 16px !important;
+  height: 16px !important;
+  background: #00d4ff !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.8) !important;
+}
+
+.slider-cyan [data-slot="slider-thumb"]:hover {
+  box-shadow: 0 0 25px rgba(0, 212, 255, 1) !important;
+}
+
+/* Custom styling for cyan switches */
+[data-slot="switch"][data-state="checked"] {
+  background: linear-gradient(90deg, #00d4ff, #0066ff) !important;
+  border-color: #00d4ff !important;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.6) !important;
+}
+
+[data-slot="switch"][data-state="unchecked"] {
+  background: rgba(0, 212, 255, 0.1) !important;
+  border-color: rgba(0, 212, 255, 0.3) !important;
+}
+
+[data-slot="switch-thumb"] {
+  background: #ffffff !important;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5) !important;
+}

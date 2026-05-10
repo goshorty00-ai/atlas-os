@@ -1,0 +1,29 @@
+<UserControl x:Class="AtlasAI.Controls.MediaCentre.AudioVisualizerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Theme/Colors.xaml"/>
+                <ResourceDictionary Source="../../Theme/Typography.xaml"/>
+                <ResourceDictionary Source="../../Theme/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Background="#300A0E12"
+            BorderBrush="#2022D3EE"
+            BorderThickness="1"
+            CornerRadius="8"
+            Height="88"
+            Padding="10"
+            ClipToBounds="True">
+        <Grid>
+            <UniformGrid x:Name="BarHost"
+                         Columns="64"
+                         VerticalAlignment="Bottom"
+                         HorizontalAlignment="Stretch"/>
+        </Grid>
+    </Border>
+</UserControl>

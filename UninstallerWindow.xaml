@@ -1,0 +1,109 @@
+<ui:FluentWindow x:Class="AtlasAI.UninstallerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="App Uninstaller" Height="700" Width="900"
+        WindowStartupLocation="CenterOwner"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowCornerPreference="Round">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Atlas AI - Professional Uninstaller" ShowMaximize="True" ShowMinimize="True"/>
+
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <ui:Card Grid.Row="0" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Delete24" FontSize="28" Margin="0,0,12,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Professional Uninstaller" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="AppCountText" Text="Loading installed applications..." 
+                                       Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <ui:TextBox x:Name="SearchBox" PlaceholderText="Search apps..." Width="200" 
+                                    Margin="0,0,8,0" TextChanged="SearchBox_TextChanged"/>
+                        <ui:Button x:Name="RefreshBtn" Content="Refresh" Icon="{ui:SymbolIcon ArrowSync24}"
+                                   Appearance="Secondary" Click="RefreshBtn_Click"/>
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+
+            <!-- Filter Tabs -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+                <ui:Button x:Name="AllAppsBtn" Content="All Apps" Appearance="Primary" Margin="0,0,8,0" Click="FilterBtn_Click" Tag="all"/>
+                <ui:Button x:Name="LargeAppsBtn" Content="Large Apps (>100MB)" Appearance="Secondary" Margin="0,0,8,0" Click="FilterBtn_Click" Tag="large"/>
+                <ui:Button x:Name="RecentAppsBtn" Content="Recently Installed" Appearance="Secondary" Margin="0,0,8,0" Click="FilterBtn_Click" Tag="recent"/>
+                <ui:Button x:Name="SystemAppsBtn" Content="System Components" Appearance="Secondary" Click="FilterBtn_Click" Tag="system"/>
+            </StackPanel>
+
+            <!-- Apps List -->
+            <ui:Card Grid.Row="2">
+                <Grid>
+                    <DataGrid x:Name="AppsGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False"
+                              GridLinesVisibility="None" HeadersVisibility="Column"
+                              Background="Transparent" BorderThickness="0"
+                              SelectionChanged="AppsGrid_SelectionChanged">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="200"/>
+                            <DataGridTextColumn Header="Publisher" Binding="{Binding Publisher}" Width="150"/>
+                            <DataGridTextColumn Header="Version" Binding="{Binding Version}" Width="100"/>
+                            <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="80"/>
+                            <DataGridTextColumn Header="Install Date" Binding="{Binding InstallDate}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+                    <ui:ProgressRing x:Name="LoadingRing" IsIndeterminate="True" Width="50" Height="50" 
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                </Grid>
+            </ui:Card>
+
+            <!-- Actions Footer -->
+            <ui:Card Grid.Row="3" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel>
+                        <TextBlock x:Name="SelectedAppText" Text="Select an application to uninstall" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="SelectedAppDetails" Text="" Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                        <ProgressBar x:Name="UninstallProgress" Height="4" Margin="0,8,0,0" Value="0" Visibility="Collapsed"/>
+                        <TextBlock x:Name="ProgressText" Text="" FontSize="11" Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:Button x:Name="UninstallBtn" Content="Uninstall" Icon="{ui:SymbolIcon Delete24}"
+                                   Appearance="Danger" IsEnabled="False" Margin="0,0,8,0" Click="UninstallBtn_Click"/>
+                        <ui:Button x:Name="ForceUninstallBtn" Content="Force Remove" Icon="{ui:SymbolIcon Warning24}"
+                                   Appearance="Caution" IsEnabled="False" Click="ForceUninstallBtn_Click"
+                                   ToolTip="Removes app and cleans leftover files/registry"/>
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>
