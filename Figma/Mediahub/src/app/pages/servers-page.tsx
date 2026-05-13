@@ -1,185 +1,426 @@
-import { useState, useMemo } from 'react';
-import { Server, Film, Tv, Music, Gamepad2, Globe, HardDrive, Sparkles, Check } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Sparkles, ChevronDown, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ServerShelf } from '../components/server-shelf';
 import { CarouselOverlay } from '../components/carousel-overlay';
 import { GridView } from '../components/grid-view';
 import { MediaItem } from '../components/server-card';
-import { FeaturedPanel } from '../components/featured-panel';
+import { FeaturedPanel, FeaturedItem } from '../components/featured-panel';
 
-const POSTERS = [
-  'https://images.unsplash.com/photo-1773592612185-bd985ac2bfe2?w=600&q=80',
-  'https://images.unsplash.com/photo-1773592606902-6e0a0cc9fc47?w=600&q=80',
-  'https://images.unsplash.com/photo-1700922180758-b335f78a3d59?w=600&q=80',
-  'https://images.unsplash.com/photo-1698533188601-2432adf826f4?w=600&q=80',
-  'https://images.unsplash.com/photo-1643377667360-c2be0413ebcc?w=600&q=80',
-  'https://images.unsplash.com/photo-1764237769175-47c3e556daa9?w=600&q=80',
-  'https://images.unsplash.com/photo-1633423553994-3a142131e191?w=600&q=80',
-  'https://images.unsplash.com/photo-1668054562943-6ba120914cc3?w=600&q=80',
-  'https://images.unsplash.com/photo-1651627567991-e4ec7b8fc72c?w=600&q=80',
-  'https://images.unsplash.com/photo-1645914987454-7bd1464f570f?w=600&q=80',
-  'https://images.unsplash.com/photo-1641900278396-a9cf14207f27?w=600&q=80',
-  'https://images.unsplash.com/photo-1773257607064-7c6a4cbb71f1?w=600&q=80',
-  'https://images.unsplash.com/photo-1777499251009-a3b4c7b62eba?w=600&q=80',
-  'https://images.unsplash.com/photo-1766094933384-6a206cfa00cd?w=600&q=80',
-  'https://images.unsplash.com/photo-1738980420952-56cc02acd17f?w=600&q=80',
-  'https://images.unsplash.com/photo-1598062547942-17806c4df368?w=600&q=80',
-  'https://images.unsplash.com/photo-1655928461456-b5c6db979360?w=600&q=80',
-  'https://images.unsplash.com/photo-1735713212083-82eafc42bf64?w=600&q=80',
-  'https://images.unsplash.com/photo-1759926953901-468ce451805a?w=600&q=80',
-  'https://images.unsplash.com/photo-1535391879778-3bae11d29a24?w=600&q=80',
-  'https://images.unsplash.com/photo-1628763228722-b11a9c545ed7?w=600&q=80',
-  'https://images.unsplash.com/photo-1633766306939-d0169a014fe2?w=600&q=80',
-  'https://images.unsplash.com/photo-1653628989927-957b335955be?w=600&q=80',
-  'https://images.unsplash.com/photo-1631044176346-804c33ade61c?w=600&q=80',
-  'https://images.unsplash.com/photo-1773982417771-d41776e48cf5?w=600&q=80',
-  'https://images.unsplash.com/photo-1668720854839-a9a746084fe5?w=600&q=80',
-  'https://images.unsplash.com/photo-1549394325-200e58997f69?w=600&q=80',
-  'https://images.unsplash.com/photo-1762279388956-1c098163a2a8?w=600&q=80',
-  'https://images.unsplash.com/photo-1531113165519-5eb0816d7e02?w=600&q=80',
-  'https://images.unsplash.com/photo-1727812518464-dae2481c65c3?w=600&q=80',
-];
+// ── Bridge types ─────────────────────────────────────────────────────────────
 
-const TITLES = [
-  'Dune: Part Two', 'The Last of Us', 'Oppenheimer', 'Severance', 'Foundation',
-  'Blade Runner 2049', 'The Creator', 'Poor Things', 'The Batman', 'Across the Spider-Verse',
-  'Succession', 'Breaking Bad', 'The Wire', 'The Sopranos', 'Mad Men',
-  'Interstellar', 'Arrival', 'Ex Machina', 'Her', 'Matrix Resurrections',
-  'Ted Lasso', 'Abbott Elementary', 'The Bear', 'Barry', 'What We Do in the Shadows',
-  'The Shining', 'Hereditary', 'Midsommar', 'Get Out', 'Nope',
-  'Inside Out 2', 'WALL-E', 'Up', 'Coco', 'Toy Story',
-  'Planet Earth II', 'Our Planet', 'Blue Planet II', 'Cosmos', 'The Last Dance',
-];
-
-const YEARS = ['2024', '2023', '2022', '2021', '2025'];
-const QUALITIES = ['4K', '1080p', 'HDR', '4K HDR'];
-const SERVERS = ['Plex', 'Jellyfin', 'Local NAS', 'Stremio', 'TMDb', 'Trakt'];
-const DESCRIPTIONS = [
-  'A gripping cinematic journey through unfamiliar worlds.',
-  'An intense character study set against an unforgettable backdrop.',
-  'A thrilling tale of resilience, mystery, and discovery.',
-  'A bold new entry that redefines the genre.',
-];
-
-interface SourceMeta {
+interface BridgeShelfItem {
   id: string;
-  name: string;
-  icon: typeof Server;
-  color: string;
-  online: boolean;
-  count: number;
+  metaId?: string;
+  imdbId?: string;
+  title: string;
+  poster?: string;
+  coverUrl?: string;
+  type?: string;
+  year?: number | string;
+  rating?: number;
+  overview?: string;
+  backdrop?: string;
+  backdropUrl?: string;
+  genres?: string[];
+  runtimeMinutes?: number;
+  trailerUrl?: string;
+  releaseDate?: string;
+  originalLanguage?: string;
 }
 
-const SOURCES: SourceMeta[] = [
-  { id: 'plex', name: 'Plex', icon: Server, color: 'from-amber-500 to-orange-500', online: true, count: 1589 },
-  { id: 'jellyfin', name: 'Jellyfin', icon: HardDrive, color: 'from-violet-500 to-fuchsia-500', online: true, count: 695 },
-  { id: 'movies', name: 'Movies Add-on', icon: Film, color: 'from-cyan-500 to-blue-500', online: true, count: 4210 },
-  { id: 'tv', name: 'TV Add-on', icon: Tv, color: 'from-pink-500 to-rose-500', online: true, count: 2380 },
-  { id: 'trakt', name: 'Trakt', icon: Sparkles, color: 'from-red-500 to-pink-500', online: true, count: 312 },
-  { id: 'tmdb', name: 'TMDb', icon: Globe, color: 'from-emerald-500 to-teal-500', online: true, count: 9999 },
-  { id: 'local', name: 'Local', icon: HardDrive, color: 'from-slate-500 to-slate-600', online: true, count: 301 },
-  { id: 'music', name: 'Music', icon: Music, color: 'from-purple-500 to-indigo-500', online: true, count: 8453 },
-  { id: 'games', name: 'Games', icon: Gamepad2, color: 'from-lime-500 to-green-500', online: false, count: 145 },
+interface BridgeShelf {
+  key: string;
+  title: string;
+  type?: string;
+  catalogId?: string;
+  items: BridgeShelfItem[];
+}
+
+interface BridgeState {
+  shelves: BridgeShelf[];
+  serverOptions?: string[];
+  selectedServer?: string;
+  mode?: string;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function postBridge(msg: object) {
+  try {
+    (window as any).chrome?.webview?.postMessage(msg);
+  } catch {
+    // not in WebView2 context
+  }
+}
+
+function mapBridgeType(type?: string): MediaItem['type'] {
+  if (!type) return 'Movie';
+  const t = type.toLowerCase();
+  if (t === 'series' || t === 'channel' || t === 'tv') return 'TV';
+  if (t === 'music video' || t === 'music') return 'Music Video';
+  if (t === 'game') return 'Game';
+  return 'Movie';
+}
+
+function mapBridgeItem(item: BridgeShelfItem, serverLabel: string, shelfType?: string): MediaItem {
+  return {
+    id: item.id,
+    title: item.title,
+    year: String(item.year ?? ''),
+    type: mapBridgeType(item.type || shelfType),
+    server: serverLabel,
+    rating: item.rating,
+    posterUrl: item.poster ?? item.coverUrl,
+    hasMetadata: true,
+    hasArtwork: !!(item.poster ?? item.coverUrl),
+    runtime: item.runtimeMinutes ? `${item.runtimeMinutes}min` : undefined,
+    genre: item.genres?.[0],
+    description: item.overview,
+  };
+}
+
+// Keywords that identify shelves likely to contain fresh/recent content
+const FRESH_SHELF_KEYWORDS = [
+  'now_playing', 'now playing', 'new release', 'new arrival', 'latest',
+  'recent', 'calendar', 'upcoming', 'coming soon', 'trending', 'fresh',
+  'in cinema', 'in theater', 'newly', 'just added', 'this week', 'this month',
 ];
 
-const FILTERS = ['All', 'Movies', 'TV', 'Music', 'Games', 'New', 'Popular', 'Trending'];
+function isFreshShelf(shelf: BridgeShelf): boolean {
+  const id = (shelf.catalogId ?? shelf.key ?? '').toLowerCase();
+  const title = (shelf.title ?? '').toLowerCase();
+  return FRESH_SHELF_KEYWORDS.some(kw => id.includes(kw) || title.includes(kw));
+}
 
-const featuredItem = {
-  id: 'dune-part-two',
-  title: 'Dune: Part Two',
-  backdropUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1600&q=80',
-  rating: 8.8,
-  runtime: '2h 46m',
-  release: 'Dec 2024',
-  genres: ['Sci-Fi', 'Adventure', 'Action'],
-  source: 'Available on 6 sources',
-  description: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
-  type: 'Movie' as const,
-  primaryAction: 'Play' as const,
-};
+function makeFeaturedFromBridge(
+  shelves: BridgeShelf[],
+  selectedServer: string
+): FeaturedItem[] {
+  const currentYear = new Date().getFullYear(); // 2026
+  const recentYearCutoff = currentYear - 1;     // 2025 or newer counts as "recent"
+  const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
 
-const pick = <T,>(arr: T[], i: number) => arr[i % arr.length];
+  const seen = new Set<string>();
+  // Buckets: prefer items from fresh shelves or with an exact releaseDate in last 10 days
+  // Secondary: items from 2025+ by year
+  const freshMovies: FeaturedItem[] = [];
+  const freshTv: FeaturedItem[] = [];
+  const recentYearMovies: FeaturedItem[] = [];
+  const recentYearTv: FeaturedItem[] = [];
 
-const generateItems = (
-  count: number,
-  seed: number,
-  overrides: Partial<MediaItem> = {}
-): MediaItem[] =>
-  Array.from({ length: count }, (_, i) => {
-    const idx = (seed * 7 + i * 3) % POSTERS.length;
-    const types: MediaItem['type'][] = ['Movie', 'TV', 'Music Video', 'Game'];
-    return {
-      id: `s${seed}-i${i}`,
-      title: pick(TITLES, idx),
-      year: pick(YEARS, idx),
-      type: pick(types, i),
-      server: pick(SERVERS, idx),
-      rating: 6 + ((idx * 17) % 40) / 10,
-      quality: pick(QUALITIES, i),
-      posterUrl: POSTERS[idx],
-      hasMetadata: true,
-      hasArtwork: true,
-      runtime: `${90 + (idx % 60)}min`,
-      genre: overrides.genre ?? pick(['Action', 'Sci-Fi', 'Comedy', 'Horror', 'Family', 'Documentary'], idx),
-      description: pick(DESCRIPTIONS, idx),
-      ...overrides,
-    };
-  });
+  for (const shelf of shelves) {
+    const shelfFresh = isFreshShelf(shelf);
+    for (const item of shelf.items) {
+      const bg = item.backdropUrl ?? item.backdrop;
+      if (!bg) continue;
 
-const SHELVES: { title: string; items: MediaItem[] }[] = [
-  { title: 'Latest From Sources', items: generateItems(20, 1) },
-  { title: 'Trending Across Add-ons', items: generateItems(20, 2) },
-  { title: 'Popular Movies', items: generateItems(18, 3, { type: 'Movie' }) },
-  { title: 'Popular TV', items: generateItems(18, 4, { type: 'TV' }) },
-  { title: 'New Episodes', items: generateItems(16, 5, { type: 'TV' }) },
-  { title: '4K / HDR', items: generateItems(15, 6, { quality: '4K HDR' }) },
-  { title: 'Action', items: generateItems(18, 7, { genre: 'Action' }) },
-  { title: 'Sci-Fi', items: generateItems(18, 8, { genre: 'Sci-Fi' }) },
-  { title: 'Comedy', items: generateItems(16, 9, { genre: 'Comedy' }) },
-  { title: 'Horror', items: generateItems(14, 10, { genre: 'Horror' }) },
-  { title: 'Family', items: generateItems(12, 11, { genre: 'Family' }) },
-  { title: 'Documentaries', items: generateItems(12, 12, { genre: 'Documentary' }) },
-  { title: 'Music Videos', items: generateItems(15, 13, { type: 'Music Video' }) },
-  { title: 'Game Trailers', items: generateItems(12, 14, { type: 'Game' }) },
-  { title: 'Continue Watching', items: generateItems(10, 15) },
-];
+      // Skip if the "backdrop" is actually just a poster URL (portrait, not landscape)
+      const bgLower = bg.toLowerCase();
+      if (bgLower.includes('/poster/') || bgLower.includes('poster-default') ||
+          bgLower.includes('/thumbnail')) continue;
+
+      // English-only: skip items with a known non-English original language
+      const lang = (item.originalLanguage ?? '').toLowerCase().trim();
+      if (lang && lang !== 'en') continue;
+
+      // Deduplicate by id or title
+      const key = ((item.id || item.title || '').toLowerCase()).trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+
+      const itemType = mapBridgeType(item.type);
+      const fi: FeaturedItem = {
+        id: item.id,
+        imdbId: item.imdbId || (item.id?.startsWith('tt') ? item.id : undefined),
+        title: item.title,
+        backdropUrl: bg,
+        rating: item.rating,
+        runtime: item.runtimeMinutes ? `${Math.floor(item.runtimeMinutes / 60)}h ${item.runtimeMinutes % 60}m` : undefined,
+        release: item.releaseDate ? String(new Date(item.releaseDate).getFullYear()) : item.year ? String(item.year) : undefined,
+        genres: item.genres ?? [],
+        source: selectedServer || 'Addon source',
+        description: item.overview ?? '',
+        primaryAction: 'Play',
+        type: itemType === 'TV' ? 'TV' : 'Movie',
+        trailerUrl: item.trailerUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent((item.title || '') + ' ' + (itemType === 'TV' ? 'series trailer' : 'official trailer'))}`,
+      };
+
+      const releaseMs = item.releaseDate ? new Date(item.releaseDate).getTime() : 0;
+      const hasExactRecent = releaseMs > 0 && releaseMs > tenDaysAgo;
+      const itemYear = releaseMs > 0 ? new Date(item.releaseDate!).getFullYear() : (typeof item.year === 'number' ? item.year : parseInt(String(item.year || '0'), 10));
+      const isYearRecent = itemYear >= recentYearCutoff;
+
+      if (hasExactRecent || shelfFresh) {
+        if (fi.type === 'TV') freshTv.push(fi); else freshMovies.push(fi);
+      } else if (isYearRecent) {
+        if (fi.type === 'TV') recentYearTv.push(fi); else recentYearMovies.push(fi);
+      }
+    }
+  }
+
+  // Pick best bucket for each type, fall through to year-recent if fresh is empty
+  const pickMovies = freshMovies.length > 0 ? freshMovies : recentYearMovies;
+  const pickTv = freshTv.length > 0 ? freshTv : recentYearTv;
+
+  const MAX = 20;
+  const half = Math.floor(MAX / 2);
+  const movies = pickMovies.slice(0, half);
+  const tv = pickTv.slice(0, half);
+
+  // Interleave movie/TV so hero rotates through both types
+  const result: FeaturedItem[] = [];
+  const maxLen = Math.max(movies.length, tv.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < movies.length) result.push(movies[i]);
+    if (i < tv.length) result.push(tv[i]);
+  }
+
+  return result.slice(0, MAX);
+}
 
 type ViewState = 'shelves' | 'grid';
 
 export function ServersPage() {
   const [viewState, setViewState] = useState<ViewState>('shelves');
   const [carouselOpen, setCarouselOpen] = useState(false);
-  const [activeSource, setActiveSource] = useState<string>('all');
-  const [activeFilter, setActiveFilter] = useState<string>('All');
-  const [currentShelf, setCurrentShelf] = useState<{ name: string; items: MediaItem[] } | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'All' | 'Movies' | 'TV'>('All');
+  const [shelfFilter, setShelfFilter] = useState<string | null>(null);
+  const [typeDropOpen, setTypeDropOpen] = useState(false);
+  const [shelfDropOpen, setShelfDropOpen] = useState(false);
+  const [currentShelf, setCurrentShelf] = useState<{ name: string; items: MediaItem[]; contentType?: string } | null>(null);
+  const [bridgeState, setBridgeState] = useState<BridgeState | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const hasShelvesRef = useRef(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Custom shelves created via bulk-select in grid view
+  const loadCustomShelves = () => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('atlas-custom-shelves-v1') ?? '{}') as Record<string, MediaItem[]>;
+      return Object.entries(raw).map(([title, items]) => ({ title, items }));
+    } catch { return []; }
+  };
+  const [customShelves, setCustomShelves] = useState<{ title: string; items: MediaItem[] }[]>(loadCustomShelves);
+
+  // ── Bridge wiring ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (!event.data) return;
+      const msg = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+      if (msg?.type === 'servers.state') {
+        const payload = msg.payload as BridgeState;
+        if (payload) {
+          // Cache globally so Shelf Creator can read even after message has already fired
+          (window as any).__atlasBridgeState = payload;
+          setBridgeState(payload);
+          if ((payload.shelves?.length ?? 0) > 0) hasShelvesRef.current = true;
+        }
+      }
+    };
+    // Also re-apply when Shelf Creator saves new config, or when a custom shelf is created
+    const onStorage = () => {
+      setBridgeState((prev) => prev ? { ...prev } : prev);
+      setCustomShelves(loadCustomShelves());
+    };
+    window.addEventListener('storage', onStorage);
+    (window as any).chrome?.webview?.addEventListener('message', handler);
+    // Seed from global cache immediately (no wait for bridge)
+    const cached = (window as any).__atlasBridgeState as BridgeState | undefined;
+    if (cached?.shelves?.length) {
+      setBridgeState(cached);
+      hasShelvesRef.current = true;
+    }
+    postBridge({ type: 'servers.ready' });
+    postBridge({ type: 'servers.getState' });
+    // Poll every 10s for 90s — streaming catalog addons (Netflix, Prime, Apple TV, Marvel)
+    // can take 30-60s to return results after app start. 10s gaps let BuildServerShelvesAsync
+    // complete without being cancelled by the next poll-triggered rebuild.
+    const intervals: ReturnType<typeof setInterval>[] = [];
+    const poll = setInterval(() => {
+      postBridge({ type: 'servers.getState' });
+    }, 10000);
+    intervals.push(poll);
+    const tid = setTimeout(() => {
+      clearInterval(poll);
+      // After 90s switch to a slow keep-alive every 30s for another 2 min
+      const slow = setInterval(() => postBridge({ type: 'servers.getState' }), 30000);
+      intervals.push(slow);
+      setTimeout(() => {
+        setTimedOut(true);
+        intervals.forEach(clearInterval);
+      }, 120000);
+    }, 90000);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      (window as any).chrome?.webview?.removeEventListener('message', handler);
+      intervals.forEach(clearInterval);
+      clearTimeout(tid);
+    };
+  }, []);
+
+  const refreshShelves = useCallback(() => {
+    setRefreshing(true);
+    postBridge({ type: 'servers.getState' });
+    setTimeout(() => setRefreshing(false), 2000);
+  }, []);
+
+  const selectedServer = bridgeState?.selectedServer ?? '';
+
+  // ── Read shelf config from localStorage (Shelf Creator persists here) ────
+  const getShelfCfg = () => {
+    try { return JSON.parse(localStorage.getItem('atlas-shelf-manager-v2') ?? '{}') as Record<string, { displayName?: string; hidden?: boolean }>; } catch { return {}; }
+  };
+  const getShelfOrder = (): string[] => {
+    try { return JSON.parse(localStorage.getItem('atlas-shelf-order-v2') ?? '[]'); } catch { return []; }
+  };
+
+  const bridgeShelves = useMemo(() => {
+    if (!bridgeState?.shelves) return [];
+    const cfg = getShelfCfg();
+    const order = getShelfOrder();
+    const withItems = bridgeState.shelves.filter((s) => s.items?.length > 0);
+    const mapped = withItems.map((s) => {
+      const c = cfg[s.title] ?? {};
+      return {
+        title: c.displayName && c.displayName !== s.title ? c.displayName : s.title,
+        originalTitle: s.title,
+        hidden: c.hidden === true,  // only hide if EXPLICITLY set
+        items: s.items.map((item) => mapBridgeItem(item, selectedServer, s.type)),
+      };
+    });
+    // Safety: if more than half the shelves would be hidden, ignore the hidden flags
+    const hiddenCount = mapped.filter((s) => s.hidden).length;
+    const useHidden = hiddenCount < mapped.length / 2;
+    let shelves = useHidden ? mapped.filter((s) => !s.hidden) : mapped.map((s) => ({ ...s, hidden: false }));
+    // Apply saved order if present
+    if (order.length > 0) {
+      const orderMap = new Map(order.map((k: string, i: number) => [k, i]));
+      shelves = [...shelves].sort((a, b) => {
+        const ai = orderMap.get(a.originalTitle) ?? 9999;
+        const bi = orderMap.get(b.originalTitle) ?? 9999;
+        return ai - bi;
+      });
+    }
+    return shelves;
+  }, [bridgeState, selectedServer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const featuredItems = useMemo<FeaturedItem[]>(() => {
+    if (!bridgeState?.shelves) return [];
+    return makeFeaturedFromBridge(bridgeState.shelves, selectedServer);
+  }, [bridgeState, selectedServer]);
+
+  const [featuredMeta, setFeaturedMeta] = useState<Partial<FeaturedItem>>({});
+  const featuredItem = featuredItems[featuredIndex % Math.max(1, featuredItems.length)] ?? null;
+
+  // Fetch description + runtime from Cinemeta when featured item has no description
+  useEffect(() => {
+    setFeaturedMeta({});
+    if (!featuredItem) return;
+    if (featuredItem.description && featuredItem.description.length > 20) return; // already has it
+    const imdbId = featuredItem.imdbId;
+    if (!imdbId || !imdbId.startsWith('tt')) return;
+    const stremioType = featuredItem.type === 'TV' ? 'series' : 'movie';
+    const url = `https://v3-cinemeta.strem.io/meta/${stremioType}/${imdbId}.json`;
+    let cancelled = false;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const meta = data?.meta;
+        if (!meta) return;
+        setFeaturedMeta({
+          description: meta.description || meta.overview || '',
+          runtime: meta.runtime ? String(meta.runtime).replace(/\s*min.*$/i, '') + ' min' : featuredItem.runtime,
+          genres: (meta.genres as string[] | undefined) ?? featuredItem.genres,
+          rating: meta.imdbRating ? parseFloat(meta.imdbRating) : featuredItem.rating,
+        });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [featuredItem?.imdbId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const displayedFeaturedItem = featuredItem
+    ? { ...featuredItem, ...featuredMeta }
+    : null;
+
+  // Auto-rotate hero every 8 seconds
+  useEffect(() => {
+    if (featuredItems.length <= 1) return;
+    const t = setInterval(() => setFeaturedIndex((i) => (i + 1) % featuredItems.length), 8000);
+    return () => clearInterval(t);
+  }, [featuredItems.length]);
 
   const openCarousel = (name: string, items: MediaItem[]) => {
-    setCurrentShelf({ name, items });
+    const allItems = bridgeShelves.find((s) => s.title === name)?.items ?? items;
+    setCurrentShelf({ name, items: allItems });
     setCarouselOpen(true);
   };
-  const openGrid = (name: string, items: MediaItem[]) => {
-    setCurrentShelf({ name, items });
+  const openGrid = (name: string) => {
+    const shelf = bridgeShelves.find((s) => s.title === name);
+    const allItems = shelf?.items ?? [];
+    const origTitle = (shelf as any)?.originalTitle ?? name;
+    const ct = bridgeState?.shelves?.find((s) => s.title === origTitle)?.type ?? 'movie';
+    setCurrentShelf({ name, items: allItems, contentType: ct });
     setViewState('grid');
   };
 
   const filteredShelves = useMemo(() => {
-    return SHELVES.map((s) => {
+    let shelves = bridgeShelves;
+    if (shelfFilter) shelves = shelves.filter((s) => s.title === shelfFilter);
+    return shelves.map((s) => {
       let items = s.items;
-      if (activeFilter === 'Movies') items = items.filter((i) => i.type === 'Movie');
-      else if (activeFilter === 'TV') items = items.filter((i) => i.type === 'TV');
-      else if (activeFilter === 'Music') items = items.filter((i) => i.type === 'Music Video');
-      else if (activeFilter === 'Games') items = items.filter((i) => i.type === 'Game');
+      if (typeFilter === 'Movies') items = items.filter((i) => i.type === 'Movie');
+      else if (typeFilter === 'TV') items = items.filter((i) => i.type === 'TV');
       return { ...s, items };
     }).filter((s) => s.items.length > 0);
-  }, [activeFilter]);
+  }, [bridgeShelves, typeFilter, shelfFilter]);
+
+  // When new state arrives while grid is open, update items so infinite scroll sees the new batch
+  useEffect(() => {
+    if (viewState === 'grid' && currentShelf) {
+      const updated = bridgeShelves.find((s) => s.title === currentShelf.name || (s as any).originalTitle === currentShelf.name)?.items;
+      if (updated && updated.length !== currentShelf.items.length) {
+        setCurrentShelf((prev) => prev ? { ...prev, items: updated } : prev);
+      }
+    }
+  }, [bridgeShelves]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (viewState === 'grid' && currentShelf) {
     return (
       <GridView
         shelfName={currentShelf.name}
         items={currentShelf.items}
+        contentType={currentShelf.contentType}
         onBack={() => setViewState('shelves')}
         onOpenCarousel={() => openCarousel(currentShelf.name, currentShelf.items)}
       />
+    );
+  }
+
+  const hasLoadedShelves = (bridgeState?.shelves?.length ?? 0) > 0;
+
+  // Loading — waiting for shelves (show spinner until shelves arrive or timeout)
+  if (!hasLoadedShelves && !timedOut) {
+    return (
+      <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="text-center space-y-2">
+          <Sparkles size={32} className="mx-auto opacity-40 animate-pulse" />
+          <p className="text-sm">Loading addon shelves…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty / timed out with no shelves
+  if (!hasLoadedShelves) {
+    return (
+      <div className="flex items-center justify-center h-64 text-slate-400">
+        <div className="text-center space-y-2">
+          <Sparkles size={32} className="mx-auto opacity-40" />
+          <p className="text-sm">No addon shelves loaded. Check installed addons.</p>
+        </div>
+      </div>
     );
   }
 
@@ -187,66 +428,94 @@ export function ServersPage() {
     <>
       <div className="space-y-5 pb-8">
         {/* Featured */}
-        <FeaturedPanel item={featuredItem} />
+        {displayedFeaturedItem && (
+          <div className="relative">
+            <FeaturedPanel item={displayedFeaturedItem} />
+            {featuredItems.length > 1 && (
+              <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i - 1 + featuredItems.length) % featuredItems.length); }}
+                  className="p-1.5 rounded-full bg-slate-900/70 hover:bg-slate-800 border border-slate-700/50 text-slate-200 hover:text-cyan-300 transition-all"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i + 1) % featuredItems.length); }}
+                  className="p-1.5 rounded-full bg-slate-900/70 hover:bg-slate-800 border border-slate-700/50 text-slate-200 hover:text-cyan-300 transition-all"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Source pills */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+        {/* Filter pills */}
+        {(typeDropOpen || shelfDropOpen) && (
+          <div className="fixed inset-0 z-40" onClick={() => { setTypeDropOpen(false); setShelfDropOpen(false); }} />
+        )}
+        <div className="flex items-center gap-2">
+          {/* Refresh button */}
           <button
-            onClick={() => setActiveSource('all')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border whitespace-nowrap transition-all ${
-              activeSource === 'all'
-                ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 border-cyan-400/50 text-cyan-200'
-                : 'bg-slate-900/60 border-slate-700/40 text-slate-300 hover:border-slate-600'
-            }`}
+            onClick={refreshShelves}
+            title="Refresh shelves from addons"
+            className="p-1.5 rounded-full bg-slate-800/60 border border-slate-700/40 text-slate-400 hover:text-cyan-300 hover:border-cyan-400/50 transition-all"
           >
-            <Sparkles size={14} />
-            <span className="text-xs">All Sources</span>
+            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
           </button>
-          {SOURCES.map((src) => {
-            const Icon = src.icon;
-            const active = activeSource === src.id;
-            return (
-              <button
-                key={src.id}
-                onClick={() => setActiveSource(src.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border whitespace-nowrap transition-all ${
-                  active
-                    ? 'bg-slate-800/80 border-cyan-400/50 text-slate-100'
-                    : 'bg-slate-900/60 border-slate-700/40 text-slate-300 hover:border-slate-600'
-                }`}
-              >
-                <span className={`p-1 rounded bg-gradient-to-br ${src.color}`}>
-                  <Icon size={11} className="text-white" />
-                </span>
-                <span className="text-xs">{src.name}</span>
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${src.online ? 'bg-emerald-400 shadow-[0_0_6px] shadow-emerald-400' : 'bg-slate-600'}`}
-                />
-                <span className="text-[10px] text-slate-400">{src.count.toLocaleString()}</span>
-              </button>
-            );
-          })}
-        </div>
+          {/* Content type dropdown */}
+          <div className="relative z-50">
+            <button
+              onClick={() => { setTypeDropOpen((p) => !p); setShelfDropOpen(false); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border bg-slate-900/60 border-slate-700/40 text-slate-200 hover:border-cyan-400/50 transition-all whitespace-nowrap"
+            >
+              {typeFilter === 'All' ? 'Movies & TV' : typeFilter}
+              <ChevronDown size={11} className={`transition-transform duration-200 ${typeDropOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {typeDropOpen && (
+              <div className="absolute top-full mt-1 left-0 bg-slate-900 border border-slate-700/60 rounded-lg overflow-hidden shadow-xl min-w-[130px]">
+                {(['All', 'Movies', 'TV'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => { setTypeFilter(opt); setTypeDropOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${typeFilter === opt ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300 hover:bg-slate-800'}`}
+                  >
+                    {opt === 'All' ? 'All Types' : opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* Filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {FILTERS.map((f) => {
-            const active = activeFilter === f;
-            return (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-all ${
-                  active
-                    ? 'bg-cyan-500/15 border-cyan-400/50 text-cyan-200'
-                    : 'bg-slate-900/40 border-slate-700/30 text-slate-400 hover:text-slate-200 hover:border-slate-600'
-                }`}
-              >
-                {active && <Check size={10} />}
-                {f}
-              </button>
-            );
-          })}
+          {/* Shelf dropdown */}
+          <div className="relative z-50">
+            <button
+              onClick={() => { setShelfDropOpen((p) => !p); setTypeDropOpen(false); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border bg-slate-900/60 border-slate-700/40 text-slate-200 hover:border-cyan-400/50 transition-all whitespace-nowrap"
+            >
+              {shelfFilter ?? 'All Shelves'}
+              <ChevronDown size={11} className={`transition-transform duration-200 ${shelfDropOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {shelfDropOpen && (
+              <div className="absolute top-full mt-1 left-0 bg-slate-900 border border-slate-700/60 rounded-lg overflow-hidden shadow-xl min-w-[180px] max-h-60 overflow-y-auto">
+                <button
+                  onClick={() => { setShelfFilter(null); setShelfDropOpen(false); }}
+                  className={`w-full text-left px-3 py-2 text-xs transition-colors ${!shelfFilter ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300 hover:bg-slate-800'}`}
+                >
+                  All Shelves
+                </button>
+                {bridgeShelves.map((s) => (
+                  <button
+                    key={s.title}
+                    onClick={() => { setShelfFilter(s.title); setShelfDropOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${shelfFilter === s.title ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300 hover:bg-slate-800'}`}
+                  >
+                    {s.title}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Shelves */}
@@ -256,7 +525,19 @@ export function ServersPage() {
             title={shelf.title}
             items={shelf.items}
             count={shelf.items.length}
-            onViewAll={() => openGrid(shelf.title, shelf.items)}
+            onViewAll={() => openGrid(shelf.title)}
+            onOpenCarousel={() => openCarousel(shelf.title, shelf.items)}
+          />
+        ))}
+
+        {/* Custom shelves created from bulk-select */}
+        {customShelves.map((shelf) => (
+          <ServerShelf
+            key={'custom-' + shelf.title}
+            title={shelf.title}
+            items={shelf.items}
+            count={shelf.items.length}
+            onViewAll={() => { setCurrentShelf({ name: shelf.title, items: shelf.items }); setViewState('grid'); }}
             onOpenCarousel={() => openCarousel(shelf.title, shelf.items)}
           />
         ))}

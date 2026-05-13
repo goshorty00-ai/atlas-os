@@ -111,7 +111,7 @@ export function ServerShelf({
         <div
           ref={scrollRef}
           onScroll={checkArrows}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth"
+          className="flex gap-5 overflow-x-auto scrollbar-hide pt-2 pb-4 pl-4 pr-4 scroll-smooth"
         >
           {items.map((item) => (
             <ServerCard key={item.id} item={item} />

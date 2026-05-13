@@ -2781,7 +2781,7 @@ namespace AtlasAI
             return tabName.ToUpper() switch
             {
                 "AI CHAT" => new Views.AiChat.AiChatView(_voiceManager),
-                "AI MEDIA CENTRE" => new Views.MediaCentre.ServersView(), // Changed from MediaCenterControl to ServersView
+                "AI MEDIA CENTRE" => new Views.MediaCentre.ServersView(),
                 "AI SPEECH STUDIO" => new AtlasAI.Modules.SpeechStudio.SpeechStudioHostView(),
                 "AI CUSTOM GREETINGS" => new AtlasAI.Modules.SpeechStudio.SpeechStudioHostView(),
                 "AI CUSTOM RESPONSES" => new AtlasAI.Modules.SpeechStudio.SpeechStudioHostView(),

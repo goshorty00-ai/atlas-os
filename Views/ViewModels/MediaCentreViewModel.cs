@@ -897,6 +897,7 @@ namespace AtlasAI.Views.ViewModels
         private bool _isServerShelvesMode = true;
         private bool _isServerGridMode;
 		private CancellationTokenSource? _serverShelvesBuildCts;
+        private CancellationTokenSource? _serverShelvesDebounCts;
         private List<ServerShelf>? _cachedIntelligenceShelves;
         private DateTime _cachedIntelligenceShelvesTime = DateTime.MinValue;
         private readonly Dictionary<string, ServerCatalogPageState> _serverMoviePageStates = new(StringComparer.OrdinalIgnoreCase);
@@ -1972,18 +1973,28 @@ namespace AtlasAI.Views.ViewModels
 
         private void RebuildServerShelves()
         {
-            try
+            // Debounce: cancel any pending debounce timer and restart it.
+            // This collapses rapid successive calls into one actual build.
+            try { _serverShelvesDebounCts?.Cancel(); _serverShelvesDebounCts?.Dispose(); } catch { }
+            _serverShelvesDebounCts = new CancellationTokenSource();
+            var debounceCt = _serverShelvesDebounCts.Token;
+            _ = Task.Run(async () =>
             {
-                _serverShelvesBuildCts?.Cancel();
-                _serverShelvesBuildCts?.Dispose();
-            }
-            catch
-            {
-            }
+                try
+                {
+                    await Task.Delay(800, debounceCt).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return; // A newer call superseded this one
+                }
 
-            _serverShelvesBuildCts = new CancellationTokenSource();
-            var ct = _serverShelvesBuildCts.Token;
-            _ = Task.Run(() => BuildServerShelvesAsync(ct));
+                // Cancel any in-progress build and start a fresh one
+                try { _serverShelvesBuildCts?.Cancel(); _serverShelvesBuildCts?.Dispose(); } catch { }
+                _serverShelvesBuildCts = new CancellationTokenSource();
+                var ct = _serverShelvesBuildCts.Token;
+                await BuildServerShelvesAsync(ct).ConfigureAwait(false);
+            });
         }
 
         private sealed record ShelfCandidate(string ContentType, string CatalogId, string Title, List<(string BaseUrl, string RequestType)> Servers);
@@ -2221,27 +2232,13 @@ namespace AtlasAI.Views.ViewModels
                 if (allSeriesShelf != null)
                     coreShelves.Add(allSeriesShelf);
 
-                await _uiDispatcher.InvokeAsync(() =>
-                {
-                    _serverShelves.Clear();
-                    foreach (var shelf in coreShelves)
-                        _serverShelves.Add(shelf);
-
-                    if (snap.Item9.Count > 0)
-                    {
-                        var musicShelf = new ServerShelf { ContentType = "music", CatalogId = "top", Title = "Music" };
-                        foreach (var item in snap.Item9)
-                            musicShelf.Items.Add(item);
-
-                        _serverShelves.Add(musicShelf);
-                    }
-
-                    OnPropertyChanged(nameof(ServerShelves));
-                });
+                // Do NOT post an intermediate state here — keep existing shelves visible
+                // while the async per-catalog build runs. Only replace once fully complete.
 
                 IEnumerable<ShelfCandidate> BuildCandidates(string contentType, Dictionary<string, List<ServerCatalogCatalogOption>> optionsByServer)
                 {
-                    var dict = new Dictionary<string, ShelfCandidate>(StringComparer.OrdinalIgnoreCase);
+                    var byId = new Dictionary<string, ShelfCandidate>(StringComparer.OrdinalIgnoreCase);
+                    var byTitle = new Dictionary<string, ShelfCandidate>(StringComparer.OrdinalIgnoreCase);
                     foreach (var kv in optionsByServer)
                     {
                         ct.ThrowIfCancellationRequested();
@@ -2261,16 +2258,28 @@ namespace AtlasAI.Views.ViewModels
                             var req = (opt?.RequestType ?? "").Trim();
                             if (string.IsNullOrWhiteSpace(req)) req = contentType;
 
-                            var key = $"{contentType}::{cid}";
-                            if (!dict.TryGetValue(key, out var existing))
+                            // Deduplicate by catalogId first, then by normalised title
+                            var idKey = $"{contentType}::{cid}";
+                            if (!byId.TryGetValue(idKey, out var existing))
                             {
+                                // Check if same display title already exists under a different catalogId
+                                var titleKey = $"{contentType}::{title.ToLowerInvariant()}";
+                                if (byTitle.TryGetValue(titleKey, out existing))
+                                {
+                                    // Merge servers into the existing same-title shelf
+                                    existing.Servers.Add((baseUrl.Trim().TrimEnd('/'), req));
+                                    byId[idKey] = existing;
+                                    continue;
+                                }
+
                                 existing = new ShelfCandidate(contentType, cid, title, new List<(string BaseUrl, string RequestType)>());
-                                dict[key] = existing;
+                                byId[idKey] = existing;
+                                byTitle[titleKey] = existing;
                             }
                             existing.Servers.Add((baseUrl.Trim().TrimEnd('/'), req));
                         }
                     }
-                    return dict.Values;
+                    return byId.Values.Distinct();
                 }
 
                 var candidates = new List<ShelfCandidate>();
@@ -2279,7 +2288,7 @@ namespace AtlasAI.Views.ViewModels
                 candidates.AddRange(BuildCandidates("music", snap.musicOptions));
 
                 const int allServersPerCatalogPreviewCount = 36;
-                const int allServersPerCatalogShelfLimit = 24;
+                const int allServersPerCatalogShelfLimit = 60;
 
                 static bool IsGenericAllServersCandidate(ShelfCandidate candidate)
                 {
@@ -13325,6 +13334,101 @@ namespace AtlasAI.Views.ViewModels
             }
         }
 
+        public void RequestLoadMoreFromBridge(string contentType)
+        {
+            AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] RequestLoadMoreFromBridge called: type={contentType}, IsServersView={IsServersView}, IsBusy={IsServerCatalogBusy}, Category={SelectedCategory?.Id}");
+            if (!IsServersView) { AtlasAI.Core.AppLogger.LogInfo("[BridgeLoad] BAIL: not servers view"); return; }
+            if (IsServerCatalogBusy) { AtlasAI.Core.AppLogger.LogInfo("[BridgeLoad] BAIL: busy"); return; }
+            var type = (contentType ?? "movie").Trim().ToLowerInvariant();
+            SelectedServerCatalogType = string.Equals(type, "series", StringComparison.OrdinalIgnoreCase) ? "series" : "movie";
+            _ = LoadBridgePageAsync();
+        }
+
+        private async Task LoadBridgePageAsync()
+        {
+            if (IsServerCatalogBusy) return;
+
+            var selection = _uiDispatcher.Invoke(() => (SelectedAddonServer ?? "").Trim());
+            var isAllServers = string.IsNullOrWhiteSpace(selection) ||
+                               string.Equals(selection, AllServersOption, StringComparison.OrdinalIgnoreCase);
+
+            var states = _uiDispatcher.Invoke(() =>
+                IsServerCatalogTvSelected ? _serverTvPageStates : _serverMoviePageStates);
+
+            var hasMoreCount = states.Values.Count(s => s.HasMore);
+            AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] LoadBridgePageAsync: statesCount={states.Count}, hasMoreCount={hasMoreCount}, isAllServers={isAllServers}");
+
+            if (!states.Values.Any(s => s.HasMore))
+            {
+                AtlasAI.Core.AppLogger.LogInfo("[BridgeLoad] BAIL: no HasMore states — all pages exhausted");
+                return;
+            }
+
+            IsServerCatalogBusy = true;
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+                var ct = cts.Token;
+
+                var excludeKeys = _uiDispatcher.Invoke(() =>
+                {
+                    var target = IsServerCatalogTvSelected ? _serverTvCatalogItems : _serverMovieCatalogItems;
+                    return new HashSet<string>(
+                        target.Select(i => BuildServerCatalogDedupeKey(i)).Where(x => !string.IsNullOrWhiteSpace(x)),
+                        StringComparer.OrdinalIgnoreCase);
+                });
+
+                var newItems = new List<MediaItem>();
+                const int targetMinimum = 500;
+                const int maxPasses = 20;
+
+                for (var pass = 0; pass < maxPasses && states.Values.Any(s => s.HasMore); pass++)
+                {
+                    var batch = await LoadNextPagesForTypeAsync(states, ct, null, loadAllServers: isAllServers, excludeKeys: excludeKeys).ConfigureAwait(false);
+                    if (batch.Count == 0) break;
+
+                    foreach (var item in batch)
+                    {
+                        if (item == null) continue;
+                        var key = BuildServerCatalogDedupeKey(item);
+                        if (string.IsNullOrWhiteSpace(key) || !excludeKeys.Add(key)) continue;
+                        newItems.Add(item);
+                    }
+
+                    if (newItems.Count >= targetMinimum) break;
+                }
+
+                AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] Fetch complete: newItems={newItems.Count}");
+                _uiDispatcher.Invoke(() =>
+                {
+                    var target = IsServerCatalogTvSelected ? _serverTvCatalogItems : _serverMovieCatalogItems;
+                    var existing = new HashSet<string>(
+                        target.Select(i => BuildServerCatalogDedupeKey(i)).Where(x => !string.IsNullOrWhiteSpace(x)),
+                        StringComparer.OrdinalIgnoreCase);
+                    var added = 0;
+                    foreach (var i in newItems)
+                    {
+                        if (i == null) continue;
+                        var key = BuildServerCatalogDedupeKey(i);
+                        if (string.IsNullOrWhiteSpace(key) || !existing.Add(key)) continue;
+                        target.Add(i);
+                        added++;
+                    }
+                    AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] Added {added} items to catalog, total now={target.Count}");
+                    OnPropertyChanged(nameof(CanLoadMoreServerCatalog));
+                    OnPropertyChanged(nameof(CanLoadNextServerCatalogPage));
+                });
+            }
+            finally
+            {
+                _uiDispatcher.Invoke(() =>
+                {
+                    IsServerCatalogBusy = false;
+                    CommandManager.InvalidateRequerySuggested();
+                });
+            }
+        }
+
         public void TryLoadMoreServerCatalog()
         {
             Debug.WriteLine($"[MediaCentre] === TryLoadMoreServerCatalog CALLED ===");
@@ -17413,6 +17517,21 @@ namespace AtlasAI.Views.ViewModels
                 {
                 }
 
+                // Sync installed addons from Stremio's local storage
+                try
+                {
+                    foreach (var stremioUrl in ExtractStremioManifestUrls())
+                    {
+                        var u = NormalizeAddonServerUrl(stremioUrl);
+                        if (string.IsNullOrWhiteSpace(u)) continue;
+                        if (normalized.Any(x => AddonUrlsMatch(x, u))) continue;
+                        normalized.Add(u);
+                    }
+                }
+                catch
+                {
+                }
+
                 var finalSnapshot = string.Join("|", normalized.OrderBy(s => s, StringComparer.OrdinalIgnoreCase));
                 if (!string.Equals(initialSnapshot, finalSnapshot, StringComparison.Ordinal))
                     SaveAddonServersToStore(normalized);
@@ -17564,9 +17683,36 @@ namespace AtlasAI.Views.ViewModels
             try
             {
                 RefreshAddonServers();
+                _ = RefreshServerCatalogAsync();
             }
             catch
             {
+            }
+        }
+
+        private static IEnumerable<string> ExtractStremioManifestUrls()
+        {
+            var ldbDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                @"Programs\Stremio\stremio-shell-ng.exe.WebView2\EBWebView\Default\Local Storage\leveldb");
+            if (!Directory.Exists(ldbDir))
+                yield break;
+
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var files = Directory.EnumerateFiles(ldbDir, "*.ldb")
+                .Concat(Directory.EnumerateFiles(ldbDir, "*.log"));
+
+            foreach (var file in files)
+            {
+                byte[] bytes;
+                try { bytes = File.ReadAllBytes(file); } catch { continue; }
+                var text = System.Text.Encoding.UTF8.GetString(bytes);
+                foreach (Match m in Regex.Matches(text, @"https://[^\x00-\x1F\s""'<>\\]{10,}/manifest\.json"))
+                {
+                    var baseUrl = m.Value.Substring(0, m.Value.Length - "/manifest.json".Length);
+                    if (seen.Add(baseUrl))
+                        yield return baseUrl;
+                }
             }
         }
 

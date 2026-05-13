@@ -49,7 +49,10 @@ namespace AtlasAI.Services
                 // Get featured spotlight
                 var featuredTask = GetFeaturedSpotlightAsync(tmdbKey, ct);
 
-                await Task.WhenAll(trendingTask, trendingMusicTask, trendingGamesTask, trailersTask, newsTask, upcomingTask, celebritiesTask, featuredTask);
+                // Get recent movies + TV for hero carousel (date-filtered, no item cap)
+                var heroMovieTvTask = GetRecentMovieTvForHeroAsync(tmdbKey, ct);
+
+                await Task.WhenAll(trendingTask, trendingMusicTask, trendingGamesTask, trailersTask, newsTask, upcomingTask, celebritiesTask, featuredTask, heroMovieTvTask);
 
                 var trending = await trendingTask;
                 trending.AddRange(await trendingMusicTask);
@@ -72,7 +75,8 @@ namespace AtlasAI.Services
                     News = await newsTask,
                     Upcoming = upcoming,
                     Celebrities = await celebritiesTask,
-                    Featured = featured
+                    Featured = featured,
+                    HeroMovieTv = await heroMovieTvTask
                 };
             }
             catch (Exception ex)
@@ -776,6 +780,262 @@ namespace AtlasAI.Services
             return published.ToString("MMM dd, yyyy");
         }
 
+        private async Task<List<DiscoveryMedia>> GetRecentMovieTvForHeroAsync(string tmdbKey, CancellationToken ct)
+        {
+            // Future-ready config: swap from user settings when available
+            const string defaultContentLanguage = "en";
+            const string defaultRegion = "GB";
+            const double minPopularity = 5.0;
+            const int minVoteCount = 50;
+            const int minHeroPoolSize = 10;
+
+            var raw = new List<DiscoveryMedia>();
+
+            if (string.IsNullOrWhiteSpace(tmdbKey))
+            {
+                Console.WriteLine("[DiscoveryMovieTv] tmdbKey missing \u2013 skip");
+                AtlasAI.Core.AppLogger.LogInfo("[DiscoveryMovieTv] tmdbKey missing \u2013 skip");
+                return raw;
+            }
+
+            Console.WriteLine($"[DiscoveryMovieTv] request begin recentWindowDays=10 lang={defaultContentLanguage} region={defaultRegion}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] request begin recentWindowDays=10 lang={defaultContentLanguage} region={defaultRegion}");
+
+            var today = DateTime.UtcNow.Date;
+            var windowStart = today.AddDays(-10).ToString("yyyy-MM-dd");
+            var windowEnd = today.ToString("yyyy-MM-dd");
+
+            // Recent movies: English originals, popularity-sorted, GB region, vote threshold at API level
+            try
+            {
+                var url = $"https://api.themoviedb.org/3/discover/movie?api_key={tmdbKey}&language=en-GB" +
+                          $"&region={defaultRegion}&with_original_language={defaultContentLanguage}" +
+                          $"&sort_by=popularity.desc&vote_count.gte=50&popularity.gte=5" +
+                          $"&primary_release_date.gte={windowStart}&primary_release_date.lte={windowEnd}&page=1";
+                var response = await _httpClient.GetStringAsync(url, ct);
+                using var doc = JsonDocument.Parse(response);
+                if (doc.RootElement.TryGetProperty("results", out var items))
+                    foreach (var item in items.EnumerateArray())
+                    {
+                        var media = ParseTmdbHeroItem(item, "movie");
+                        if (media != null) raw.Add(media);
+                    }
+            }
+            catch { }
+
+            var rawMovieCount = raw.Count;
+            Console.WriteLine($"[DiscoveryMovieTv] tmdb.movies.recent count={rawMovieCount}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] tmdb.movies.recent count={rawMovieCount}");
+
+            // Recent TV: English originals, popularity-sorted, vote threshold at API level
+            try
+            {
+                var url = $"https://api.themoviedb.org/3/discover/tv?api_key={tmdbKey}&language=en-GB" +
+                          $"&with_original_language={defaultContentLanguage}" +
+                          $"&sort_by=popularity.desc&vote_count.gte=50&popularity.gte=5" +
+                          $"&first_air_date.gte={windowStart}&first_air_date.lte={windowEnd}&page=1";
+                var response = await _httpClient.GetStringAsync(url, ct);
+                using var doc = JsonDocument.Parse(response);
+                if (doc.RootElement.TryGetProperty("results", out var items))
+                    foreach (var item in items.EnumerateArray())
+                    {
+                        var media = ParseTmdbHeroItem(item, "tv");
+                        if (media != null) raw.Add(media);
+                    }
+            }
+            catch { }
+
+            var rawTvCount = raw.Count - rawMovieCount;
+            Console.WriteLine($"[DiscoveryMovieTv] tmdb.tv.recent count={rawTvCount}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] tmdb.tv.recent count={rawTvCount}");
+
+            // Upcoming movies: English originals, GB region
+            var beforeUpcoming = raw.Count;
+            try
+            {
+                var url = $"https://api.themoviedb.org/3/movie/upcoming?api_key={tmdbKey}&language=en-GB" +
+                          $"&region={defaultRegion}&with_original_language={defaultContentLanguage}&page=1";
+                var response = await _httpClient.GetStringAsync(url, ct);
+                using var doc = JsonDocument.Parse(response);
+                if (doc.RootElement.TryGetProperty("results", out var items))
+                    foreach (var item in items.EnumerateArray())
+                    {
+                        var media = ParseTmdbHeroItem(item, "movie");
+                        if (media != null && !raw.Any(r => r.Id == media.Id))
+                            raw.Add(media);
+                    }
+            }
+            catch { }
+
+            var rawUpcomingCount = raw.Count - beforeUpcoming;
+            Console.WriteLine($"[DiscoveryMovieTv] tmdb.movies.upcoming count={rawUpcomingCount}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] tmdb.movies.upcoming count={rawUpcomingCount}");
+
+            // ── Quality filter (in-memory safety net after API-level filters) ────────────
+            var originalCount = raw.Count;
+            var removedLanguage = 0;
+            var removedPopularity = 0;
+            var removedVoteCount = 0;
+            var kept = new List<DiscoveryMedia>();
+            foreach (var item in raw)
+            {
+                if (!string.IsNullOrWhiteSpace(item.OriginalLanguage) &&
+                    !string.Equals(item.OriginalLanguage, defaultContentLanguage, StringComparison.OrdinalIgnoreCase))
+                { removedLanguage++; continue; }
+
+                if (item.VoteCount > 0 && item.VoteCount < minVoteCount)
+                { removedVoteCount++; continue; }
+
+                if (item.Popularity > 0 && item.Popularity < minPopularity)
+                { removedPopularity++; continue; }
+
+                kept.Add(item);
+            }
+
+            var qualityLog = $"[DiscoveryMovieTv] quality.filtered original={originalCount} kept={kept.Count} removedLanguage={removedLanguage} removedPopularity={removedPopularity} removedVoteCount={removedVoteCount}";
+            Console.WriteLine(qualityLog);
+            AtlasAI.Core.AppLogger.LogInfo(qualityLog);
+
+            // ── Supplement if pool is too small ──────────────────────────────────────────
+            int suppTrendingMovie = 0, suppTrendingTv = 0, suppUpcoming = 0, suppPopularTv = 0;
+
+            if (kept.Count < minHeroPoolSize)
+            {
+                static bool IsEnglish(DiscoveryMedia m, string lang) =>
+                    string.IsNullOrWhiteSpace(m.OriginalLanguage) ||
+                    string.Equals(m.OriginalLanguage, lang, StringComparison.OrdinalIgnoreCase);
+
+                // Trending movies/week
+                try
+                {
+                    var url = $"https://api.themoviedb.org/3/trending/movie/week?api_key={tmdbKey}&language=en-GB";
+                    var response = await _httpClient.GetStringAsync(url, ct);
+                    using var doc = JsonDocument.Parse(response);
+                    if (doc.RootElement.TryGetProperty("results", out var items))
+                        foreach (var item in items.EnumerateArray())
+                        {
+                            var media = ParseTmdbHeroItem(item, "movie");
+                            if (media != null && IsEnglish(media, defaultContentLanguage) && !kept.Any(r => r.Id == media.Id))
+                            { kept.Add(media); suppTrendingMovie++; }
+                        }
+                }
+                catch { }
+
+                // Trending TV/week
+                try
+                {
+                    var url = $"https://api.themoviedb.org/3/trending/tv/week?api_key={tmdbKey}&language=en-GB";
+                    var response = await _httpClient.GetStringAsync(url, ct);
+                    using var doc = JsonDocument.Parse(response);
+                    if (doc.RootElement.TryGetProperty("results", out var items))
+                        foreach (var item in items.EnumerateArray())
+                        {
+                            var media = ParseTmdbHeroItem(item, "tv");
+                            if (media != null && IsEnglish(media, defaultContentLanguage) && !kept.Any(r => r.Id == media.Id))
+                            { kept.Add(media); suppTrendingTv++; }
+                        }
+                }
+                catch { }
+
+                // Upcoming movies (second page)
+                try
+                {
+                    var url = $"https://api.themoviedb.org/3/movie/upcoming?api_key={tmdbKey}&language=en-GB&region={defaultRegion}&page=2";
+                    var response = await _httpClient.GetStringAsync(url, ct);
+                    using var doc = JsonDocument.Parse(response);
+                    if (doc.RootElement.TryGetProperty("results", out var items))
+                        foreach (var item in items.EnumerateArray())
+                        {
+                            var media = ParseTmdbHeroItem(item, "movie");
+                            if (media != null && IsEnglish(media, defaultContentLanguage) && !kept.Any(r => r.Id == media.Id))
+                            { kept.Add(media); suppUpcoming++; }
+                        }
+                }
+                catch { }
+
+                // Popular TV (English)
+                try
+                {
+                    var url = $"https://api.themoviedb.org/3/tv/popular?api_key={tmdbKey}&language=en-GB&page=1";
+                    var response = await _httpClient.GetStringAsync(url, ct);
+                    using var doc = JsonDocument.Parse(response);
+                    if (doc.RootElement.TryGetProperty("results", out var items))
+                        foreach (var item in items.EnumerateArray())
+                        {
+                            var media = ParseTmdbHeroItem(item, "tv");
+                            if (media != null && IsEnglish(media, defaultContentLanguage) && !kept.Any(r => r.Id == media.Id))
+                            { kept.Add(media); suppPopularTv++; }
+                        }
+                }
+                catch { }
+
+                var suppLog = $"[DiscoveryMovieTv] quality.supplemented trendingMovie={suppTrendingMovie} trendingTv={suppTrendingTv} upcoming={suppUpcoming} popularTv={suppPopularTv}";
+                Console.WriteLine(suppLog);
+                AtlasAI.Core.AppLogger.LogInfo(suppLog);
+            }
+
+            // ── Sort by weighted score: popularity (weight 1) + vote_count (weight 0.05) + rating (weight 10) ─
+            kept = kept
+                .OrderByDescending(m => m.Popularity * 1.0 + m.VoteCount * 0.05 + m.Rating * 10.0)
+                .ToList();
+
+            // ── Attach trailers ──────────────────────────────────────────────────────────
+            await AttachTrailerUrlsFromTmdbAsync(kept, tmdbKey, ct);
+            var trailerCount = kept.Count(r => !string.IsNullOrWhiteSpace(r.TrailerUrl));
+            Console.WriteLine($"[DiscoveryMovieTv] trailers count={trailerCount}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] trailers count={trailerCount}");
+
+            Console.WriteLine($"[DiscoveryMovieTv] mixed.total={kept.Count}");
+            AtlasAI.Core.AppLogger.LogInfo($"[DiscoveryMovieTv] mixed.total={kept.Count}");
+
+            return kept;
+        }
+
+        private static DiscoveryMedia? ParseTmdbHeroItem(JsonElement item, string type)
+        {
+            if (!item.TryGetProperty("id", out var idEl) || idEl.ValueKind != JsonValueKind.Number)
+                return null;
+
+            var id = idEl.GetInt32();
+            if (id <= 0) return null;
+
+            var title = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase)
+                ? (item.TryGetProperty("name", out var nameEl) ? nameEl.GetString()?.Trim() ?? "" : "")
+                : (item.TryGetProperty("title", out var titleEl) ? titleEl.GetString()?.Trim() ?? "" : "");
+            if (string.IsNullOrWhiteSpace(title)) return null;
+
+            var backdropPath = item.TryGetProperty("backdrop_path", out var bpEl) ? (bpEl.GetString() ?? "") : "";
+            var posterPath = item.TryGetProperty("poster_path", out var ppEl) ? (ppEl.GetString() ?? "") : "";
+            var backdropUrl = string.IsNullOrWhiteSpace(backdropPath) ? null : $"https://image.tmdb.org/t/p/w1280{backdropPath}";
+            var posterUrl = string.IsNullOrWhiteSpace(posterPath) ? null : $"https://image.tmdb.org/t/p/w500{posterPath}";
+            var image = backdropUrl ?? posterUrl ?? "";
+
+            var releaseDate = string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase)
+                ? (item.TryGetProperty("first_air_date", out var fadEl) ? fadEl.GetString() : "")
+                : (item.TryGetProperty("release_date", out var rdEl) ? rdEl.GetString() : "");
+
+            var originalLanguage = item.TryGetProperty("original_language", out var olEl) ? (olEl.GetString() ?? "") : "";
+            var popularity = item.TryGetProperty("popularity", out var popEl) && popEl.ValueKind == JsonValueKind.Number ? popEl.GetDouble() : 0.0;
+            var voteCount = item.TryGetProperty("vote_count", out var vcEl) && vcEl.ValueKind == JsonValueKind.Number ? vcEl.GetInt32() : 0;
+
+            return new DiscoveryMedia
+            {
+                Id = id.ToString(),
+                Title = title,
+                Image = image,
+                BackdropUrl = backdropUrl,
+                PosterUrl = posterUrl,
+                Rating = item.TryGetProperty("vote_average", out var ratingEl) ? ratingEl.GetDouble() : 0,
+                Type = type,
+                IsNew = true,
+                Overview = item.TryGetProperty("overview", out var overviewEl) ? overviewEl.GetString() : "",
+                ReleaseDate = releaseDate,
+                OriginalLanguage = originalLanguage,
+                Popularity = popularity,
+                VoteCount = voteCount,
+            };
+        }
+
         private async Task AttachTrailerUrlsFromTmdbAsync(List<DiscoveryMedia> items, string tmdbKey, CancellationToken ct)
         {
             if (items == null || items.Count == 0)
@@ -858,6 +1118,7 @@ namespace AtlasAI.Services
         public List<DiscoveryMedia> Upcoming { get; set; } = new();
         public List<DiscoveryCelebrity> Celebrities { get; set; } = new();
         public DiscoveryMedia? Featured { get; set; }
+        public List<DiscoveryMedia> HeroMovieTv { get; set; } = new();
         public string? Error { get; set; }
     }
 
@@ -874,6 +1135,12 @@ namespace AtlasAI.Services
         public List<string>? Genres { get; set; }
         public string? Runtime { get; set; }
         public string? TrailerUrl { get; set; }
+        public string? BackdropUrl { get; set; }
+        public string? PosterUrl { get; set; }
+        // Quality-filter fields (internal, not rendered in UI)
+        public string? OriginalLanguage { get; set; }
+        public double Popularity { get; set; }
+        public int VoteCount { get; set; }
     }
 
     public class DiscoveryNews

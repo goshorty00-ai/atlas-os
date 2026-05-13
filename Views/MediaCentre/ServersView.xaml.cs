@@ -108,14 +108,17 @@ namespace AtlasAI.Views.MediaCentre
         private bool _contextMenuHooked;
         private bool _figmaEnabled;
         private bool _statePostScheduled;
+        private MediaCentreViewModel? _cachedViewModel;
         private System.Drawing.Point _lastContextMenuPoint;
         private DateTime _lastEnteredGridUtc = DateTime.MinValue;
         private DateTime _lastStatePostUtc = DateTime.MinValue;
         private DateTime _lastAutoLoadUtc = DateTime.MinValue;
+        private DateTime _lastReloadAddonServersUtc = DateTime.MinValue;
         private string? _lastPostedStateMessage;
         private string? _lastPostedStreamsMessage;
         private string? _lastNavigatedServersUri;
         private string _selectedServerView = string.Empty;
+        private bool _mediaHubDistMissingNotified;
         private CoreWebView2Environment? _serversEnvironment;
         private Microsoft.Web.WebView2.Wpf.WebView2? _addonManagerWebView;
         private readonly DiscoveryService _discoveryService = new();
@@ -691,6 +694,18 @@ namespace AtlasAI.Views.MediaCentre
 
         private void ServersView_Loaded(object sender, RoutedEventArgs e)
         {
+            // Self-initialize: when no parent provided a DataContext (e.g. standalone in CommandCenterWindow),
+            // bootstrap from the service layer — same pattern Stremio uses where each component owns its data connection.
+            if (DataContext is not MediaCentreViewModel)
+            {
+                try
+                {
+                    var ps = AtlasAI.MediaScanner.MediaPlaybackService.GetOrCreate();
+                    DataContext = MediaCentreViewModel.Instance ?? new MediaCentreViewModel(ps);
+                }
+                catch { }
+            }
+
             try
             {
                 _defaultBackground ??= Background;
@@ -785,6 +800,7 @@ namespace AtlasAI.Views.MediaCentre
             {
                 UnhookViewModel();
                 _viewModel = DataContext as MediaCentreViewModel;
+                if (_viewModel != null) _cachedViewModel = _viewModel;
                 HookViewModel();
                 UpdateEmbeddedVisibility();
                 SchedulePostState();
@@ -977,6 +993,14 @@ namespace AtlasAI.Views.MediaCentre
                 catch
                 {
                 }
+
+                // When a bridge-triggered load completes, clear dedup cache so PostState always fires with new items
+                try
+                {
+                    if (n == nameof(MediaCentreViewModel.IsServerCatalogBusy) && _viewModel != null && !_viewModel.IsServerCatalogBusy)
+                        _lastPostedStateMessage = null;
+                }
+                catch { }
 
                 if (n == nameof(MediaCentreViewModel.IsServerShelvesMode) ||
                     n == nameof(MediaCentreViewModel.IsServerGridMode) ||
@@ -1199,9 +1223,57 @@ namespace AtlasAI.Views.MediaCentre
                     dist = null;
                 }
 
+                if (string.IsNullOrWhiteSpace(dist))
+                {
+                    try
+                    {
+                        const string err = "[MediaHubRuntime] ERROR: Frontend dist not found. Expected Figma\\Mediahub\\dist.";
+                        Console.WriteLine(err);
+                        AtlasAI.Core.AppLogger.LogError(err);
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        _figmaEnabled = false;
+                        UpdateEmbeddedVisibility();
+                    }
+                    catch
+                    {
+                    }
+
+                    if (!_mediaHubDistMissingNotified)
+                    {
+                        _mediaHubDistMissingNotified = true;
+                        try
+                        {
+                            MessageBox.Show(
+                                "Atlas MediaHub frontend is missing. Expected folder: Figma\\Mediahub\\dist",
+                                "MediaHub Runtime Missing",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+                        }
+                        catch
+                        {
+                        }
+                    }
+
+                    return;
+                }
+
+                try
+                {
+                    Console.WriteLine($"[MediaHubRuntime] Using frontend dist: {dist}");
+                    AtlasAI.Core.AppLogger.LogInfo($"[MediaHubRuntime] Using frontend dist: {dist}");
+                }
+                catch
+                {
+                }
+
                 if (!alreadyInitialized)
                 {
-                    if (dist == null) return;
                     _serversEnvironment ??= await CreateServersWebViewEnvironmentAsync();
                     await ServersFigmaWebView.EnsureCoreWebView2Async(_serversEnvironment);
                 }
@@ -1490,13 +1562,13 @@ namespace AtlasAI.Views.MediaCentre
 
         private static string? FindMediaStreamerDist()
         {
-            const string mediaStreamerFolder = "Media Streamer";
+            const string mediaHubFolder = "Mediahub";
             var candidates = new List<string>();
 
             try
             {
                 var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                var shipped = Path.Combine(baseDir, "Figma", mediaStreamerFolder, "dist");
+                var shipped = Path.Combine(baseDir, "Figma", mediaHubFolder, "dist");
                 if (Directory.Exists(shipped) && File.Exists(Path.Combine(shipped, "index.html")))
                     candidates.Add(shipped);
             }
@@ -1521,7 +1593,7 @@ namespace AtlasAI.Views.MediaCentre
                         var figmaRoot = Path.Combine(dir.FullName, "Figma");
                         if (Directory.Exists(figmaRoot))
                         {
-                            var uiFolder = Directory.GetDirectories(figmaRoot, mediaStreamerFolder, SearchOption.TopDirectoryOnly)
+                            var uiFolder = Directory.GetDirectories(figmaRoot, mediaHubFolder, SearchOption.TopDirectoryOnly)
                                 .FirstOrDefault();
                             if (!string.IsNullOrWhiteSpace(uiFolder))
                             {
@@ -1540,7 +1612,6 @@ namespace AtlasAI.Views.MediaCentre
 
             return candidates
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderByDescending(GetNewestDistWriteTicks)
                 .FirstOrDefault();
         }
 
@@ -1756,6 +1827,9 @@ namespace AtlasAI.Views.MediaCentre
 
                 switch (type)
                 {
+                    case "mediahub.openTrailerUrl":
+                        // Handled entirely in React via YouTube embed modal — no C# action needed
+                        break;
                     case "mediahub.openExternalUrl":
                     case "servers.openExternalUrl":
                         try
@@ -1846,7 +1920,22 @@ namespace AtlasAI.Views.MediaCentre
                         catch
                         {
                         }
-                        try { _viewModel?.ReloadAddonServersFromStore(); } catch { }
+                        // Force re-send even if payload hasn't changed — the React page just mounted
+                        // and needs the state delivered fresh (dedup would otherwise swallow it).
+                        _lastPostedStateMessage = null;
+                        // Only reload addon servers on mount (servers.ready) or after a 30s cooldown.
+                        // Reloading on every poll cancels BuildServerShelvesAsync (via RebuildServerShelves)
+                        // so streaming catalog addons (Netflix, Prime, Marvel) never finish building.
+                        try
+                        {
+                            if (string.Equals(type, "servers.ready", StringComparison.OrdinalIgnoreCase) ||
+                                (DateTime.UtcNow - _lastReloadAddonServersUtc).TotalSeconds > 30)
+                            {
+                                _lastReloadAddonServersUtc = DateTime.UtcNow;
+                                _viewModel?.ReloadAddonServersFromStore();
+                            }
+                        }
+                        catch { }
                         SchedulePostState();
                         _ = PostDiscoveryDataFromServersAsync();
                         break;
@@ -1970,6 +2059,28 @@ namespace AtlasAI.Views.MediaCentre
                         catch
                         {
                         }
+                        break;
+                    case "servers.loadMoreShelfItems":
+                        try
+                        {
+                            var vm2 = _viewModel;
+                            if (vm2 != null)
+                            {
+                                // contentType is at root level (not nested in payload)
+                                var ct2 = root.TryGetProperty("contentType", out var ct2El) && ct2El.ValueKind == JsonValueKind.String
+                                    ? (ct2El.GetString() ?? "movie").Trim() : "movie";
+                                Dispatcher.Invoke(() =>
+                                {
+                                    try { vm2.RequestLoadMoreFromBridge(ct2); }
+                                    catch (Exception ex2) { AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] RequestLoadMoreFromBridge threw: {ex2.Message}"); }
+                                });
+                            }
+                            else
+                            {
+                                AtlasAI.Core.AppLogger.LogInfo("[BridgeLoad] vm2 is null");
+                            }
+                        }
+                        catch (Exception ex3) { AtlasAI.Core.AppLogger.LogInfo($"[BridgeLoad] handler threw: {ex3.Message}"); }
                         break;
                     case "servers.openAddonManager":
                         try
@@ -2495,9 +2606,13 @@ namespace AtlasAI.Views.MediaCentre
 
                 try
                 {
-                    var successLog = $"[DiscoveryHeroData] servers.discovery.post success=true trending={data?.Trending?.Count ?? 0} upcoming={data?.Upcoming?.Count ?? 0} news={data?.News?.Count ?? 0} featured={(data?.Featured != null).ToString().ToLowerInvariant()}";
+                    var heroCount = data?.HeroMovieTv?.Count ?? 0;
+                    var successLog = $"[DiscoveryHeroData] servers.discovery.post success=true trending={data?.Trending?.Count ?? 0} upcoming={data?.Upcoming?.Count ?? 0} news={data?.News?.Count ?? 0} featured={(data?.Featured != null).ToString().ToLowerInvariant()} heroMovieTv={heroCount}";
                     Console.WriteLine(successLog);
                     AtlasAI.Core.AppLogger.LogInfo(successLog);
+                    var heroLog = $"[DiscoveryMovieTv] post discovery.data success=true heroMovieTv={heroCount}";
+                    Console.WriteLine(heroLog);
+                    AtlasAI.Core.AppLogger.LogInfo(heroLog);
                 }
                 catch
                 {
@@ -3627,7 +3742,7 @@ namespace AtlasAI.Views.MediaCentre
             {
                 if (!IsLoaded || !IsVisible) return;
                 if (RootHost?.Visibility != Visibility.Visible) return;
-                var vm = _viewModel;
+                var vm = _viewModel ?? _cachedViewModel;
                 if (vm == null) return;
                 if (ServersFigmaWebView?.CoreWebView2 == null) return;
 
@@ -3635,18 +3750,49 @@ namespace AtlasAI.Views.MediaCentre
                 try { rpdbKey = (AtlasAI.Core.IntegrationKeyStore.GetDecrypted("rpdb") ?? "").Trim(); } catch { }
 
                 var orderedShelves = OrderShelvesForClient(vm.ServerShelves);
+                AtlasAI.Core.AppLogger.LogInfo($"[PostState] shelves={orderedShelves.Count} totalItems={orderedShelves.Sum(s => s.Items?.Count ?? 0)}");
+
+                // Poster diagnostic — log first 5 poster URLs from the first shelf to diagnose cover loading
+                try
+                {
+                    var firstShelf = orderedShelves.FirstOrDefault();
+                    if (firstShelf?.Items != null)
+                    {
+                        var sampleItems = firstShelf.Items.Take(5).ToList();
+                        for (int di = 0; di < sampleItems.Count; di++)
+                        {
+                            var si = sampleItems[di];
+                            var sImdb = ExtractImdbId(si.ImdbId, si.MetaId, si.FilePath);
+                            var sRpdb = RpdbPosterUrl(rpdbKey, sImdb);
+                            var sOrig = (si.CoverUrl ?? "").Trim();
+                            var sIsRpdb = sOrig.IndexOf("ratingposterdb.com", StringComparison.OrdinalIgnoreCase) >= 0;
+                            var sFinal = !string.IsNullOrWhiteSpace(sRpdb) ? sRpdb
+                                : (!sIsRpdb && !string.IsNullOrWhiteSpace(sOrig)) ? sOrig
+                                : (!string.IsNullOrWhiteSpace(sImdb) ? $"https://images.metahub.space/poster/medium/{sImdb}/img" : sOrig);
+                            AtlasAI.Core.AppLogger.LogInfo($"[PostState:poster] [{di}] imdb={sImdb} orig={sOrig.Substring(0, Math.Min(100, sOrig.Length))} final={sFinal.Substring(0, Math.Min(80, sFinal.Length))}");
+                        }
+                    }
+                }
+                catch { }
+
                 var shelves = orderedShelves.Select(s => new
                 {
                     key = $"{(s.ContentType ?? "").Trim()}::{(s.CatalogId ?? "").Trim()}",
                     title = (s.Title ?? "").Trim(),
                     type = (s.ContentType ?? "").Trim(),
                     catalogId = (s.CatalogId ?? "").Trim(),
-                    items = s.Items.Select(i =>
+                    items = (string.Equals((s.CatalogId ?? "").Trim(), "__all_movies__", StringComparison.OrdinalIgnoreCase)
+                                ? (IEnumerable<MediaItem>)vm.ServerMovieCatalogItems
+                                : string.Equals((s.CatalogId ?? "").Trim(), "__all_series__", StringComparison.OrdinalIgnoreCase)
+                                ? (IEnumerable<MediaItem>)vm.ServerTvCatalogItems
+                                : (IEnumerable<MediaItem>)s.Items).Select(i =>
                     {
                         var imdb = ExtractImdbId(i.ImdbId, i.MetaId, i.FilePath);
                         var rpdbPoster = RpdbPosterUrl(rpdbKey, imdb);
                         var originalPoster = (i.CoverUrl ?? "").Trim();
-                        var poster = !string.IsNullOrWhiteSpace(rpdbPoster) ? rpdbPoster : originalPoster;
+                        var poster = !string.IsNullOrWhiteSpace(rpdbPoster) ? rpdbPoster
+                            : !string.IsNullOrWhiteSpace(originalPoster) ? originalPoster
+                            : !string.IsNullOrWhiteSpace(imdb) ? $"https://images.metahub.space/poster/medium/{imdb}/img" : "";
                         return new
                     {
                         id = (i.MetaId ?? i.FilePath ?? "").Trim(),
@@ -3739,7 +3885,9 @@ namespace AtlasAI.Views.MediaCentre
                         var catImdb = ExtractImdbId(i.ImdbId, i.MetaId, i.FilePath);
                         var catRpdb = RpdbPosterUrl(rpdbKey, catImdb);
                         var catOriginal = (i.CoverUrl ?? "").Trim();
-                        var catPoster = !string.IsNullOrWhiteSpace(catRpdb) ? catRpdb : catOriginal;
+                        var catPoster = !string.IsNullOrWhiteSpace(catRpdb) ? catRpdb
+                            : !string.IsNullOrWhiteSpace(catOriginal) ? catOriginal
+                            : !string.IsNullOrWhiteSpace(catImdb) ? $"https://images.metahub.space/poster/medium/{catImdb}/img" : "";
                         catalogItems.Add(new
                         {
                             metaId = (i.MetaId ?? "").Trim(),
@@ -3784,7 +3932,9 @@ namespace AtlasAI.Views.MediaCentre
                         var previewImdb = ExtractImdbId(p.ImdbId, p.MetaId, p.FilePath);
                         var previewRpdb = RpdbPosterUrl(rpdbKey, previewImdb);
                         var previewOriginal = (p.CoverUrl ?? "").Trim();
-                        var previewPoster = !string.IsNullOrWhiteSpace(previewRpdb) ? previewRpdb : previewOriginal;
+                        var previewPoster = !string.IsNullOrWhiteSpace(previewRpdb) ? previewRpdb
+                            : !string.IsNullOrWhiteSpace(previewOriginal) ? previewOriginal
+                            : !string.IsNullOrWhiteSpace(previewImdb) ? $"https://images.metahub.space/poster/medium/{previewImdb}/img" : "";
                         preview = new
                         {
                             metaId = (p.MetaId ?? "").Trim(),
@@ -3877,11 +4027,14 @@ namespace AtlasAI.Views.MediaCentre
 
                 _lastPostedStateMessage = msg;
 
+                AtlasAI.Core.AppLogger.LogInfo($"[PostState] SENDING servers.state len={msg.Length}");
                 ServersFigmaWebView.CoreWebView2.PostWebMessageAsJson(msg);
+                AtlasAI.Core.AppLogger.LogInfo($"[PostState] SENT ok");
                 _ = ApplyServersChromePatchAsync();
             }
-            catch
+            catch (Exception ex)
             {
+                AtlasAI.Core.AppLogger.LogError($"[PostState] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
             }
         }
 

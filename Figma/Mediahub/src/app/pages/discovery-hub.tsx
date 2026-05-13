@@ -21,12 +21,15 @@ type HeroItem = {
   hasTrailer: boolean;
   hasDetails: boolean;
   trailerUrl?: string;
+  isNewSeason?: boolean;
 };
 
 type DiscoveryMediaPayload = {
   id?: string;
   title?: string;
   image?: string;
+  backdropUrl?: string;
+  posterUrl?: string;
   rating?: number;
   type?: string;
   releaseDate?: string;
@@ -43,6 +46,7 @@ type DiscoveryDataPayload = {
   news?: DiscoveryNewsPayload[];
   celebrities?: DiscoveryCelebrityPayload[];
   featured?: DiscoveryMediaPayload | null;
+  heroMovieTv?: DiscoveryMediaPayload[];
   error?: string;
 };
 
@@ -522,6 +526,7 @@ export function DiscoveryHub() {
   const [liveNewsItems, setLiveNewsItems] = useState<DiscoveryNewsPayload[]>([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [infoItem, setInfoItem] = useState<HeroItem | null>(null);
 
   const postToHost = (message: unknown) => {
     try {
@@ -564,7 +569,7 @@ export function DiscoveryHub() {
     if (direct)
       return direct;
 
-    if (item.category === 'Game' || item.category === 'Music')
+    if (item.category === 'Movie' || item.category === 'TV' || item.category === 'Game' || item.category === 'Music')
       return buildTrailerSearchUrl(item.title, item.category);
 
     return undefined;
@@ -637,7 +642,7 @@ export function DiscoveryHub() {
       type === 'game' ? 'Game' :
       'News';
 
-    const providedBackdropUrl = (item.image ?? '').trim();
+    const providedBackdropUrl = ((item.backdropUrl ?? item.image) ?? '').trim();
     const backdropUrl = providedBackdropUrl || fallbackBackdropForCategory(category);
 
     const release = (item.releaseDate ?? '').trim() || (type === 'movie' ? 'Release date unknown' : type === 'tv' ? 'Air date unknown' : 'Upcoming');
@@ -668,14 +673,23 @@ export function DiscoveryHub() {
       description: (item.overview ?? '').trim() || 'No overview available.',
       category,
       canPlay: category === 'Movie' || category === 'TV',
-      hasTrailer: Boolean(trailerUrl) || category === 'Game' || category === 'Music',
+      hasTrailer: Boolean(trailerUrl) || category === 'Movie' || category === 'TV' || category === 'Game' || category === 'Music',
       hasDetails: true,
       trailerUrl: trailerUrl || undefined,
+      isNewSeason: category === 'TV' && (() => {
+        const rd = (item.releaseDate ?? '').trim();
+        if (!rd) return false;
+        const aired = new Date(rd);
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+        return aired < twelveMonthsAgo;
+      })(),
     };
   };
 
   const requestDiscoveryData = () => {
     logDiscovery('[DiscoveryHeroData] frontend.request discovery.getData');
+    logDiscovery('[DiscoveryMovieTv] frontend.request discovery.getData');
     postToHost({ type: 'discovery.getData' });
   };
 
@@ -684,13 +698,19 @@ export function DiscoveryHub() {
     if (!url)
       return;
     logDiscovery(`[DiscoveryHeroData] frontend.openTrailer id=${item.id} category=${item.category} hasUrl=true`);
-    postToHost({ type: 'mediahub.openExternalUrl', payload: { url } });
+    logDiscovery(`[DiscoveryMovieTv] trailer.click url=${url}`);
+    postToHost({ type: 'mediahub.openTrailerUrl', payload: { url } });
+    logDiscovery('[DiscoveryMovieTv] trailer.openAtlasBrowser success=true');
   };
 
   const openHeroInfo = (item: HeroItem) => {
-    const url = buildInfoUrl(item.title, item.category, item.release);
-    logDiscovery(`[DiscoveryHeroData] frontend.openInfo id=${item.id} category=${item.category}`);
-    postToHost({ type: 'mediahub.openExternalUrl', payload: { url } });
+    logDiscovery(`[DiscoveryMovieTv] info.open id=${item.id} title=${item.title}`);
+    setInfoItem(item);
+  };
+
+  const closeHeroInfo = () => {
+    logDiscovery('[DiscoveryMovieTv] info.close');
+    setInfoItem(null);
   };
 
   const shuffleArray = <T,>(items: T[]): T[] => {
@@ -756,6 +776,7 @@ export function DiscoveryHub() {
         return;
 
       logDiscovery('[DiscoveryHeroData] frontend.discovery.received=true');
+      logDiscovery('[DiscoveryMovieTv] frontend.received=true');
       const payload = (message.payload ?? {}) as DiscoveryDataPayload;
       const payloadKeys = Object.keys(payload ?? {}).join(',');
       logDiscovery(`[DiscoveryHeroData] frontend.payload.keys=${payloadKeys}`);
@@ -771,6 +792,12 @@ export function DiscoveryHub() {
         : [];
       const news = Array.isArray(payload.news) ? payload.news : [];
 
+      // Dedicated recent Movie/TV items from backend (date-filtered by backend, no client filter needed)
+      const heroMovieTvRaw = Array.isArray(payload.heroMovieTv)
+        ? payload.heroMovieTv.map(mapToHeroItem).filter((hero): hero is HeroItem => hero !== null)
+        : [];
+      logDiscovery(`[DiscoveryMovieTv] frontend.heroItems count=${heroMovieTvRaw.length}`);
+
       const recentTrending = filterRecentReleases(trending);
       const recentTrailers = filterRecentReleases(trailers);
       const recentUpcoming = filterRecentReleases(upcoming);
@@ -781,19 +808,31 @@ export function DiscoveryHub() {
       setLiveUpcomingItems(recentUpcoming);
       setLiveNewsItems(news);
 
-      const merged = buildMixedHeroFeed(recentFeatured, recentTrailers, recentTrending, recentUpcoming);
-
-      logDiscovery(`[DiscoveryHeroData] frontend.mapped.count=${merged.length}`);
-
-      if (merged.length > 0) {
-        setHeroItems(merged);
+      if (heroMovieTvRaw.length > 0) {
+        // Use dedicated recent movie/TV feed — shuffle to mix movies and TV
+        const shuffled = shuffleArray(heroMovieTvRaw);
+        setHeroItems(shuffled);
         setHeroIndex(0);
         setLastUpdated(new Date());
+        logDiscovery(`[DiscoveryHeroData] frontend.mapped.count=${shuffled.length}`);
         logDiscovery('[DiscoveryHeroData] frontend.usingFallback=false');
+        logDiscovery('[DiscoveryMovieTv] frontend.usingFallback=false');
       } else {
-        setHeroItems([]);
-        setLastUpdated(new Date());
-        logDiscovery('[DiscoveryHeroData] frontend.usingFallback=none');
+        // Fall back to mixed trending/trailers/upcoming if heroMovieTv is empty
+        const merged = buildMixedHeroFeed(recentFeatured, recentTrailers, recentTrending, recentUpcoming);
+        logDiscovery(`[DiscoveryHeroData] frontend.mapped.count=${merged.length}`);
+        logDiscovery('[DiscoveryMovieTv] frontend.usingFallback=true');
+
+        if (merged.length > 0) {
+          setHeroItems(merged);
+          setHeroIndex(0);
+          setLastUpdated(new Date());
+          logDiscovery('[DiscoveryHeroData] frontend.usingFallback=false');
+        } else {
+          setHeroItems([]);
+          setLastUpdated(new Date());
+          logDiscovery('[DiscoveryHeroData] frontend.usingFallback=none');
+        }
       }
     };
 
@@ -823,6 +862,15 @@ export function DiscoveryHub() {
 
     return () => window.clearInterval(rotation);
   }, [heroItems.length]);
+
+  useEffect(() => {
+    if (heroItems.length === 0) return;
+    const current = heroItems[heroIndex % heroItems.length];
+    if (current) {
+      logDiscovery(`[DiscoveryMovieTv] current type=${current.category} title=${current.title}`);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heroIndex, heroItems]);
 
   const featuredDiscovery = heroItems.length > 0 ? heroItems[heroIndex % heroItems.length] : null;
   const previousHero = () => {
@@ -947,6 +995,11 @@ export function DiscoveryHub() {
             <span className="px-2 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-200 text-[10px]">
               {featuredDiscovery.category}
             </span>
+            {featuredDiscovery.isNewSeason && (
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-[10px]">
+                New Season
+              </span>
+            )}
           </div>
           <div className="text-slate-50" style={{ fontSize: 30, letterSpacing: '-0.01em', textShadow: '0 2px 24px rgba(0,0,0,0.7)' }}>
             {featuredDiscovery.title}
@@ -964,11 +1017,14 @@ export function DiscoveryHub() {
           <p className="text-slate-300/90 text-xs mt-2.5 line-clamp-2 max-w-[520px]">{featuredDiscovery.description}</p>
           <div className="flex items-center gap-2 mt-3">
             {featuredDiscovery.canPlay ? (
-              <button className="px-3 py-1.5 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/30">
-                <Play size={12} fill="currentColor" /> Play
+              <button
+                className="px-3 py-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs flex items-center gap-1.5"
+                onClick={() => openHeroInfo(featuredDiscovery)}
+              >
+                <Play size={11} /> Play
               </button>
             ) : null}
-            {featuredDiscovery.hasTrailer && featuredDiscovery.trailerUrl ? (
+            {featuredDiscovery.hasTrailer ? (
               <button
                 className="px-3 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-xs flex items-center gap-1.5"
                 onClick={() => openHeroTrailer(featuredDiscovery)}
@@ -1308,6 +1364,80 @@ export function DiscoveryHub() {
       </div>
 
       <div className="h-8" />
+
+      {/* Info Overlay */}
+      {infoItem ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+          onClick={closeHeroInfo}
+        >
+          <div
+            className="relative w-full max-w-2xl mx-4 rounded-2xl overflow-hidden shadow-2xl"
+            style={{ maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Backdrop */}
+            <div className="relative" style={{ aspectRatio: '16/9', maxHeight: 280 }}>
+              <img
+                src={infoItem.backdropUrl}
+                alt={infoItem.title}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+              <button
+                className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/70 hover:bg-slate-800 text-slate-200 transition-all"
+                onClick={closeHeroInfo}
+              >
+                ✕
+              </button>
+              <div className="absolute bottom-3 left-4">
+                <span className={`px-2 py-0.5 rounded text-xs ${infoItem.category === 'Movie' ? 'bg-cyan-500/30 text-cyan-200' : 'bg-purple-500/30 text-purple-200'}`}>
+                  {infoItem.category}
+                </span>
+              </div>
+            </div>
+            {/* Content */}
+            <div className="bg-slate-900 p-6 space-y-3">
+              <h2 className="text-slate-50 text-2xl" style={{ letterSpacing: '-0.01em' }}>{infoItem.title}</h2>
+              <div className="flex items-center gap-3 text-slate-400 text-sm">
+                {infoItem.rating > 0 ? <span>⭐ {infoItem.rating.toFixed(1)}</span> : null}
+                {infoItem.runtime ? <span>{infoItem.runtime}</span> : null}
+                {infoItem.release && infoItem.release !== 'Release date unknown' && infoItem.release !== 'Air date unknown' ? (
+                  <span>{infoItem.release}</span>
+                ) : null}
+              </div>
+              {infoItem.genres.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {infoItem.genres.map((g) => (
+                    <span key={g} className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs">{g}</span>
+                  ))}
+                </div>
+              ) : null}
+              {infoItem.description && infoItem.description !== 'No overview available.' ? (
+                <p className="text-slate-300 text-sm leading-relaxed">{infoItem.description}</p>
+              ) : null}
+              <div className="flex items-center gap-3 pt-2">
+                {infoItem.hasTrailer && infoItem.trailerUrl ? (
+                  <button
+                    className="px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm flex items-center gap-2"
+                    onClick={() => { openHeroTrailer(infoItem); closeHeroInfo(); }}
+                  >
+                    <Film size={13} /> Watch Trailer
+                  </button>
+                ) : null}
+                <button
+                  className="px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 text-sm"
+                  onClick={closeHeroInfo}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
