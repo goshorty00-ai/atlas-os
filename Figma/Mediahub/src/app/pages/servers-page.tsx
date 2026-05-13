@@ -136,7 +136,15 @@ function makeFeaturedFromBridge(
         backdropUrl: bg,
         rating: item.rating,
         runtime: item.runtimeMinutes ? `${Math.floor(item.runtimeMinutes / 60)}h ${item.runtimeMinutes % 60}m` : undefined,
-        release: item.releaseDate ? String(new Date(item.releaseDate).getFullYear()) : item.year ? String(item.year) : undefined,
+        release: (() => {
+          if (!item.releaseDate) return item.year ? String(item.year) : undefined;
+          const d = new Date(item.releaseDate);
+          const day = d.getUTCDate();
+          const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()];
+          const yr = d.getUTCFullYear();
+          const label = `${day} ${mon} ${yr}`;
+          return d.getTime() > Date.now() ? `Coming ${label}` : label;
+        })(),
         genres: item.genres ?? [],
         source: selectedServer || 'Addon source',
         description: item.overview ?? '',

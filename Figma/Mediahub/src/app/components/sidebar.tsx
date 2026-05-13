@@ -31,7 +31,7 @@ export function Sidebar() {
 
   return (
     <div
-      className={`h-full bg-gradient-to-b from-slate-950/95 to-slate-900/95 backdrop-blur-xl border-r border-cyan-500/20 transition-all duration-300 ${
+      className={`h-full bg-gradient-to-b from-slate-950/95 to-slate-900/95 backdrop-blur-xl border-r border-cyan-500/20 overflow-hidden transition-[width] duration-300 ${
         collapsed ? 'w-16' : 'w-56'
       }`}
       style={{
@@ -43,15 +43,17 @@ export function Sidebar() {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-4 flex items-center justify-between border-b border-cyan-500/20">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-cyan-100 tracking-wide">AI MEDIA</span>
-            </div>
-          )}
+          <div
+            className={`flex items-center gap-2 overflow-hidden transition-[width,opacity] duration-300 ${
+              collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+            }`}
+          >
+            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+            <span className="text-cyan-100 tracking-wide whitespace-nowrap">AI MEDIA</span>
+          </div>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-cyan-400 transition-all"
+            className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-cyan-400 transition-all shrink-0"
           >
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
