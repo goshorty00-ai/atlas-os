@@ -2350,6 +2350,21 @@ namespace AtlasAI.Views.ViewModels
 
                 AtlasAI.Core.AppLogger.LogInfo($"[BuildServerShelves] result: intelligence={intelligentShelves.Count} perCatalog={perCatalogShelves.Count} candidates={candidates.Count} selectedPerCatalogCandidates={perCatalogCandidates.Count} perCatalogPreviewCount={perCatalogPreviewCount}");
 
+                // Option A: index Phase 1 results by ContentType::CatalogId so Phase 2 named shelves and
+                // Phase 3 extra shelves can be assembled from memory without any additional network calls.
+                var perCatalogByKey = new Dictionary<string, List<MediaItem>>(StringComparer.OrdinalIgnoreCase);
+                foreach (var pcs in perCatalogShelves)
+                {
+                    if (pcs?.Items.Count > 0)
+                    {
+                        var k = $"{pcs.ContentType}::{pcs.CatalogId}";
+                        if (!perCatalogByKey.TryGetValue(k, out var existing))
+                            perCatalogByKey[k] = new List<MediaItem>(pcs.Items);
+                        else
+                            existing.AddRange(pcs.Items);
+                    }
+                }
+
                 if (intelligentShelves.Count > 0)
                 {
                     // Keep stable browse-all shelves first, then append intelligence and addon shelves.
@@ -2525,6 +2540,79 @@ namespace AtlasAI.Views.ViewModels
                     }
                 }
 
+                // In-memory counterpart to BuildShelfFromCandidatesAsync.
+                // Aggregates items from Phase 1 perCatalogShelves; no network calls.
+                ServerShelf? BuildShelfFromCache(string keyType, string keyCatalogId, string title, List<ShelfCandidate> match)
+                {
+                    try
+                    {
+                        if (match.Count == 0) return null;
+
+                        // Same primary-candidate selection as BuildShelfFromCandidatesAsync.
+                        var primary = match
+                            .Select(c => new
+                            {
+                                c,
+                                score = ShelfScore(c.CatalogId, c.Title),
+                                hostCount = c.Servers.Select(s => s.BaseUrl).Distinct(StringComparer.OrdinalIgnoreCase).Count()
+                            })
+                            .OrderBy(x => x.score)
+                            .ThenByDescending(x => x.hostCount)
+                            .ThenBy(x => x.c.Title, StringComparer.OrdinalIgnoreCase)
+                            .Select(x => x.c)
+                            .FirstOrDefault();
+
+                        var shelfType = (primary?.ContentType ?? keyType).Trim();
+                        var shelfCatalogId = (primary?.CatalogId ?? keyCatalogId).Trim();
+
+                        // Aggregate items from all matching Phase 1 per-catalog shelves.
+                        var items = new List<MediaItem>();
+                        foreach (var cand in match)
+                        {
+                            var key = $"{cand.ContentType}::{cand.CatalogId}";
+                            if (perCatalogByKey.TryGetValue(key, out var cachedItems))
+                                items.AddRange(cachedItems);
+                        }
+
+                        if (items.Count == 0) return null;
+
+                        items = items
+                            .Where(i => i != null)
+                            .Where(i =>
+                            {
+                                var type = (i.Type ?? "").Trim();
+                                if (string.Equals(keyType, "movie", StringComparison.OrdinalIgnoreCase))
+                                    return string.Equals(type, "movies", StringComparison.OrdinalIgnoreCase) || string.Equals(type, "movie", StringComparison.OrdinalIgnoreCase);
+                                if (string.Equals(keyType, "series", StringComparison.OrdinalIgnoreCase) || string.Equals(keyType, "tv", StringComparison.OrdinalIgnoreCase))
+                                    return string.Equals(type, "tv", StringComparison.OrdinalIgnoreCase) || string.Equals(type, "series", StringComparison.OrdinalIgnoreCase);
+                                return true;
+                            })
+                            .DistinctBy(i => BuildServerCatalogDedupeKey(i), StringComparer.OrdinalIgnoreCase)
+                            .ToList();
+
+                        if (items.Count == 0) return null;
+
+                        if (string.Equals(title, "Latest Movies", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(title, "Latest Series", StringComparison.OrdinalIgnoreCase))
+                        {
+                            items = items
+                                .OrderByDescending(i => i.Year > 0 ? i.Year : int.MinValue)
+                                .ThenByDescending(i => i.ReleaseDate ?? DateTime.MinValue)
+                                .ThenByDescending(i => i.Rating)
+                                .ThenBy(i => i.Title, StringComparer.OrdinalIgnoreCase)
+                                .ToList();
+                        }
+
+                        var shelf = new ServerShelf { ContentType = shelfType, CatalogId = shelfCatalogId, Title = title };
+                        foreach (var i in items.Take(shelfPreviewCount)) shelf.Items.Add(i);
+                        return shelf;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
                 static List<ShelfCandidate> BestFallback(List<ShelfCandidate> list)
                 {
                     return list
@@ -2536,7 +2624,7 @@ namespace AtlasAI.Views.ViewModels
 
                 var specs = new List<(int order, Func<Task<ServerShelf?>> build)>
                 {
-                    (0, async () =>
+                    (0, () =>
                     {
                         var match = movieCandidates
                             .Where(c => MatchesKeyword(c, "latest", "new", "new releases", "recent"))
@@ -2545,9 +2633,9 @@ namespace AtlasAI.Views.ViewModels
                             .ToList();
                         if (match.Count == 0) match = movieCandidates.Where(c => string.Equals((c.CatalogId ?? "").Trim(), "top", StringComparison.OrdinalIgnoreCase)).ToList();
                         if (match.Count == 0) match = BestFallback(movieCandidates);
-                        return await BuildShelfFromCandidatesAsync("movie", "latest", "Latest Movies", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("movie", "latest", "Latest Movies", match));
                     }),
-                    (1, async () =>
+                    (1, () =>
                     {
                         var match = seriesCandidates
                             .Where(c => MatchesKeyword(c, "latest", "new", "new releases", "recent"))
@@ -2556,25 +2644,25 @@ namespace AtlasAI.Views.ViewModels
                             .ToList();
                         if (match.Count == 0) match = seriesCandidates.Where(c => string.Equals((c.CatalogId ?? "").Trim(), "top", StringComparison.OrdinalIgnoreCase)).ToList();
                         if (match.Count == 0) match = BestFallback(seriesCandidates);
-                        return await BuildShelfFromCandidatesAsync("series", "latest", "Latest Series", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("series", "latest", "Latest Series", match));
                     }),
-                    (3, async () =>
+                    (3, () =>
                     {
                         var match = candidates.Where(c => MatchesKeyword(c, "popular", "top")).ToList();
                         if (match.Count == 0) match = candidates.Where(c => string.Equals((c.CatalogId ?? "").Trim(), "top", StringComparison.OrdinalIgnoreCase)).ToList();
-                        return await BuildShelfFromCandidatesAsync("mixed", "popular", "Popular", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("mixed", "popular", "Popular", match));
                     }),
-                    (4, async () =>
+                    (4, () =>
                     {
                         var match = candidates.Where(c => MatchesKeyword(c, "trending", "trend")).ToList();
-                        return await BuildShelfFromCandidatesAsync("mixed", "trending", "Trending This Week", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("mixed", "trending", "Trending This Week", match));
                     }),
-                    (5, async () =>
+                    (5, () =>
                     {
                         var match = candidates.Where(c => MatchesKeyword(c, "top rated", "top-rated", "best", "all time", "imdb")).ToList();
-                        return await BuildShelfFromCandidatesAsync("mixed", "alltime", "All Time Greats", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("mixed", "alltime", "All Time Greats", match));
                     }),
-                    (6, async () =>
+                    (6, () =>
                     {
                         static bool IsAnimationy(ShelfCandidate c)
                         {
@@ -2605,12 +2693,12 @@ namespace AtlasAI.Views.ViewModels
                         if (match.Count == 0)
                             match = candidates.Where(c => MatchesRequestType(c, "marvel") || MatchesKeyword(c, "marvel")).ToList();
 
-                        return await BuildShelfFromCandidatesAsync("marvel", "marvel", "Marvel", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("marvel", "marvel", "Marvel", match));
                     }),
-                    (7, async () =>
+                    (7, () =>
                     {
                         var match = candidates.Where(c => MatchesRequestType(c, "collections") || MatchesKeyword(c, "collection", "collections")).ToList();
-                        return await BuildShelfFromCandidatesAsync("collections", "collections", "Collections", match).ConfigureAwait(false);
+                        return Task.FromResult<ServerShelf?>(BuildShelfFromCache("collections", "collections", "Collections", match));
                     }),
                 };
 
@@ -2638,22 +2726,15 @@ namespace AtlasAI.Views.ViewModels
 
                 await Task.WhenAll(buildTasks).ConfigureAwait(false);
 
-                // Also build per-catalog shelves for any addon catalogs not already covered by the fixed shelves.
+                // Phase 3 eliminated: reuse Phase 1 perCatalogShelves directly instead of re-fetching from network.
                 var fixedCatalogKeys = new HashSet<string>(
                     built.Select(b => $"{b.shelf.ContentType}::{b.shelf.CatalogId}"),
                     StringComparer.OrdinalIgnoreCase);
-                var remainingCandidates = candidates
-                    .Where(c => !fixedCatalogKeys.Contains($"{c.ContentType}::{c.CatalogId}"))
-                    .ToList();
-                var extraCandidates = SelectPerCatalogCandidates(remainingCandidates);
-                var extraShelves = await BuildPerCatalogShelvesAsync(extraCandidates, isAll, perCatalogPreviewCount, ct).ConfigureAwait(false);
                 var nextOrder = (built.Count > 0 ? built.Max(b => b.order) : 7) + 1;
-                foreach (var extra in extraShelves)
+                foreach (var extra in perCatalogShelves)
                 {
-                    if (extra?.Items.Count > 0)
-                    {
-                        lock (built) built.Add((nextOrder++, extra));
-                    }
+                    if (extra?.Items.Count > 0 && !fixedCatalogKeys.Contains($"{extra.ContentType}::{extra.CatalogId}"))
+                        built.Add((nextOrder++, extra));
                 }
 
                 await _uiDispatcher.InvokeAsync(() =>
