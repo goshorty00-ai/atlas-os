@@ -1,0 +1,4 @@
+# Local environment variables — NEVER commit API keys
+.env.local
+.env.*.local
+.env

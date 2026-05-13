@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
-const YT_API_KEY = 'AIzaSyBvGTNBO2CWU921vPZo9YnxFuKAxIBEUc0';
+// YouTube Data API key — must be set via VITE_YT_API_KEY in .env.local (never hardcode)
+const YT_API_KEY = import.meta.env.VITE_YT_API_KEY ?? '';
 
 async function fetchYouTubeVideoId(title: string, type: string): Promise<string | null> {
+  if (!YT_API_KEY) return null;
   const query = encodeURIComponent(`${title} ${type === 'TV' ? 'series' : 'movie'} official trailer`);
   try {
     const res = await fetch(
