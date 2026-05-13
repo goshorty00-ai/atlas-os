@@ -192,6 +192,7 @@ export function ServersPage() {
   const [timedOut, setTimedOut] = useState(false);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const hasShelvesRef = useRef(false);
+  const autoRotateRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Custom shelves created via bulk-select in grid view
@@ -344,12 +345,20 @@ export function ServersPage() {
     ? { ...featuredItem, ...featuredMeta }
     : null;
 
-  // Auto-rotate hero every 8 seconds
-  useEffect(() => {
-    if (featuredItems.length <= 1) return;
-    const t = setInterval(() => setFeaturedIndex((i) => (i + 1) % featuredItems.length), 8000);
-    return () => clearInterval(t);
+  // Auto-rotate hero every 8 seconds; reset timer on manual navigation
+  const startAutoRotate = useCallback(() => {
+    if (autoRotateRef.current) clearInterval(autoRotateRef.current);
+    if (featuredItems.length <= 1) { autoRotateRef.current = null; return; }
+    autoRotateRef.current = setInterval(
+      () => setFeaturedIndex((i) => (i + 1) % featuredItems.length),
+      8000
+    );
   }, [featuredItems.length]);
+
+  useEffect(() => {
+    startAutoRotate();
+    return () => { if (autoRotateRef.current) clearInterval(autoRotateRef.current); };
+  }, [startAutoRotate]);
 
   const openCarousel = (name: string, items: MediaItem[]) => {
     const allItems = bridgeShelves.find((s) => s.title === name)?.items ?? items;
@@ -434,13 +443,13 @@ export function ServersPage() {
             {featuredItems.length > 1 && (
               <div className="absolute bottom-3 right-3 z-10 flex gap-1.5">
                 <button
-                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i - 1 + featuredItems.length) % featuredItems.length); }}
+                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i - 1 + featuredItems.length) % featuredItems.length); startAutoRotate(); }}
                   className="p-1.5 rounded-full bg-slate-900/70 hover:bg-slate-800 border border-slate-700/50 text-slate-200 hover:text-cyan-300 transition-all"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i + 1) % featuredItems.length); }}
+                  onClick={(e) => { e.stopPropagation(); setFeaturedIndex((i) => (i + 1) % featuredItems.length); startAutoRotate(); }}
                   className="p-1.5 rounded-full bg-slate-900/70 hover:bg-slate-800 border border-slate-700/50 text-slate-200 hover:text-cyan-300 transition-all"
                 >
                   <ChevronRight size={16} />
