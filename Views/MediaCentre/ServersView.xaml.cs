@@ -1435,7 +1435,13 @@ namespace AtlasAI.Views.MediaCentre
                 try
                 {
                     Directory.CreateDirectory(folder);
-                    var env = await CoreWebView2Environment.CreateAsync(null, folder);
+                    var options = new CoreWebView2EnvironmentOptions
+                    {
+                        AdditionalBrowserArguments = "--disk-cache-size=52428800"
+                    };
+                    try { Console.WriteLine("[MediaHubRuntime] WebView2 disk cache cap: 50 MB"); } catch { }
+                    try { AtlasAI.Core.AppLogger.LogInfo("[MediaHubRuntime] WebView2 disk cache cap: 50 MB"); } catch { }
+                    var env = await CoreWebView2Environment.CreateAsync(null, folder, options);
                     try { Console.WriteLine($"[ServersWebView:env] {folder}"); } catch { }
                     return env;
                 }

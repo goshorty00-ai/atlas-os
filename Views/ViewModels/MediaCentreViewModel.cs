@@ -15447,6 +15447,19 @@ namespace AtlasAI.Views.ViewModels
                     ApplyCatalogSelectionToStates(_serverMusicPageStates, "music", _selectedServerMusicCatalogId);
                 }
 
+                // F2: start shelf build immediately after manifests — catalog options are fully
+                // populated by initTasks above. BuildServerShelvesAsync does not need grid items,
+                // so there is no need to wait for LoadNextPagesForTypeAsync to complete first.
+                try
+                {
+                    _uiDispatcher.Invoke(() =>
+                    {
+                        AtlasAI.Core.AppLogger.LogInfo("[BuildServerShelves] early rebuild requested after manifest init");
+                        RebuildServerShelves();
+                    });
+                }
+                catch { }
+
                 const int prefetchMin = 120;
                 const int prefetchPasses = 3;
 
@@ -15511,8 +15524,7 @@ namespace AtlasAI.Views.ViewModels
                     {
                     }
 
-                    // Build shelves from loaded catalog data
-                    try { RebuildServerShelves(); } catch { }
+                    // Shelves already triggered earlier (F2 early rebuild after manifest init).
 
                     OnPropertyChanged(nameof(CanLoadMoreServerCatalog));
                     OnPropertyChanged(nameof(CanLoadNextServerCatalogPage));
