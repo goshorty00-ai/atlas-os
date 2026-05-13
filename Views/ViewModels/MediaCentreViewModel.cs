@@ -16311,6 +16311,17 @@ namespace AtlasAI.Views.ViewModels
                         if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name)) continue;
                         if (!ShouldIncludeServerCatalogMeta(id, name)) continue;
 
+                        // Derive IMDb ID: prefer explicit imdb_id field, fall back to id if it looks like a tt-ID
+                        var imdbId = "";
+                        try
+                        {
+                            if (m.TryGetProperty("imdb_id", out var imdbEl) && imdbEl.ValueKind == JsonValueKind.String)
+                                imdbId = (imdbEl.GetString() ?? "").Trim();
+                            if (string.IsNullOrWhiteSpace(imdbId) && id.StartsWith("tt", StringComparison.OrdinalIgnoreCase))
+                                imdbId = id;
+                        }
+                        catch { }
+
                         var poster = m.TryGetProperty("poster", out var posterEl) && posterEl.ValueKind == JsonValueKind.String ? (posterEl.GetString() ?? "").Trim() : "";
                         if (!string.IsNullOrWhiteSpace(poster))
                         {
@@ -16384,6 +16395,37 @@ namespace AtlasAI.Views.ViewModels
                         {
                             year = 0;
                         }
+
+                        // Read full release date from addon catalog: `released`, `releaseDate`, `firstAired`
+                        DateTime? releaseDate = null;
+                        try
+                        {
+                            static bool TryParseReleaseDateString(string? raw, out DateTime result)
+                            {
+                                result = default;
+                                if (string.IsNullOrWhiteSpace(raw)) return false;
+                                return DateTime.TryParse(raw.Trim(),
+                                    System.Globalization.CultureInfo.InvariantCulture,
+                                    System.Globalization.DateTimeStyles.RoundtripKind | System.Globalization.DateTimeStyles.AllowWhiteSpaces,
+                                    out result);
+                            }
+
+                            string? rdRaw = null;
+                            if (m.TryGetProperty("released", out var rdEl) && rdEl.ValueKind == JsonValueKind.String)
+                                rdRaw = rdEl.GetString();
+                            if (rdRaw == null && m.TryGetProperty("releaseDate", out var rd2El) && rd2El.ValueKind == JsonValueKind.String)
+                                rdRaw = rd2El.GetString();
+                            if (rdRaw == null && m.TryGetProperty("firstAired", out var faEl) && faEl.ValueKind == JsonValueKind.String)
+                                rdRaw = faEl.GetString();
+
+                            if (TryParseReleaseDateString(rdRaw, out var parsedDate))
+                            {
+                                releaseDate = parsedDate.ToUniversalTime();
+                                if (year <= 0)
+                                    year = parsedDate.Year;
+                            }
+                        }
+                        catch { }
 
                         double rating = 0;
                         try
@@ -16480,6 +16522,7 @@ namespace AtlasAI.Views.ViewModels
                             PlaybackItem = null,
 							MetaId = id,
                             FilePath = id,
+                            ImdbId = imdbId,
                             Title = name,
                             Metadata = description ?? "",
                             Artist = "",
@@ -16488,6 +16531,7 @@ namespace AtlasAI.Views.ViewModels
                             DiscNumber = 0,
                             Duration = TimeSpan.Zero,
                             Year = year,
+                            ReleaseDate = releaseDate,
                             Rating = rating,
                             Genres = genres.Count == 0 ? Array.Empty<string>() : genres,
                             Type = atlasType,
