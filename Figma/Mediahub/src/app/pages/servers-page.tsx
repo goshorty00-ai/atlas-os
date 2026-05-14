@@ -65,14 +65,15 @@ function mapBridgeType(type?: string): MediaItem['type'] {
 function mapBridgeItem(item: BridgeShelfItem, serverLabel: string, shelfType?: string): MediaItem {
   return {
     id: item.id,
+    imdbId: item.imdbId || (item.id?.startsWith('tt') ? item.id : undefined),
     title: item.title,
     year: String(item.year ?? ''),
-    type: mapBridgeType(item.type || shelfType),
+    type: mapBridgeType(shelfType || item.type),
     server: serverLabel,
     rating: item.rating,
-    posterUrl: item.poster ?? item.coverUrl,
+    posterUrl: item.poster || item.coverUrl || undefined,
     hasMetadata: true,
-    hasArtwork: !!(item.poster ?? item.coverUrl),
+    hasArtwork: !!(item.poster || item.coverUrl),
     runtime: item.runtimeMinutes ? `${item.runtimeMinutes}min` : undefined,
     genre: item.genres?.[0],
     description: item.overview,
@@ -222,7 +223,16 @@ export function ServersPage() {
         if (payload) {
           // Cache globally so Shelf Creator can read even after message has already fired
           (window as any).__atlasBridgeState = payload;
-          setBridgeState(payload);
+          setBridgeState((prev) => {
+            // Never replace existing shelf data with fewer shelves — prevents blank flash
+            // during incremental addon rebuilds that fire multiple partial state updates.
+            const prevLen = prev?.shelves?.length ?? 0;
+            const newLen = payload.shelves?.length ?? 0;
+            if (prevLen > 0 && newLen < prevLen) {
+              return { ...payload, shelves: prev!.shelves };
+            }
+            return payload;
+          });
           if ((payload.shelves?.length ?? 0) > 0) hasShelvesRef.current = true;
         }
       }

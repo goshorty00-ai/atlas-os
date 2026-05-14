@@ -7,18 +7,47 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 // YouTube Data API key — must be set via VITE_YT_API_KEY in .env.local (never hardcode)
 const YT_API_KEY = import.meta.env.VITE_YT_API_KEY ?? '';
 
-async function fetchYouTubeVideoId(title: string, type: string): Promise<string | null> {
-  if (!YT_API_KEY) return null;
-  const query = encodeURIComponent(`${title} ${type === 'TV' ? 'series' : 'movie'} official trailer`);
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${YT_API_KEY}&maxResults=1`
-    );
-    const data = await res.json();
-    return data?.items?.[0]?.id?.videoId ?? null;
-  } catch {
-    return null;
+function extractYouTubeVideoId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]{11})/);
+  return m ? m[1] : null;
+}
+
+async function fetchYouTubeVideoId(title: string, type: string, imdbId?: string): Promise<string | null> {
+  // 1. Cinemeta — no API key needed, returns official YouTube trailer IDs via IMDB
+  if (imdbId) {
+    try {
+      const metaType = type === 'TV' ? 'series' : 'movie';
+      const r = await fetch(`https://v3-cinemeta.strem.io/meta/${metaType}/${imdbId}.json`, { signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const data = await r.json();
+        const trailer = (data?.meta?.trailers ?? []).find((t: any) => t.type === 'Trailer') ?? data?.meta?.trailers?.[0];
+        if (trailer?.source) return trailer.source as string;
+      }
+    } catch { /* fall through */ }
   }
+  const query = encodeURIComponent(`${title} ${type === 'TV' ? 'series' : 'movie'} official trailer`);
+  // 2. YouTube Data API with videoEmbeddable=true
+  if (YT_API_KEY) {
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoEmbeddable=true&key=${YT_API_KEY}&maxResults=1`
+      );
+      const data = await res.json();
+      const id = data?.items?.[0]?.id?.videoId;
+      if (id) return id;
+    } catch { /* fall through */ }
+  }
+  // 3. Invidious fallback
+  for (const base of ['https://inv.riverside.rocks', 'https://yewtu.be']) {
+    try {
+      const r = await fetch(`${base}/api/v1/search?q=${query}&type=video&fields=videoId`, { signal: AbortSignal.timeout(6000) });
+      if (!r.ok) continue;
+      const d = await r.json();
+      const id = Array.isArray(d) && d[0]?.videoId ? d[0].videoId as string : null;
+      if (id) return id;
+    } catch { /* try next */ }
+  }
+  return null;
 }
 
 export interface FeaturedItem {
@@ -37,8 +66,7 @@ export interface FeaturedItem {
   trailerUrl?: string;
 }
 
-function TrailerModal({ videoId, title, onClose }: { videoId: string; title: string; onClose: () => void }) {
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+function TrailerModal({ embedUrl, title, onClose }: { embedUrl: string; title: string; onClose: () => void }) {
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm"
@@ -71,7 +99,7 @@ function TrailerModal({ videoId, title, onClose }: { videoId: string; title: str
 export function FeaturedPanel({ item }: { item: FeaturedItem }) {
   const navigate = useNavigate();
   const [trailerLoading, setTrailerLoading] = useState(false);
-  const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
+  const [trailerEmbedUrl, setTrailerEmbedUrl] = useState<string | null>(null);
   const primary = item.primaryAction ?? 'Play';
   const PrimaryIcon = primary === 'Play' ? Play : primary === 'Add Reminder' ? Bell : Plus;
 
@@ -85,25 +113,34 @@ export function FeaturedPanel({ item }: { item: FeaturedItem }) {
 
   const handleTrailerClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    // 1. If trailerUrl is a direct YouTube watch URL, embed it immediately
+    if (item.trailerUrl) {
+      const videoId = extractYouTubeVideoId(item.trailerUrl);
+      if (videoId) {
+        setTrailerEmbedUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
+        return;
+      }
+    }
+    // 2. Race all public APIs in parallel for a video ID
     setTrailerLoading(true);
-    const videoId = await fetchYouTubeVideoId(item.title, item.type ?? 'Movie');
+    const videoId = await fetchYouTubeVideoId(item.title, item.type ?? 'Movie', item.imdbId);
     setTrailerLoading(false);
     if (videoId) {
-      setTrailerVideoId(videoId);
+      setTrailerEmbedUrl(`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
     }
   };
 
   return (
     <>
-      {trailerVideoId && (
+      {trailerEmbedUrl && (
         <TrailerModal
-          videoId={trailerVideoId}
+          embedUrl={trailerEmbedUrl}
           title={item.title}
-          onClose={() => setTrailerVideoId(null)}
+          onClose={() => setTrailerEmbedUrl(null)}
         />
       )}
       <div onClick={handleTitleClick} className="relative rounded-2xl overflow-hidden border border-cyan-400/15 ring-1 ring-cyan-500/10 cursor-pointer" style={{ height: 280 }}>
-        <ImageWithFallback src={item.backdropUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+        <ImageWithFallback key={item.imdbId || item.id || item.title} src={item.backdropUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
         {/* cinematic gradients */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/40" />

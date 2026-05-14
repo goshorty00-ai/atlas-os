@@ -694,6 +694,16 @@ namespace AtlasAI.Views.MediaCentre
 
         private void ServersView_Loaded(object sender, RoutedEventArgs e)
         {
+            // Register with parent MediaCenterControl so it can send us WebView messages directly
+            try
+            {
+                DependencyObject? p = VisualTreeHelper.GetParent(this);
+                while (p != null && p is not AtlasAI.Controls.MediaCenterControl)
+                    p = VisualTreeHelper.GetParent(p);
+                (p as AtlasAI.Controls.MediaCenterControl)?.RegisterActiveServersView(this);
+            }
+            catch { }
+
             // Self-initialize: when no parent provided a DataContext (e.g. standalone in CommandCenterWindow),
             // bootstrap from the service layer — same pattern Stremio uses where each component owns its data connection.
             if (DataContext is not MediaCentreViewModel)
@@ -773,6 +783,16 @@ namespace AtlasAI.Views.MediaCentre
 
         private void ServersView_Unloaded(object sender, RoutedEventArgs e)
         {
+            // Unregister so MediaCenterControl doesn't hold a stale reference
+            try
+            {
+                DependencyObject? p = VisualTreeHelper.GetParent(this);
+                while (p != null && p is not AtlasAI.Controls.MediaCenterControl)
+                    p = VisualTreeHelper.GetParent(p);
+                (p as AtlasAI.Controls.MediaCenterControl)?.UnregisterActiveServersView(this);
+            }
+            catch { }
+
             try
             {
                 if (ServersFigmaWebView?.CoreWebView2 != null)
@@ -1655,6 +1675,30 @@ namespace AtlasAI.Views.MediaCentre
                 // Keep the bundle's own routing. We only sync state via postMessage.
                 await ApplyServersChromePatchAsync();
                 SchedulePostState();
+                // After a short delay, send the current chrome collapsed state so React's
+                // message listener is guaranteed to be registered before we send.
+                _ = Task.Delay(700).ContinueWith(_ =>
+                {
+                    try
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            try
+                            {
+                                var parentWin = Window.GetWindow(this) as AtlasAI.CommandCenterWindow;
+                                if (parentWin != null)
+                                {
+                                    var isCollapsed = parentWin.IsHeaderCollapsed;
+                                    var chromeJson = $"{{\"type\":\"mediahub.chromeCollapsed\",\"payload\":{{\"collapsed\":{(isCollapsed ? "true" : "false")}}}}}";
+                                    PostToWebView(chromeJson);
+                                    AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] NavigationCompleted delayed: sent collapsed={isCollapsed}");
+                                }
+                            }
+                            catch { }
+                        });
+                    }
+                    catch { }
+                });
             }
             catch (Exception ex)
             {
@@ -1833,6 +1877,20 @@ namespace AtlasAI.Views.MediaCentre
 
                 switch (type)
                 {
+                    case "mediahub.requestChromeState":
+                        // React just mounted and is asking for the current WPF chrome collapsed state
+                        try
+                        {
+                            var parentWin = Window.GetWindow(this) as AtlasAI.CommandCenterWindow;
+                            if (parentWin != null)
+                            {
+                                var isCollapsed = parentWin.IsHeaderCollapsed;
+                                var stateJson = $"{{\"type\":\"mediahub.chromeCollapsed\",\"payload\":{{\"collapsed\":{(isCollapsed ? "true" : "false")}}}}}";
+                                PostToWebView(stateJson);
+                            }
+                        }
+                        catch { }
+                        break;
                     case "mediahub.openTrailerUrl":
                         // Handled entirely in React via YouTube embed modal — no C# action needed
                         break;
@@ -1944,6 +2002,18 @@ namespace AtlasAI.Views.MediaCentre
                         catch { }
                         SchedulePostState();
                         _ = PostDiscoveryDataFromServersAsync();
+                        // Send current chrome collapsed state so React sidebar syncs immediately on mount
+                        try
+                        {
+                            var parentWin = Window.GetWindow(this) as AtlasAI.CommandCenterWindow;
+                            if (parentWin != null)
+                            {
+                                var isCollapsed = parentWin.IsHeaderCollapsed;
+                                var chromeJson = $"{{\"type\":\"mediahub.chromeCollapsed\",\"payload\":{{\"collapsed\":{(isCollapsed ? "true" : "false")}}}}}";
+                                PostToWebView(chromeJson);
+                            }
+                        }
+                        catch { }
                         break;
                     case "servers.playSource":
                         try
@@ -2565,10 +2635,53 @@ namespace AtlasAI.Views.MediaCentre
                         {
                         }
                         break;
+                    case "mediahub.immersive.set":
+                        try
+                        {
+                            var immEnabled = payload.ValueKind == JsonValueKind.Object &&
+                                             payload.TryGetProperty("enabled", out var immEl) &&
+                                             immEl.ValueKind == JsonValueKind.True;
+                            AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] react restore enabled={immEnabled}");
+                            if (!immEnabled) // restore Atlas header when React arrow is clicked
+                            {
+                                Dispatcher.Invoke(() =>
+                                {
+                                    try
+                                    {
+                                        (Window.GetWindow(this) as AtlasAI.CommandCenterWindow)?.RestoreHeader();
+                                    }
+                                    catch { }
+                                });
+                            }
+                        }
+                        catch { }
+                        break;
                 }
             }
             catch
             {
+            }
+        }
+
+        /// <summary>Returns true when the underlying CoreWebView2 has been initialized.</summary>
+        public bool IsWebViewReady => ServersFigmaWebView?.CoreWebView2 != null;
+
+        /// <summary>Posts a raw JSON string to the MediaHub WebView2.</summary>
+        public void PostToWebView(string json)
+        {
+            try
+            {
+                if (ServersFigmaWebView?.CoreWebView2 == null)
+                {
+                    AtlasAI.Core.AppLogger.LogInfo("[MediaHubImmersive] PostToWebView: CoreWebView2 is null — message dropped");
+                    return;
+                }
+                ServersFigmaWebView.CoreWebView2.PostWebMessageAsJson(json);
+                AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] PostToWebView sent: {json}");
+            }
+            catch (Exception ex)
+            {
+                AtlasAI.Core.AppLogger.LogError($"[MediaHubImmersive] PostToWebView error: {ex.Message}");
             }
         }
 
@@ -3795,7 +3908,8 @@ namespace AtlasAI.Views.MediaCentre
                     {
                         var imdb = ExtractImdbId(i.ImdbId, i.MetaId, i.FilePath);
                         var rpdbPoster = RpdbPosterUrl(rpdbKey, imdb);
-                        var originalPoster = (i.CoverUrl ?? "").Trim();
+                        var originalPoster = (i.CoverUrl ?? "").Trim()
+                            .Replace("/poster/small/", "/poster/medium/", StringComparison.OrdinalIgnoreCase);
                         var poster = !string.IsNullOrWhiteSpace(rpdbPoster) ? rpdbPoster
                             : !string.IsNullOrWhiteSpace(originalPoster) ? originalPoster
                             : !string.IsNullOrWhiteSpace(imdb) ? $"https://images.metahub.space/poster/medium/{imdb}/img" : "";
