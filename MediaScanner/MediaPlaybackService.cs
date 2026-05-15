@@ -92,6 +92,7 @@ namespace AtlasAI.MediaScanner
         /// </summary>
         public void PlaySingle(MediaItem item)
         {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlaybackService.PlaySingle entry path={item?.FilePath ?? ""} title={item?.DisplayName ?? item?.Title ?? ""}");
             lock (_queue)
             {
                 _queue.Clear();
@@ -99,7 +100,9 @@ namespace AtlasAI.MediaScanner
                 _currentIndex = 0;
             }
             
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlaybackService.PlaySingle before CurrentMediaChanged path={item?.FilePath ?? ""}");
             CurrentMediaChanged?.Invoke(this, item);
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlaybackService.PlaySingle after CurrentMediaChanged path={item?.FilePath ?? ""}");
             QueueChanged?.Invoke(this, EventArgs.Empty);
         }
         

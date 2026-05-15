@@ -110,6 +110,18 @@
                         ToolTip="Wallpaper only"
                         shell:WindowChrome.IsHitTestVisibleInChrome="False"/>
 
+                <Button x:Name="NowPlayingBtn"
+                        Content="▶"
+                        Click="NowPlayingBtn_Click"
+                        Style="{StaticResource GhostBtn}"
+                        FontSize="11"
+                        Width="26"
+                        Height="26"
+                        Margin="0,0,6,0"
+                        Padding="0"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="False"
+                        ToolTip="Restore player"/>
+
                 <Button Content="⟨"
                         Click="HeaderToggle_Click"
                         Style="{StaticResource GhostBtn}"
@@ -158,6 +170,7 @@
                     DockPanel.Dock="Right"
                     Margin="0,0,8,0"
                     Padding="8,3"
+                    Visibility="Collapsed"
                     CornerRadius="8"
                     BorderThickness="1"
                     VerticalAlignment="Center"

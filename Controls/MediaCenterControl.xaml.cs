@@ -69,6 +69,11 @@ namespace AtlasAI.Controls
         private Visibility _restoreHeaderVisibility = Visibility.Visible;
         private Visibility _restoreNeoReopenVisibility = Visibility.Collapsed;
         private Visibility _restoreShellTopNavVisibility = Visibility.Visible;
+        // Immersive mode (toggled from MediaHub React frontend)
+        private bool _isMediaHubImmersive;
+        private GridLength _restoreNeoNavWidthImmersive = new GridLength(200);
+        // Stored reference — set by ServersView on Loaded, cleared on Unloaded
+        private WeakReference<AtlasAI.Views.MediaCentre.ServersView>? _activeServersViewRef;
 
         private bool _prefsHooked;
         private bool _suppressSidebarLottiePicker;
@@ -105,6 +110,7 @@ namespace AtlasAI.Controls
         };
 
         public ICollectionView AddonBrowserItemsView => _addonBrowserItemsView;
+
 
         public string SelectedAddonScope
         {
@@ -335,7 +341,27 @@ namespace AtlasAI.Controls
             _vm.PropertyChanged += Vm_PropertyChanged;
             Loaded += MediaCenterControl_Loaded;
             Unloaded += MediaCenterControl_Unloaded;
+            IsVisibleChanged += MediaCenterControl_IsVisibleChanged;
             SizeChanged += (_, _) => PositionMiniPlayerIfNeeded();
+        }
+
+        private void MediaCenterControl_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                if (Visibility != Visibility.Visible)
+                    return;
+
+                if (_currentMedia == null)
+                    _currentMedia = _playbackService.CurrentMedia;
+
+                SyncEmbeddedPlayerBinding();
+                ShowPlayer();
+                PositionMiniPlayerIfNeeded();
+            }
+            catch
+            {
+            }
         }
 
         private static HttpClient CreateAddonDirectoryHttpClient()
@@ -1722,14 +1748,42 @@ namespace AtlasAI.Controls
 
         private async void RemoveAddonCard(AddonBrowserItem? addon)
         {
-            var url = addon?.Url;
-            if (string.IsNullOrWhiteSpace(url))
+            if (addon == null)
                 return;
 
             try
             {
-                if (_vm.RemoveAddonServerCommand?.CanExecute(url) == true)
-                    _vm.RemoveAddonServerCommand.Execute(url);
+                var candidates = new[]
+                {
+                    NormalizeAddonUrl(addon.InstallManifestUrl ?? ""),
+                    NormalizeAddonUrl(addon.Url ?? ""),
+                    NormalizeAddonUrl(addon.DirectoryUrl ?? "")
+                }
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+                var installed = _vm.AddonServers
+                    .Select(NormalizeAddonUrl)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                var targets = installed
+                    .Where(installedUrl => candidates.Any(candidate =>
+                        string.Equals(installedUrl, candidate, StringComparison.OrdinalIgnoreCase) ||
+                        installedUrl.StartsWith(candidate + "/", StringComparison.OrdinalIgnoreCase) ||
+                        candidate.StartsWith(installedUrl + "/", StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+
+                if (targets.Count == 0 && candidates.Count > 0)
+                    targets.Add(candidates[0]);
+
+                foreach (var target in targets)
+                {
+                    if (_vm.RemoveAddonServerCommand?.CanExecute(target) == true)
+                        _vm.RemoveAddonServerCommand.Execute(target);
+                }
 
                 _vm.ReloadAddonServersFromStore();
                 await RefreshAddonBrowserAsync();
@@ -2085,9 +2139,8 @@ namespace AtlasAI.Controls
 
         private void PlaybackService_CurrentMediaChanged(object? sender, AtlasAI.MediaScanner.MediaItem e)
         {
-            if (!_isLoaded) return;
-            _currentMedia = e;
-            Dispatcher.Invoke(() =>
+            _currentMedia = e; // Always set so the Loaded handler and IsVisibleChanged handler see it
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 _isPlayerMinimized = false;
                 try
@@ -2102,23 +2155,24 @@ namespace AtlasAI.Controls
                 {
                     _videoPlayerWindow = null;
                 }
+                // If a FullscreenPlayerWindow is visible, it owns playback.
+                // Do not activate ChatWindow or make the embedded player visible —
+                // that would start a second VLC instance and steal PlaybackOutputCoordinator.
+                var fullscreenVisible = System.Windows.Application.Current.Windows
+                    .OfType<FullscreenPlayerWindow>()
+                    .Any(w => w.IsVisible);
+                if (fullscreenVisible)
+                    return;
+
+                // Always ensure ChatWindow is visible for video, even before _isLoaded
+                // This triggers MediaCenterControl_Loaded which then calls ShowPlayer
+                if (IsVideoMedia(_currentMedia))
+                    EnsureVideoPlaybackWindowState();
+                if (!_isLoaded) return;
                 SyncEmbeddedPlayerBinding();
                 ShowPlayer();
                 PositionMiniPlayerIfNeeded();
-                try
-                {
-                    if (IsVideoMedia(_currentMedia))
-                    {
-                        var p = (_currentMedia?.FilePath ?? "").Trim();
-                        var ext = System.IO.Path.GetExtension(p).ToLowerInvariant();
-                        if (ext != ".zip" && ext != ".cdg")
-                            EnsureExclusiveFullscreen();
-                    }
-                }
-                catch
-                {
-                }
-            });
+            }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void Player_PlayerClosed(object? sender, EventArgs e)
@@ -2137,8 +2191,22 @@ namespace AtlasAI.Controls
         private void Player_PlayerMinimized(object? sender, EventArgs e)
         {
             ExitExclusiveFullscreen();
-            _isPlayerMinimized = true;
-            HidePlayer();
+            if (IsVideoMedia(_currentMedia))
+            {
+                // For video, minimize would leave audio playing with no accessible stop control
+                // (RestorePlayerButton is covered by the WebView2 Win32 HWND). Stop instead.
+                _isPlayerMinimized = false;
+                try { Player.Stop(); } catch { }
+                try { _playbackService.ClearQueue(); } catch { }
+                _currentMedia = null;
+                try { SyncEmbeddedPlayerBinding(); } catch { }
+                HidePlayer();
+            }
+            else
+            {
+                _isPlayerMinimized = true;
+                HidePlayer();
+            }
         }
 
         private void RestorePlayerButton_Click(object sender, RoutedEventArgs e)
@@ -2147,19 +2215,6 @@ namespace AtlasAI.Controls
             UpdateRestorePlayerButtonVisibility();
             ShowPlayer();
             PositionMiniPlayerIfNeeded();
-            try
-            {
-                if (IsVideoMedia(_currentMedia))
-                {
-                    var p = (_currentMedia?.FilePath ?? "").Trim();
-                    var ext = System.IO.Path.GetExtension(p).ToLowerInvariant();
-                    if (ext != ".zip" && ext != ".cdg")
-                        EnsureExclusiveFullscreen();
-                }
-            }
-            catch
-            {
-            }
         }
 
         private void Player_FullscreenRequested(object? sender, EventArgs e)
@@ -2172,64 +2227,80 @@ namespace AtlasAI.Controls
 
         private void ShowPlayer()
         {
-            var isMusicView = _vm.IsMusicAlbumsView || _vm.IsAlbumTracksView;
-            var isVideo = IsVideoMedia(_currentMedia);
-            var isKaraoke = _currentMedia?.SectionName != null && _currentMedia.SectionName.Equals("Karaoke", StringComparison.OrdinalIgnoreCase);
-            var isKaraokeView = string.Equals(_vm.SelectedCategory?.Id, "karaoke", StringComparison.OrdinalIgnoreCase);
+                var isMusicView = _vm.IsMusicAlbumsView || _vm.IsAlbumTracksView;
+                var isVideo = IsVideoMedia(_currentMedia);
+                var isKaraoke = _currentMedia?.SectionName != null && _currentMedia.SectionName.Equals("Karaoke", StringComparison.OrdinalIgnoreCase);
+                var isKaraokeView = string.Equals(_vm.SelectedCategory?.Id, "karaoke", StringComparison.OrdinalIgnoreCase);
 
-            if (_isPlayerMinimized)
-            {
-                Player.Visibility = Visibility.Collapsed;
-                NowPlayingVisualizer.Visibility = Visibility.Visible;
-                UpdateRestorePlayerButtonVisibility();
-                return;
-            }
+                LogShowPlayerTrace($"isMusicView={isMusicView} isVideo={isVideo} isKaraoke={isKaraoke} isKaraokeView={isKaraokeView} minimized={_isPlayerMinimized} mediaNull={_currentMedia == null} mediaType={_currentMedia?.MediaType} section={_currentMedia?.SectionName} path={_currentMedia?.FilePath}");
 
-            // If we are not in Music view, and it's not video/karaoke, hide the player (use visualizer/default)
-            // But wait, if it's not Music view, we usually hide everything or show full screen video?
-            // Existing logic: if (!isMusicView && !isKaraoke) -> Hide.
-            
-            if (!isMusicView && !isVideo)
-            {
-                Player.Visibility = Visibility.Collapsed;
-                NowPlayingVisualizer.Visibility = Visibility.Visible;
-                UpdateRestorePlayerButtonVisibility();
-                return;
-            }
-
-            if (_currentMedia == null)
-            {
-                Player.Visibility = Visibility.Collapsed;
-                NowPlayingVisualizer.Visibility = Visibility.Visible;
-                UpdateRestorePlayerButtonVisibility();
-                return;
-            }
-
-            if (isVideo)
-            {
-                if (isKaraoke && !isKaraokeView)
+                if (_isPlayerMinimized)
                 {
+                    LogShowPlayerTrace("Collapsed: _isPlayerMinimized");
                     Player.Visibility = Visibility.Collapsed;
+                    SetAllWebView2sVisible(true);
                     NowPlayingVisualizer.Visibility = Visibility.Visible;
                     UpdateRestorePlayerButtonVisibility();
                     return;
                 }
-                Player.Visibility = Visibility.Visible;
-                NowPlayingVisualizer.Visibility = Visibility.Collapsed;
-                Player.Focus();
-                UpdateRestorePlayerButtonVisibility();
-                return;
-            }
 
-            // Audio in Music View -> Show Visualizer, Hide Player (Player still runs in background)
-            Player.Visibility = Visibility.Collapsed;
-            NowPlayingVisualizer.Visibility = Visibility.Visible;
-            UpdateRestorePlayerButtonVisibility();
+                if (!isMusicView && !isVideo)
+                {
+                    LogShowPlayerTrace("Collapsed: !isMusicView && !isVideo");
+                    Player.Visibility = Visibility.Collapsed;
+                    SetAllWebView2sVisible(true);
+                    NowPlayingVisualizer.Visibility = Visibility.Visible;
+                    UpdateRestorePlayerButtonVisibility();
+                    return;
+                }
+
+                if (_currentMedia == null)
+                {
+                    LogShowPlayerTrace("Collapsed: _currentMedia == null");
+                    Player.Visibility = Visibility.Collapsed;
+                    SetAllWebView2sVisible(true);
+                    NowPlayingVisualizer.Visibility = Visibility.Visible;
+                    UpdateRestorePlayerButtonVisibility();
+                    return;
+                }
+
+                if (isVideo)
+                {
+                    if (isKaraoke && !isKaraokeView)
+                    {
+                            LogShowPlayerTrace("Collapsed: isKaraoke && !isKaraokeView");
+                        Player.Visibility = Visibility.Collapsed;
+                        SetAllWebView2sVisible(true);
+                        NowPlayingVisualizer.Visibility = Visibility.Visible;
+                        UpdateRestorePlayerButtonVisibility();
+                        return;
+                    }
+                    if (this.Visibility != Visibility.Visible)
+                    {
+                        LogShowPlayerTrace($"VISIBLE: auto-showing MediaCenterControl (was {this.Visibility})");
+                        this.Visibility = Visibility.Visible;
+                        Panel.SetZIndex(this, 5000);
+                    }
+                    SetAllWebView2sVisible(false);
+                    Player.Visibility = Visibility.Visible;
+                    LogShowPlayerTrace($"POST-VISIBLE: this.IsVisible={this.IsVisible} Player.IsVisible={Player.IsVisible} Player.Visibility={Player.Visibility}");
+                    NowPlayingVisualizer.Visibility = Visibility.Collapsed;
+                    Player.Focus();
+                    UpdateRestorePlayerButtonVisibility();
+                    return;
+                }
+
+                LogShowPlayerTrace("Collapsed: fallback audio branch");
+                Player.Visibility = Visibility.Collapsed;
+                SetAllWebView2sVisible(true);
+                NowPlayingVisualizer.Visibility = Visibility.Visible;
+                UpdateRestorePlayerButtonVisibility();
         }
 
         private void HidePlayer()
         {
             Player.Visibility = Visibility.Collapsed;
+            SetAllWebView2sVisible(true);
             NowPlayingVisualizer.Visibility = Visibility.Visible;
             UpdateRestorePlayerButtonVisibility();
         }
@@ -2247,6 +2318,30 @@ namespace AtlasAI.Controls
             }
         }
 
+        /// <summary>
+        /// Recursively shows or hides all WebView2 HWNDs within this control.
+        /// WebView2 (and LibVLC VideoView) both use Win32 child HWNDs that render at the
+        /// OS level — WPF ZIndex has no effect between them. Hiding the WebView2s lets
+        /// the VideoView HWND become visible when the inline player is shown.
+        /// </summary>
+        private void SetAllWebView2sVisible(bool visible)
+        {
+            try { SetWebView2sInTree(this, visible); } catch { }
+        }
+
+        private static void SetWebView2sInTree(DependencyObject root, bool visible)
+        {
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                if (child is Microsoft.Web.WebView2.Wpf.WebView2 wv)
+                    wv.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                else
+                    SetWebView2sInTree(child, visible);
+            }
+        }
+
         private bool IsMusicView()
         {
             try
@@ -2261,63 +2356,72 @@ namespace AtlasAI.Controls
 
         private static bool IsVideoMedia(AtlasAI.MediaScanner.MediaItem? media)
         {
-            if (media == null) return false;
-            
-            // CRITICAL: Trust explicit flags first
-            if (media.SectionName != null && media.SectionName.Equals("Karaoke", StringComparison.OrdinalIgnoreCase)) return true;
-            if (media.MediaType == MediaType.Video) return true;
-            if (media.MediaType == MediaType.Unknown) return true; // Force Unknown to video so player controls show
+                if (media == null) { LogShowPlayerTrace("[IsVideoMediaTrace] media==null"); return false; }
+                // CRITICAL: Trust explicit flags first
+                if (media.SectionName != null && media.SectionName.Equals("Karaoke", StringComparison.OrdinalIgnoreCase)) { LogShowPlayerTrace("[IsVideoMediaTrace] Karaoke section"); return true; }
+                if (media.MediaType == MediaType.Video) { LogShowPlayerTrace("[IsVideoMediaTrace] MediaType.Video"); return true; }
+                if (media.MediaType == MediaType.Unknown) { LogShowPlayerTrace("[IsVideoMediaTrace] MediaType.Unknown"); return true; }
 
-            // Check extension first to rescue Karaoke/Zip files that might be classified as Audio
-            var path = (media.FilePath ?? "").Trim();
-            if (!string.IsNullOrWhiteSpace(path))
-            {
+                // Check extension first to rescue Karaoke/Zip files that might be classified as Audio
+                var path = (media.FilePath ?? "").Trim();
+                if (!string.IsNullOrWhiteSpace(path))
+                {
+                    try
+                    {
+                        string? ext = null;
+                        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
+                            (string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            ext = System.IO.Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+                        }
+                        else
+                        {
+                            ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                        }
+                        // Karaoke files are technically "Video" for playback purposes (graphics)
+                        if (ext is ".zip" or ".cdg") { LogShowPlayerTrace($"[IsVideoMediaTrace] ext={ext} => true (karaoke)"); return true; }
+                        if (ext is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg" or ".opus" or ".m4b") { LogShowPlayerTrace($"[IsVideoMediaTrace] ext={ext} => false (audio)"); return false; }
+                        // Streams from cloud/addon providers often have no extension.
+                        if (string.Equals(media.SectionName, "cloud", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(ext)) { LogShowPlayerTrace($"[IsVideoMediaTrace] section=cloud, no ext => true"); return true; }
+                    }
+                    catch { }
+                }
+                if (media.MediaType == MediaType.Audio) { LogShowPlayerTrace("[IsVideoMediaTrace] MediaType.Audio"); return false; }
+                if (string.IsNullOrWhiteSpace(path)) { LogShowPlayerTrace("[IsVideoMediaTrace] empty path"); return false; }
                 try
                 {
-                    string? ext = null;
                     if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
                         (string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
                     {
-                        ext = System.IO.Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+                        var ext = System.IO.Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
+                        if (ext is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg") { LogShowPlayerTrace($"[IsVideoMediaTrace] ext={ext} => false (audio2)"); return false; }
+                        var isVid = ext is ".mp4" or ".mkv" or ".avi" or ".mov" or ".webm" or ".m4v" or ".flv" or ".wmv" or ".m3u8" or ".zip" or ".cdg";
+                        LogShowPlayerTrace($"[IsVideoMediaTrace] ext={ext} => {isVid} (video ext)");
+                        return isVid;
                     }
-                    else
-                    {
-                        ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
-                    }
-                    
-                    // Karaoke files are technically "Video" for playback purposes (graphics)
-                    if (ext is ".zip" or ".cdg") return true;
-
-                    if (ext is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg" or ".opus" or ".m4b")
-                        return false;
+                    var e = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                    if (e is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg") { LogShowPlayerTrace($"[IsVideoMediaTrace] ext={e} => false (audio3)"); return false; }
+                    var isVid2 = e is ".mp4" or ".mkv" or ".avi" or ".mov" or ".webm" or ".m4v" or ".flv" or ".wmv" or ".m3u8" or ".zip" or ".cdg";
+                    LogShowPlayerTrace($"[IsVideoMediaTrace] ext={e} => {isVid2} (video ext2)");
+                    return isVid2;
                 }
-                catch { }
+                catch
+                {
+                    LogShowPlayerTrace("[IsVideoMediaTrace] catch-all false");
+                    return false;
+                }
             }
 
-            if (media.MediaType == MediaType.Audio) return false;
-            
-            if (string.IsNullOrWhiteSpace(path)) return false;
-
+        private static void LogShowPlayerTrace(string msg)
+        {
             try
             {
-                if (Uri.TryCreate(path, UriKind.Absolute, out var uri) &&
-                    (string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
-                {
-                    var ext = System.IO.Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
-                    if (ext is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg") return false;
-                    return ext is ".mp4" or ".mkv" or ".avi" or ".mov" or ".webm" or ".m4v" or ".flv" or ".wmv" or ".m3u8" or ".zip" or ".cdg";
-                }
-
-                var e = System.IO.Path.GetExtension(path).ToLowerInvariant();
-                if (e is ".mp3" or ".wav" or ".flac" or ".aac" or ".wma" or ".m4a" or ".ogg") return false;
-                return e is ".mp4" or ".mkv" or ".avi" or ".mov" or ".webm" or ".m4v" or ".flv" or ".wmv" or ".m3u8" or ".zip" or ".cdg";
+                var logPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "ShowPlayerTrace.txt");
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {msg}\r\n");
             }
-            catch
-            {
-                return false;
-            }
+            catch { }
         }
 
         private void SyncEmbeddedPlayerBinding()
@@ -2347,6 +2451,26 @@ namespace AtlasAI.Controls
             catch
             {
             }
+        }
+
+        private void EnsureVideoPlaybackWindowState()
+        {
+            try
+            {
+                var parentWindow = Window.GetWindow(this);
+                if (parentWindow == null) return;
+                if (parentWindow.Visibility != Visibility.Visible)
+                    parentWindow.Visibility = Visibility.Visible;
+                if (parentWindow.WindowState == WindowState.Minimized)
+                    parentWindow.WindowState = WindowState.Normal;
+                if (parentWindow is ChatWindow chatWin)
+                    chatWin.ShowPage("media");
+                // Briefly set Topmost to force window to front without hiding other windows
+                parentWindow.Topmost = true;
+                parentWindow.Activate();
+                parentWindow.Topmost = false;
+            }
+            catch { }
         }
 
         private void PositionMiniPlayerIfNeeded()
@@ -2840,6 +2964,111 @@ namespace AtlasAI.Controls
                 }
                 catch
                 {
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Immersive mode toggle — called by the MediaHub React frontend via bridge message
+        /// <c>mediahub.immersive.set { enabled: bool }</c>.
+        /// Collapses the Atlas NeoNav sidebar (WPF) when entering immersive and restores it on exit.
+        /// The matching reveal arrow lives entirely inside the React/WebView2 layer to avoid
+        /// HWND airspace conflicts.
+        /// </summary>
+        /// <summary>Called by ServersView on Loaded so we always have a direct reference to the active instance.</summary>
+        public void RegisterActiveServersView(AtlasAI.Views.MediaCentre.ServersView sv)
+        {
+            _activeServersViewRef = new WeakReference<AtlasAI.Views.MediaCentre.ServersView>(sv);
+            AtlasAI.Core.AppLogger.LogInfo("[MediaHubImmersive] ServersView registered");
+        }
+
+        /// <summary>Called by ServersView on Unloaded to prevent stale references.</summary>
+        public void UnregisterActiveServersView(AtlasAI.Views.MediaCentre.ServersView sv)
+        {
+            if (_activeServersViewRef != null &&
+                _activeServersViewRef.TryGetTarget(out var existing) &&
+                ReferenceEquals(existing, sv))
+            {
+                _activeServersViewRef = null;
+                AtlasAI.Core.AppLogger.LogInfo("[MediaHubImmersive] ServersView unregistered");
+            }
+        }
+
+        /// <summary>Posts a chrome-state notification to the active MediaHub WebView2 so that
+        /// the React sidebar can collapse/restore in sync with the Atlas header.</summary>
+        public void NotifyMediaHubChromeState(bool collapsed)
+        {
+            try
+            {
+                AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] NotifyMediaHubChromeState called collapsed={collapsed}");
+
+                // Prefer the directly-registered reference; fall back to visual-tree walk
+                AtlasAI.Views.MediaCentre.ServersView? sv = null;
+                if (_activeServersViewRef != null)
+                    _activeServersViewRef.TryGetTarget(out sv);
+
+                if (sv == null)
+                {
+                    AtlasAI.Core.AppLogger.LogInfo("[MediaHubImmersive] stored ref null — falling back to FindDescendant");
+                    sv = FindDescendant<AtlasAI.Views.MediaCentre.ServersView>(this);
+                }
+
+                if (sv == null)
+                {
+                    AtlasAI.Core.AppLogger.LogInfo("[MediaHubImmersive] ServersView NOT FOUND in visual tree — message not sent");
+                    return;
+                }
+
+                AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] ServersView found, WebView ready={sv.IsWebViewReady}");
+                var collapsedStr = collapsed ? "true" : "false";
+                var json = $"{{\"type\":\"mediahub.chromeCollapsed\",\"payload\":{{\"collapsed\":{collapsedStr}}}}}";
+                sv.PostToWebView(json);
+                AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] headerCollapsed={collapsed} sentToWebView=true");
+            }
+            catch (Exception ex)
+            {
+                AtlasAI.Core.AppLogger.LogError($"[MediaHubImmersive] NotifyMediaHubChromeState error: {ex.Message}");
+            }
+        }
+
+        public void SetMediaHubImmersiveMode(bool enabled)
+        {
+            try
+            {
+                _isMediaHubImmersive = enabled;
+                AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] enabled={enabled}");
+
+                if (enabled)
+                {
+                    // Save current sidebar width before collapsing
+                    if (NeoNavColumn != null && NeoNavColumn.Width.Value > 0)
+                        _restoreNeoNavWidthImmersive = NeoNavColumn.Width;
+
+                    // Collapse the WPF NeoNav sidebar column completely
+                    if (NeoNavColumn != null)
+                        NeoNavColumn.Width = new GridLength(0);
+                    try { if (NeoNavSidebar != null) NeoNavSidebar.Visibility = Visibility.Collapsed; } catch { }
+
+                    // Never show the WPF reopen tab — the React layer handles the restore arrow
+                    if (NeoNavReopenTab != null)
+                        NeoNavReopenTab.Visibility = Visibility.Collapsed;
+
+                    // Remove any residual left-margin gutter on the content area
+                    try { if (LibraryContent != null) LibraryContent.Margin = new Thickness(0); } catch { }
+                }
+                else
+                {
+                    // Restore the NeoNav sidebar
+                    if (NeoNavColumn != null)
+                        NeoNavColumn.Width = _restoreNeoNavWidthImmersive.Value > 0
+                            ? _restoreNeoNavWidthImmersive : new GridLength(200);
+                    try { if (NeoNavSidebar != null) NeoNavSidebar.Visibility = Visibility.Visible; } catch { }
+
+                    if (NeoNavReopenTab != null)
+                        NeoNavReopenTab.Visibility = Visibility.Collapsed;
+
+                    try { if (LibraryContent != null) LibraryContent.Margin = new Thickness(0); } catch { }
                 }
             }
             catch { }

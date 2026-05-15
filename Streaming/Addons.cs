@@ -95,9 +95,9 @@ namespace AtlasAI.Streaming
         private const string AddonServersKey = "streaming_addon_servers";
         private const string AddonServerSelectedKey = "streaming_addon_servers_selected";
         private const string RatingsCompatibilityHost = "stremio-addon-ratings.baby-beamup.club";
-        private static readonly TimeSpan ServerQueryTimeout = TimeSpan.FromSeconds(12);
+        private static readonly TimeSpan ServerQueryTimeout = TimeSpan.FromSeconds(8);
         private const int MaxConcurrentServerQueries = 8;
-        private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+        private static readonly HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
         private static readonly Dictionary<string, ServerDescriptor> DescriptorCache = new(StringComparer.OrdinalIgnoreCase);
         private static readonly object DescriptorLock = new();
         private static readonly TmdbClient Tmdb = new();
@@ -127,9 +127,26 @@ namespace AtlasAI.Streaming
 
             using var throttler = new SemaphoreSlim(MaxConcurrentServerQueries);
             var tasks = servers.Select(s => QueryServerSafeAsync(s, request, throttler, ct)).ToArray();
-            var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            var allTask = Task.WhenAll(tasks);
+            var waves = (int)Math.Ceiling((double)servers.Count / Math.Max(1, MaxConcurrentServerQueries));
+            var batchTimeout = TimeSpan.FromSeconds(Math.Min(60, Math.Max(20, ServerQueryTimeout.TotalSeconds * waves)));
+            var timeoutTask = Task.Delay(batchTimeout, ct);
+            await Task.WhenAny(allTask, timeoutTask).ConfigureAwait(false);
 
-            return results.SelectMany(x => x).ToList();
+            var completed = new List<AddonSource>();
+            foreach (var task in tasks)
+            {
+                if (!task.IsCompletedSuccessfully)
+                    continue;
+
+                var result = task.Result;
+                if (result == null || result.Count == 0)
+                    continue;
+
+                completed.AddRange(result);
+            }
+
+            return completed;
         }
 
         private static List<string> LoadServers()
@@ -1146,24 +1163,8 @@ namespace AtlasAI.Streaming
                     (string.Equals(u.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(u.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)))
                 {
-                    try
-                    {
-                        var path = (u.AbsolutePath ?? "").ToLowerInvariant();
-                        if (path.Contains("/resolve/realdebrid/") && !string.IsNullOrWhiteSpace(magnetCandidate))
-                            return (magnetCandidate!, true);
-                    }
-                    catch
-                    {
-                    }
-                    try
-                    {
-                        var converted = TryConvertResolveToMagnet(url);
-                        if (converted.requiresDebrid && !string.Equals(converted.url, url, StringComparison.OrdinalIgnoreCase))
-                            return converted;
-                    }
-                    catch
-                    {
-                    }
+                    // The addon (e.g. Torrentio+RD) has already resolved debrid — use the URL as-is.
+                    // Only patch null-token placeholder URLs; never convert a direct URL back to a magnet.
                     url = TryPatchDebridStreamUrl(u, url);
                 }
                 return (url, requires);

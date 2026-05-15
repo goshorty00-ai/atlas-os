@@ -1,91 +1,69 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+﻿import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import {
   X, Play, Film, Plus, Eye, Share2, Star, ChevronLeft, Sparkles, Send,
-  Check, Copy, Info, AlertCircle, Crown, Zap,
+  Check, Copy, Info, Crown, Zap, Loader2,
 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { createPortal } from 'react-dom';
 
-export interface DetailsItem {
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+interface CinemetaMeta {
   id: string;
-  title: string;
-  type: 'Movie' | 'TV';
-  year: string;
+  name: string;
+  type: string;
+  poster?: string;
+  background?: string;
+  description?: string;
+  releaseInfo?: string;
   runtime?: string;
-  episodeLength?: string;
-  posterUrl?: string;
-  backdropUrl?: string;
-  tmdb?: number;
-  imdb?: number;
-  rt?: number;
-  user?: number;
-  cert?: string;
-  quality?: string;
-  genres: string[];
-  description: string;
-  director?: string;
-  writers?: string[];
-  releaseDate?: string;
+  imdbRating?: string;
+  genres?: string[];
+  cast?: string[];
+  director?: string | string[];
+  writer?: string | string[];
   country?: string;
   language?: string;
-  studio?: string;
-  budget?: string;
-  revenue?: string;
+  trailers?: { source: string; type: string }[];
+  videos?: CinemetaVideo[];
 }
 
-const QUICK_PROMPTS = [
-  'Spoiler-free summary', 'Is it worth watching?', 'Find best source',
-  'Parental guide', 'Similar titles', 'Cast highlights', 'Trailer breakdown',
-];
+interface CinemetaVideo {
+  id: string;
+  title?: string;
+  season?: number;
+  episode?: number;
+  overview?: string;
+  thumbnail?: string;
+  released?: string;
+  runtime?: string;
+}
 
-const SOURCES = [
-  { name: 'Plex',          stream: 'Local Library · Original',     quality: '4K HDR',  size: '38.4 GB', audio: 'Atmos 7.1', lang: 'EN',     subs: 'EN, ES, FR', health: 100, status: 'Available',       reliability: 99, recommended: true,  premium: false },
-  { name: 'Jellyfin',      stream: 'Home Server',                  quality: '1080p',   size: '12.1 GB', audio: '5.1',       lang: 'EN',     subs: 'EN, ES',     health: 98,  status: 'Available',       reliability: 96, recommended: false, premium: false },
-  { name: 'Netflix',       stream: 'Netflix Original',             quality: '4K Dolby Vision', size: 'Stream', audio: 'Atmos', lang: 'Multi', subs: 'Multi', health: 100, status: 'Premium',         reliability: 99, recommended: false, premium: true  },
-  { name: 'Prime Video',   stream: 'Included with Prime',          quality: '4K',      size: 'Stream',  audio: '5.1',       lang: 'Multi',  subs: 'Multi',      health: 99,  status: 'Available',       reliability: 95, recommended: false, premium: true  },
-  { name: 'Disney+',       stream: 'Disney+ Stream',               quality: '4K HDR',  size: 'Stream',  audio: 'Atmos',     lang: 'Multi',  subs: 'Multi',      health: 99,  status: 'Available',       reliability: 97, recommended: false, premium: true  },
-  { name: 'Torrentio RD',  stream: 'YIFY · 4K HDR · Real-Debrid',  quality: '4K HDR',  size: '14.8 GB', audio: '5.1',       lang: 'EN',     subs: 'EN',         health: 92,  status: 'Buffer risk',     reliability: 84, recommended: false, premium: false },
-  { name: 'Stremio Add-on',stream: 'Cinemeta · 1080p',             quality: '1080p',   size: '3.6 GB',  audio: 'Stereo',    lang: 'EN',     subs: 'EN',         health: 70,  status: 'Available',       reliability: 78, recommended: false, premium: false },
-  { name: 'Local Library', stream: 'Downloads · Backup',           quality: '720p',    size: '1.9 GB',  audio: 'Stereo',    lang: 'EN',     subs: '—',          health: 100, status: 'Available',       reliability: 90, recommended: false, premium: false },
-  { name: 'YouTube',       stream: 'Official Trailer',             quality: '1080p',   size: 'Stream',  audio: 'Stereo',    lang: 'EN',     subs: 'Auto',       health: 100, status: 'Available',       reliability: 99, recommended: false, premium: false },
-];
+interface AtlasStream {
+  sourceId: string;
+  name: string;
+  providerId: string;
+  providerName: string;
+  urlOrPath: string;
+  quality: string;
+  requiresDebrid: boolean;
+  isInfoOnly: boolean;
+  isPlayable: boolean;
+  rank: number;
+  metadata: Record<string, string>;
+  sizeText: string;
+  seedersText: string;
+}
 
-const CAST = [
-  { name: 'Timothée Chalamet', char: 'Paul Atreides', img: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=200&q=80' },
-  { name: 'Zendaya',           char: 'Chani',          img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80' },
-  { name: 'Rebecca Ferguson',  char: 'Lady Jessica',   img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80' },
-  { name: 'Javier Bardem',     char: 'Stilgar',        img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80' },
-  { name: 'Josh Brolin',       char: 'Gurney Halleck', img: 'https://images.unsplash.com/photo-1463453091185-61582044d556?w=200&q=80' },
-  { name: 'Austin Butler',     char: 'Feyd-Rautha',    img: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&q=80' },
-  { name: 'Florence Pugh',     char: 'Princess Irulan',img: 'https://images.unsplash.com/photo-1485893015719-2eecabaaa9d6?w=200&q=80' },
-];
-
-const SIMILAR_POSTERS = [
-  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80',
-  'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400&q=80',
-  'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&q=80',
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&q=80',
-  'https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=400&q=80',
-  'https://images.unsplash.com/photo-1518930259200-3e5b1f3b1e5e?w=400&q=80',
-  'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80',
-  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&q=80',
-];
-
-const SHELVES: Array<{ title: string; count: number }> = [
-  { title: 'Similar Titles',   count: 8 },
-  { title: 'More Like This',   count: 8 },
-  { title: 'Same Director',    count: 6 },
-  { title: 'From This Source', count: 8 },
-];
-
-const SEASONS = [1, 2, 3];
-const EPISODES = Array.from({ length: 8 }).map((_, i) => ({
-  num: i + 1,
-  title: ['The Gantry', 'A Nest of Vipers', 'Defiant Jazz', 'Hide and Seek', 'The Reformed', 'Trojan Horse', 'Cold Harbor', 'Macrodata Refinement'][i],
-  runtime: `${44 + (i % 4) * 3}m`,
-  airDate: `Feb ${(i + 1) * 3}, 2026`,
-  progress: i === 2 ? 45 : i < 2 ? 100 : 0,
-}));
+interface SimilarItem {
+  id: string;
+  imdbId?: string;
+  title: string;
+  poster?: string;
+  year?: number | string;
+  type?: string;
+}
 
 interface AIPrefs {
   auto: boolean;
@@ -95,68 +73,344 @@ interface AIPrefs {
   avoidLowHealth: boolean;
 }
 
-const MOCK_DATA: Record<string, DetailsItem> = {
-  'dune-part-two': {
-    id: 'dune-part-two',
-    title: 'Dune: Part Two',
-    type: 'Movie',
-    year: '2024',
-    runtime: '2h 46m',
-    posterUrl: 'https://images.unsplash.com/photo-1773592612185-bd985ac2bfe2?w=600&q=80',
-    backdropUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80',
-    tmdb: 8.6,
-    imdb: 8.8,
-    rt: 93,
-    user: 9.1,
-    cert: 'PG-13',
-    quality: '4K HDR',
-    genres: ['Sci-Fi', 'Adventure', 'Drama'],
-    description: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
-    director: 'Denis Villeneuve',
-    writers: ['Jon Spaihts', 'Denis Villeneuve'],
-    releaseDate: 'Mar 1, 2024',
-    country: 'United States',
-    language: 'English',
-    studio: 'Legendary · Warner Bros.',
-    budget: '$190M',
-    revenue: '$711M worldwide',
-  },
-};
+const QUICK_PROMPTS = [
+  'Spoiler-free summary', 'Is it worth watching?', 'Find best source',
+  'Parental guide', 'Similar titles', 'Cast highlights', 'Trailer breakdown',
+];
+
+const YT_API_KEY = (window as any).__ATLAS_YT_KEY ?? import.meta.env.VITE_YT_API_KEY ?? '';
+
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function postBridge(msg: object) {
+  try { (window as any).chrome?.webview?.postMessage(msg); } catch { /* no bridge */ }
+}
+
+function toArray(val: string | string[] | undefined): string[] {
+  if (!val) return [];
+  return Array.isArray(val) ? val : [val];
+}
+
+function getInitials(name: string): string {
+  return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+}
+
+function extractYouTubeVideoId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]{11})/);
+  return m ? m[1] : null;
+}
+
+async function searchYouTubeTrailer(title: string, year: string, mediaType: string): Promise<string | null> {
+  const query = encodeURIComponent(`${title} ${year} ${mediaType === 'series' ? 'tv series' : 'movie'} official trailer`);
+  if (YT_API_KEY) {
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoEmbeddable=true&key=${YT_API_KEY}&maxResults=1`,
+      );
+      const data = await res.json();
+      const vid = data?.items?.[0]?.id?.videoId;
+      if (vid) return vid as string;
+    } catch { /* fall through */ }
+  }
+  for (const base of ['https://inv.riverside.rocks', 'https://yewtu.be']) {
+    try {
+      const res = await fetch(`${base}/api/v1/search?q=${query}&type=video&fields=videoId`, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]?.videoId) return data[0].videoId as string;
+    } catch { continue; }
+  }
+  return null;
+}
+
+function mapBridgeTypeLocal(type?: string): 'Movie' | 'TV' {
+  if (!type) return 'Movie';
+  const t = type.toLowerCase();
+  if (t === 'series' || t === 'channel' || t === 'tv') return 'TV';
+  return 'Movie';
+}
+
+// â”€â”€ Trailer Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function TrailerModal({ videoId, title, onClose }: { videoId: string; title: string; onClose: () => void }) {
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="relative w-[860px] max-w-[92vw] rounded-xl overflow-hidden shadow-2xl border border-slate-700/60"
+        style={{ aspectRatio: '16/9' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe
+          src={embedUrl}
+          title={`${title} Trailer`}
+          className="w-full h-full"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white border border-white/20"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function DetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Item data from navigation state (passed by ServerCard, CarouselOverlay, FeaturedPanel, etc.)
+  const stateItem = (location.state as any)?.item as Record<string, any> | undefined;
+
+  // â”€â”€ UI state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [askInput, setAskInput] = useState('');
   const [askResponse, setAskResponse] = useState<string | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
+  const [trailerLoading, setTrailerLoading] = useState(false);
   const [watchlisted, setWatchlisted] = useState(false);
   const [watched, setWatched] = useState(false);
-  const [season, setSeason] = useState(2);
-  const [selectedSource, setSelectedSource] = useState<string | null>('Plex');
+  const [season, setSeason] = useState(1);
+  const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [prefs, setPrefs] = useState<AIPrefs>({ auto: true, prefer4K: true, preferSmall: false, preferSubs: true, avoidLowHealth: true });
 
-  const item = id ? MOCK_DATA[id] || MOCK_DATA['dune-part-two'] : MOCK_DATA['dune-part-two'];
+  // â”€â”€ Data state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [meta, setMeta] = useState<CinemetaMeta | null>(null);
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [streams, setStreams] = useState<AtlasStream[]>([]);
+  const [streamsLoading, setStreamsLoading] = useState(false);
+  const [similarItems, setSimilarItems] = useState<SimilarItem[]>([]);
+  const [castImages, setCastImages] = useState<Record<string, string>>({});
+  const requestedDetailKeyRef = useRef<string>('');
 
+  // â”€â”€ Derived values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const imdbId: string | undefined = stateItem?.imdbId ?? (id?.startsWith('tt') ? id : undefined);
+  const rawType: string = stateItem?.type ?? '';
+  const isTV = rawType.toLowerCase() === 'tv' || rawType === 'series' || meta?.type === 'series';
+  const cinemetaType: 'movie' | 'series' = isTV ? 'series' : 'movie';
+  const bridgeType: 'movie' | 'series' = (rawType.toLowerCase() === 'tv' || rawType.toLowerCase() === 'series') ? 'series' : 'movie';
+
+  const title: string = meta?.name ?? stateItem?.title ?? id ?? '';
+  const year: string = stateItem?.year ?? meta?.releaseInfo ?? '';
+  const runtime: string = meta?.runtime ?? stateItem?.runtime ?? '';
+  const genres: string[] = meta?.genres ?? (stateItem?.genres as string[] | undefined) ?? (stateItem?.genre ? [stateItem.genre as string] : []);
+  const description: string = meta?.description ?? (stateItem?.description as string | undefined) ?? (stateItem?.overview as string | undefined) ?? '';
+  const posterUrl: string = meta?.poster ?? stateItem?.posterUrl ?? '';
+  const backdropUrl: string = meta?.background ?? stateItem?.backdropUrl ?? '';
+  const imdbRating: number | undefined = meta?.imdbRating ? parseFloat(meta.imdbRating) : (typeof stateItem?.rating === 'number' ? stateItem.rating : undefined);
+  const cast: string[] = meta?.cast ?? [];
+  const directors: string[] = toArray(meta?.director);
+  const writers: string[] = toArray(meta?.writer);
+  const country: string = meta?.country ?? '';
+  const language: string = meta?.language ?? '';
+
+  const allEpisodes = meta?.videos ?? [];
+  const seasons: number[] = [...new Set(allEpisodes.map((v) => v.season).filter((s): s is number => typeof s === 'number'))].sort((a, b) => a - b);
+  const visibleEpisodes: CinemetaVideo[] = allEpisodes.filter((v) => v.season === season);
+
+  // â”€â”€ Fetch Cinemeta metadata â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    if (!imdbId) return;
+    setMetaLoading(true);
+    fetch(`https://v3-cinemeta.strem.io/meta/${cinemetaType}/${encodeURIComponent(imdbId)}.json`,
+      { signal: AbortSignal.timeout(8000) })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.meta) {
+          setMeta(data.meta);
+          const trailer = (data.meta.trailers ?? []).find((t: any) => (t.type ?? '').toLowerCase() === 'trailer') ?? data.meta.trailers?.[0];
+          if (trailer?.source) setTrailerVideoId(trailer.source as string);
+          const vids: CinemetaVideo[] = data.meta.videos ?? [];
+          const firstSeason = vids.map((v) => v.season).filter((s): s is number => typeof s === 'number').sort((a, b) => a - b)[0];
+          if (firstSeason) setSeason(firstSeason);
+        }
+      })
+      .catch(() => { /* silently ignore */ })
+      .finally(() => setMetaLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imdbId]);
+
+  // â”€â”€ Fetch similar items from Cinemeta genre catalog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  useEffect(() => {
+    const genre = genres[0];
+    if (!genre) return;
+    const enc = encodeURIComponent(genre);
+    fetch(`https://v3-cinemeta.strem.io/catalog/${cinemetaType}/top/genre=${enc}.json`,
+      { signal: AbortSignal.timeout(6000) })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data?.metas)) {
+          const items: SimilarItem[] = (data.metas as any[])
+            .filter((m: any) => m.id !== imdbId)
+            .slice(0, 10)
+            .map((m: any) => ({
+              id: m.id as string,
+              imdbId: m.id as string,
+              title: (m.name ?? m.title ?? '') as string,
+              poster: m.poster as string | undefined,
+              year: m.releaseInfo as string | undefined,
+              type: m.type as string | undefined,
+            }));
+          setSimilarItems(items);
+        }
+      })
+      .catch(() => { /* silently ignore */ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [genres[0], cinemetaType, imdbId]);
+
+  // ── Fetch Wikipedia actor photos for cast ─────────────────────────────────
+  useEffect(() => {
+    if (cast.length === 0) return;
+    setCastImages({});
+    cast.slice(0, 12).forEach((name) => {
+      fetch(
+        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=185&origin=*`,
+        { signal: AbortSignal.timeout(5000) }
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          const pages = data?.query?.pages;
+          if (!pages) return;
+          const page = Object.values(pages)[0] as any;
+          const thumb = page?.thumbnail?.source as string | undefined;
+          if (thumb) setCastImages((prev) => ({ ...prev, [name]: thumb }));
+        })
+        .catch(() => { /* ignore */ });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cast.join(',')]);
+
+  // ── Listen for streams from the C# bridge ────────────────────────────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      try {
+        if (!event.data) return;
+        const msg = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (msg?.type === 'atlas:streams:state') {
+          const expectedMediaId = (imdbId ?? id ?? '').trim();
+          const incomingMediaId = String(msg.mediaId ?? '').trim();
+          if (expectedMediaId && incomingMediaId && !incomingMediaId.includes(expectedMediaId) && !expectedMediaId.includes(incomingMediaId)) {
+            return;
+          }
+
+          setStreamsLoading(!!msg.isBusy);
+          const srcs: AtlasStream[] = msg.sources ?? [];
+          if (srcs.length > 0) {
+            setStreams(srcs);
+            setSelectedSource((prev) => prev ?? srcs[0]?.sourceId ?? null);
+          } else if (!msg.isBusy) {
+            setStreams([]);
+          }
+        }
+      } catch { /* ignore parse errors */ }
+    };
+    (window as any).chrome?.webview?.addEventListener('message', handler);
+    return () => {
+      (window as any).chrome?.webview?.removeEventListener('message', handler);
+    };
+  }, [imdbId, id]);
+
+  // Request streams for this item when we have an imdb id
+  useEffect(() => {
+    const mediaId = (imdbId ?? id ?? '').trim();
+    if (!mediaId) return;
+
+    const requestKey = `${mediaId}::${bridgeType}`;
+    if (requestedDetailKeyRef.current === requestKey) return;
+    requestedDetailKeyRef.current = requestKey;
+
+    setStreamsLoading(true);
+    setStreams([]);
+    postBridge({
+      type: 'servers.openDetail',
+      payload: {
+        metaId: mediaId,
+        imdbId: imdbId ?? '',
+        id: mediaId,
+        title: title || mediaId,
+        type: bridgeType,
+      },
+    });
+  }, [imdbId, id, bridgeType, title]);
+
+  // â”€â”€ Keyboard shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (trailerOpen) return setTrailerOpen(false);
+      if (trailerOpen) { setTrailerOpen(false); return; }
       navigate(-1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [trailerOpen, navigate]);
 
+  // â”€â”€ Trailer handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const handleTrailerClick = useCallback(async () => {
+    if (trailerVideoId) { setTrailerOpen(true); return; }
+    const rawUrl = (stateItem?.trailerUrl as string | undefined) ?? '';
+    if (rawUrl) {
+      const vid = extractYouTubeVideoId(rawUrl);
+      if (vid) { setTrailerVideoId(vid); setTrailerOpen(true); return; }
+    }
+    setTrailerLoading(true);
+    const found = await searchYouTubeTrailer(title, year, cinemetaType);
+    setTrailerLoading(false);
+    if (found) { setTrailerVideoId(found); setTrailerOpen(true); }
+  }, [trailerVideoId, stateItem, title, year, cinemetaType]);
+
+  // -- Play handler: scroll to Sources section so user can pick a stream --
+  const handlePlay = useCallback(() => {
+    document.getElementById('sources-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  // â”€â”€ AI ask â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleAsk = (q: string) => {
     setAskInput('');
-    setAskResponse(`AI: ${q.startsWith('Spoiler') ? 'A son of nobility navigates a desert world ruled by spice, prophecy, and politics. No spoilers — go in fresh.' : `Here is your answer about "${q}" for ${item.title}.`}`);
+    setAskResponse(
+      q.toLowerCase().includes('spoiler')
+        ? `AI: A spoiler-free overview of "${title}" - a must-watch for fans of the genre.`
+        : `AI: Here's information about "${q}" for ${title}.`,
+    );
   };
 
+  // â”€â”€ Stream display helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  function streamSubtitle(s: AtlasStream): string {
+    const parts: string[] = [];
+    if (s.providerName && s.providerName !== s.name) parts.push(s.providerName);
+    if (s.sizeText) parts.push(s.sizeText);
+    if (s.seedersText) parts.push(s.seedersText);
+    return parts.join(' · ') || '-';
+  }
+
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="fixed inset-0 z-50 bg-[#04060d] overflow-y-auto">
-      {/* Top hero */}
+
+      {/* Trailer modal */}
+      {trailerOpen && trailerVideoId && (
+        <TrailerModal videoId={trailerVideoId} title={title} onClose={() => setTrailerOpen(false)} />
+      )}
+
+      {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="relative" style={{ height: 480 }}>
-        <ImageWithFallback src={item.backdropUrl ?? SIMILAR_POSTERS[0]} alt={item.title} className="absolute inset-0 w-full h-full object-cover" />
+        {(backdropUrl || imdbId) ? (
+          <ImageWithFallback
+            src={backdropUrl || `https://images.metahub.space/background/medium/${imdbId}/img`}
+            fallbackSrc={posterUrl || undefined}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60" />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 80% 30%, rgba(34,211,238,0.10) 0%, transparent 60%)' }} />
@@ -174,56 +428,75 @@ export function DetailsPage() {
         {/* Hero content */}
         <div className="relative h-full flex items-end p-6 gap-5 z-[5]">
           {/* Poster */}
-          <div className="hidden md:block flex-shrink-0 w-[200px] aspect-[2/3] rounded-xl overflow-hidden border border-cyan-400/30 ring-1 ring-cyan-500/20 shadow-2xl shadow-cyan-500/10 -mb-12">
-            <ImageWithFallback src={item.posterUrl ?? SIMILAR_POSTERS[1]} alt={item.title} className="w-full h-full object-cover" />
-          </div>
+          {posterUrl && (
+            <div className="hidden md:block flex-shrink-0 w-[200px] aspect-[2/3] rounded-xl overflow-hidden border border-cyan-400/30 ring-1 ring-cyan-500/20 shadow-2xl shadow-cyan-500/10 -mb-12">
+              <ImageWithFallback src={posterUrl} alt={title} className="w-full h-full object-cover" />
+            </div>
+          )}
+
           {/* Info */}
           <div className="flex-1 min-w-0 max-w-3xl">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-200 text-[10px]">{item.type === 'TV' ? 'TV Show' : 'Movie'}</span>
-              {item.cert && <span className="px-2 py-0.5 rounded-md bg-slate-900/70 border border-slate-700/60 text-slate-300 text-[10px]">{item.cert}</span>}
-              {item.quality && <span className="px-2 py-0.5 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-cyan-200 text-[10px]">{item.quality}</span>}
-            </div>
-            <div className="text-slate-50" style={{ fontSize: 36, letterSpacing: '-0.01em', textShadow: '0 2px 24px rgba(0,0,0,0.7)' }}>{item.title}</div>
-            <div className="flex items-center gap-3 mt-1.5 text-slate-300 text-xs">
-              <span>{item.year}</span>
-              <span>·</span>
-              <span>{item.type === 'TV' ? (item.episodeLength ?? '55m / ep') : (item.runtime ?? '2h 38m')}</span>
-              <span>·</span>
-              <span>{item.genres.join(' · ')}</span>
+              <span className="px-2 py-0.5 rounded-md bg-violet-500/15 border border-violet-400/30 text-violet-200 text-[10px]">
+                {isTV ? 'TV Show' : 'Movie'}
+              </span>
+              {metaLoading && !meta && <Loader2 size={12} className="animate-spin text-slate-400" />}
             </div>
 
-            {/* Ratings row */}
-            <div className="flex flex-wrap items-center gap-2 mt-3">
-              {item.tmdb !== undefined && <RatingChip label="TMDb" value={`${item.tmdb.toFixed(1)}`} color="#01b4e4" />}
-              {item.imdb !== undefined && <RatingChip label="IMDb" value={`${item.imdb.toFixed(1)}`} color="#f5c518" />}
-              {item.rt   !== undefined && <RatingChip label="RT"   value={`${item.rt}%`}            color="#fa320a" />}
-              {item.user !== undefined && <RatingChip label="You"  value={`${item.user.toFixed(1)}`} color="#22d3ee" icon />}
+            <div className="text-slate-50" style={{ fontSize: 36, letterSpacing: '-0.01em', textShadow: '0 2px 24px rgba(0,0,0,0.7)' }}>{title || id}</div>
+
+            <div className="flex items-center gap-3 mt-1.5 text-slate-300 text-xs flex-wrap">
+              {year && <span>{year}</span>}
+              {year && runtime && <span>·</span>}
+              {runtime && <span>{runtime}</span>}
+              {(year || runtime) && genres.length > 0 && <span>·</span>}
+              {genres.length > 0 && <span>{genres.slice(0, 3).join(' · ')}</span>}
             </div>
 
-            {/* Genres */}
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
-              {item.genres.map((g) => (
-                <span key={g} className="px-2 py-0.5 rounded-full bg-slate-900/70 border border-slate-700/60 text-slate-300 text-[10px]">{g}</span>
-              ))}
-            </div>
+            {imdbRating !== undefined && (
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                <RatingChip label="IMDb" value={`${imdbRating.toFixed(1)}`} color="#f5c518" />
+              </div>
+            )}
 
-            <p className="text-slate-300/90 text-sm mt-3 max-w-[640px] leading-relaxed line-clamp-3">{item.description}</p>
+            {genres.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {genres.map((g) => (
+                  <span key={g} className="px-2 py-0.5 rounded-full bg-slate-900/70 border border-slate-700/60 text-slate-300 text-[10px]">{g}</span>
+                ))}
+              </div>
+            )}
 
-            {/* Buttons */}
-            <div className="flex items-center gap-2 mt-4">
-              <button className="px-3 py-1.5 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/30">
+            {description && (
+              <p className="text-slate-300/90 text-sm mt-3 max-w-[640px] leading-relaxed line-clamp-3">{description}</p>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 mt-4 flex-wrap">
+              <button
+                onClick={handlePlay}
+                className="px-3 py-1.5 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/30"
+              >
                 <Play size={12} fill="currentColor" /> Play
               </button>
-              <button onClick={() => setTrailerOpen(true)} className="px-3 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-xs flex items-center gap-1.5">
-                <Film size={11} /> Trailer
+              <button
+                onClick={handleTrailerClick}
+                disabled={trailerLoading}
+                className="px-3 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-xs flex items-center gap-1.5 disabled:opacity-60"
+              >
+                {trailerLoading ? <Loader2 size={11} className="animate-spin" /> : <Film size={11} />}
+                Trailer
               </button>
-              <button onClick={() => setWatchlisted(!watchlisted)}
-                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 border ${watchlisted ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-200' : 'bg-slate-900/80 hover:bg-slate-800 border-slate-700/60 text-slate-200'}`}>
+              <button
+                onClick={() => setWatchlisted(!watchlisted)}
+                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 border ${watchlisted ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-200' : 'bg-slate-900/80 hover:bg-slate-800 border-slate-700/60 text-slate-200'}`}
+              >
                 {watchlisted ? <Check size={11} /> : <Plus size={11} />} {watchlisted ? 'Watchlisted' : 'Watchlist'}
               </button>
-              <button onClick={() => setWatched(!watched)}
-                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 border ${watched ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200' : 'bg-slate-900/80 hover:bg-slate-800 border-slate-700/60 text-slate-200'}`}>
+              <button
+                onClick={() => setWatched(!watched)}
+                className={`px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 border ${watched ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200' : 'bg-slate-900/80 hover:bg-slate-800 border-slate-700/60 text-slate-200'}`}
+              >
                 <Eye size={11} /> {watched ? 'Watched' : 'Mark Seen'}
               </button>
               <button className="p-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 text-slate-200">
@@ -234,29 +507,33 @@ export function DetailsPage() {
         </div>
       </div>
 
-      {/* Body */}
+      {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="px-6 pt-16 pb-12 max-w-[1200px] mx-auto space-y-8">
+
         {/* AI Assistant */}
         <Section title="Ask AI" icon={<Sparkles size={13} className="text-violet-300" />}>
           <div className="rounded-xl border border-violet-400/20 bg-gradient-to-br from-slate-900/80 via-violet-950/30 to-slate-900/80 backdrop-blur-md p-4 ring-1 ring-violet-500/10">
             <p className="text-slate-300 text-xs">Ask for a spoiler-free summary, best source, cast info, parental guide, similar titles, or whether it's worth watching.</p>
             <div className="flex flex-wrap gap-1.5 mt-3">
               {QUICK_PROMPTS.map((q) => (
-                <button key={q} onClick={() => handleAsk(q)} className="px-2.5 py-1 rounded-full bg-violet-500/10 hover:bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[11px]">
-                  {q}
-                </button>
+                <button key={q} onClick={() => handleAsk(q)} className="px-2.5 py-1 rounded-full bg-violet-500/10 hover:bg-violet-500/20 border border-violet-400/30 text-violet-200 text-[11px]">{q}</button>
               ))}
             </div>
             <div className="flex items-center gap-2 mt-3">
               <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950/70 border border-slate-700/60">
                 <Sparkles size={11} className="text-violet-300" />
-                <input value={askInput} onChange={(e) => setAskInput(e.target.value)}
+                <input
+                  value={askInput}
+                  onChange={(e) => setAskInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter' && askInput.trim()) handleAsk(askInput); }}
-                  placeholder="Ask anything about this title…"
-                  className="flex-1 bg-transparent text-xs text-slate-200 placeholder:text-slate-500 outline-none" />
+                  placeholder="Ask anything about this title..."
+                  className="flex-1 bg-transparent text-xs text-slate-200 placeholder:text-slate-500 outline-none"
+                />
               </div>
-              <button onClick={() => askInput.trim() && handleAsk(askInput)}
-                className="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-400 text-slate-950 text-xs flex items-center gap-1.5">
+              <button
+                onClick={() => askInput.trim() && handleAsk(askInput)}
+                className="px-3 py-1.5 rounded-lg bg-violet-500 hover:bg-violet-400 text-slate-950 text-xs flex items-center gap-1.5"
+              >
                 <Send size={11} /> Send
               </button>
             </div>
@@ -267,204 +544,253 @@ export function DetailsPage() {
         </Section>
 
         {/* TV Episodes */}
-        {item.type === 'TV' && (
+        {isTV && (
           <Section title="Episodes" icon={<Play size={13} className="text-cyan-300" />}>
             <div className="rounded-xl border border-cyan-400/15 bg-slate-900/60 backdrop-blur-md p-4">
-              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                <div className="flex items-center gap-1.5">
-                  {SEASONS.map((s) => (
-                    <button key={s} onClick={() => setSeason(s)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] border ${season === s ? 'bg-cyan-500/15 text-cyan-200 border-cyan-400/40' : 'bg-slate-900/70 text-slate-300 border-slate-700/60 hover:bg-slate-800'}`}>
-                      Season {s}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <SmallBtn>Episode Guide</SmallBtn>
-                  <SmallBtn>AI Recap</SmallBtn>
-                  <SmallBtn>Spoiler-free Recap</SmallBtn>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                {EPISODES.map((ep) => (
-                  <div key={ep.num} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-950/60 hover:bg-slate-800/60 border border-slate-700/40 group">
-                    <div className="w-10 text-slate-500 text-[10px] flex-shrink-0">S{season}·E{ep.num}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-slate-100 text-xs truncate">{ep.title}</div>
-                      <div className="text-slate-500 text-[10px]">{ep.runtime} · {ep.airDate}</div>
-                    </div>
-                    {ep.progress > 0 && ep.progress < 100 && (
-                      <div className="hidden md:block w-24 h-1 rounded-full bg-slate-800 overflow-hidden flex-shrink-0">
-                        <div className="h-full bg-cyan-400" style={{ width: `${ep.progress}%` }} />
-                      </div>
-                    )}
-                    {ep.progress === 100 && <Check size={12} className="text-emerald-400 flex-shrink-0" />}
-                    <button className="px-2 py-1 rounded-md bg-cyan-500/90 hover:bg-cyan-400 text-slate-950 text-[10px] flex items-center gap-1">
-                      <Play size={10} fill="currentColor" /> Play
-                    </button>
-                    <button className="px-2 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-slate-200 text-[10px]">Recap</button>
+              {seasons.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                    {seasons.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSeason(s)}
+                        className={`px-2.5 py-1 rounded-full text-[11px] border ${season === s ? 'bg-cyan-500/15 text-cyan-200 border-cyan-400/40' : 'bg-slate-900/70 text-slate-300 border-slate-700/60 hover:bg-slate-800'}`}
+                      >
+                        Season {s}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1.5">
+                    {visibleEpisodes.map((ep) => (
+                      <div key={ep.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-950/60 hover:bg-slate-800/60 border border-slate-700/40">
+                        <div className="w-10 text-slate-500 text-[10px] flex-shrink-0">S{ep.season}·E{ep.episode}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-slate-100 text-xs truncate">{ep.title ?? `Episode ${ep.episode}`}</div>
+                          <div className="text-slate-500 text-[10px]">{[ep.runtime, ep.released].filter(Boolean).join(' · ')}</div>
+                        </div>
+                        <button
+                          onClick={() => postBridge({ type: 'servers.playItem', payload: { id: ep.id, title: ep.title, mediaType: 'series' } })}
+                          className="px-2 py-1 rounded-md bg-cyan-500/90 hover:bg-cyan-400 text-slate-950 text-[10px] flex items-center gap-1"
+                        >
+                          <Play size={10} fill="currentColor" /> Play
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-500 text-xs text-center py-4">
+                  {metaLoading ? 'Loading episode guide...' : 'No episodes found for this series.'}
+                </div>
+              )}
             </div>
           </Section>
         )}
 
+
+        {/* Cast */}
+        {cast.length > 0 && (
+          <Section title="Cast" icon={null}>
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+              {cast.slice(0, 12).map((name) => (
+                <div key={name} className="flex-shrink-0 w-24 text-center">
+                  <div className="w-24 h-24 rounded-xl overflow-hidden ring-1 ring-slate-700/50 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                    {castImages[name] ? (
+                      <img src={castImages[name]} alt={name} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <span className="text-slate-300 text-lg font-semibold">{getInitials(name)}</span>
+                    )}
+                  </div>
+                  <div className="mt-1.5 text-slate-100 text-[11px] truncate">{name}</div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Similar titles */}
+        {similarItems.length > 0 && (
+          <Section
+            title={`More ${genres[0] ?? ''} ${isTV ? 'Shows' : 'Movies'}`}
+            icon={null}
+            action={<button className="text-cyan-300 text-[11px] hover:text-cyan-200">View All</button>}
+          >
+            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
+              {similarItems.map((sim) => (
+                <div
+                  key={sim.id}
+                  className="flex-shrink-0 w-[130px] cursor-pointer"
+                  onClick={() =>
+                    navigate(`/details/${sim.id}`, {
+                      state: {
+                        item: {
+                          id: sim.id,
+                          imdbId: sim.imdbId,
+                          title: sim.title,
+                          year: String(sim.year ?? ''),
+                          type: mapBridgeTypeLocal(sim.type),
+                          posterUrl: sim.poster,
+                          server: '',
+                          hasMetadata: true,
+                          hasArtwork: !!sim.poster,
+                        },
+                      },
+                    })
+                  }
+                >
+                  <div className="aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-700/40 hover:ring-cyan-400/60 transition-all hover:-translate-y-1">
+                    <ImageWithFallback
+                      src={sim.poster ?? `https://images.metahub.space/poster/medium/${sim.imdbId ?? sim.id}/img`}
+                      alt={sim.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="mt-1.5 text-slate-200 text-[11px] truncate">{sim.title}</div>
+                  <div className="text-slate-500 text-[10px]">
+                    {sim.year ? String(sim.year) : ''}{genres[0] ? ` · ${genres[0]}` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Details metadata */}
+        {(directors.length > 0 || writers.length > 0 || country || language || runtime) && (
+          <Section title="Details" icon={null}>
+            <div className="rounded-xl border border-slate-700/40 bg-slate-900/50 backdrop-blur-md p-4 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-xs">
+              {directors.length > 0 && <Meta label="Director" value={directors.join(', ')} />}
+              {writers.length > 0 && <Meta label="Writers" value={writers.join(', ')} />}
+              {runtime && <Meta label="Runtime" value={runtime} />}
+              {country && <Meta label="Country" value={country} />}
+              {language && <Meta label="Language" value={language} />}
+              {genres.length > 0 && <Meta label="Genres" value={genres.join(', ')} />}
+            </div>
+          </Section>
+        )}
+
+
+        <div id="sources-section" />
         {/* Sources */}
         <Section title="Sources" icon={<Zap size={13} className="text-cyan-300" />}>
-          {/* AI Stream Selection */}
           <div className="rounded-xl border border-cyan-400/15 bg-slate-900/60 backdrop-blur-md p-3 mb-3">
             <div className="flex items-center gap-2 text-cyan-200 text-[11px] mb-2">
               <Sparkles size={11} /> AI Stream Selection
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <Toggle on={prefs.auto} onClick={() => setPrefs({ ...prefs, auto: !prefs.auto })}>Auto Pick Best Source</Toggle>
+              <Toggle on={prefs.auto} onClick={() => setPrefs({ ...prefs, auto: !prefs.auto })}>Auto Pick Best</Toggle>
               <Toggle on={prefs.prefer4K} onClick={() => setPrefs({ ...prefs, prefer4K: !prefs.prefer4K })}>Prefer 4K</Toggle>
-              <Toggle on={prefs.preferSmall} onClick={() => setPrefs({ ...prefs, preferSmall: !prefs.preferSmall })}>Prefer smallest file</Toggle>
-              <Toggle on={prefs.preferSubs} onClick={() => setPrefs({ ...prefs, preferSubs: !prefs.preferSubs })}>Prefer subtitles</Toggle>
-              <Toggle on={prefs.avoidLowHealth} onClick={() => setPrefs({ ...prefs, avoidLowHealth: !prefs.avoidLowHealth })}>Avoid low health</Toggle>
+              <Toggle on={prefs.preferSmall} onClick={() => setPrefs({ ...prefs, preferSmall: !prefs.preferSmall })}>Smallest File</Toggle>
+              <Toggle on={prefs.preferSubs} onClick={() => setPrefs({ ...prefs, preferSubs: !prefs.preferSubs })}>Prefer Subtitles</Toggle>
+              <Toggle on={prefs.avoidLowHealth} onClick={() => setPrefs({ ...prefs, avoidLowHealth: !prefs.avoidLowHealth })}>Avoid Low Health</Toggle>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            {SOURCES.map((s) => {
-              const selected = selectedSource === s.name;
-              const statusColor =
-                s.status === 'Available'      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30'
-                : s.status === 'Premium'      ? 'bg-amber-500/15 text-amber-200 border-amber-400/30'
-                : s.status === 'Buffer risk'  ? 'bg-rose-500/15 text-rose-200 border-rose-400/30'
-                : 'bg-slate-700/40 text-slate-300 border-slate-600/50';
-              return (
-                <div key={s.name}
-                  onClick={() => setSelectedSource(s.name)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
-                    selected ? 'bg-cyan-500/10 border-cyan-400/40 ring-1 ring-cyan-500/20' : 'bg-slate-950/60 border-slate-700/40 hover:bg-slate-800/60'
-                  }`}>
-                  <div className="flex items-center gap-2 min-w-[140px]">
-                    <span className="w-6 h-6 rounded-md bg-slate-800 border border-slate-600/60 flex items-center justify-center text-slate-200 text-[11px]">{s.name[0]}</span>
-                    <div className="min-w-0">
-                      <div className="text-slate-100 text-xs truncate">{s.name}</div>
-                      {s.recommended && (
-                        <div className="flex items-center gap-1 text-[9px] text-violet-300">
-                          <Sparkles size={8} /> Recommended
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-slate-300 text-[11px] truncate">{s.stream}</div>
-                    <div className="text-slate-500 text-[10px] truncate">
-                      {s.quality} · {s.size} · {s.audio} · {s.lang} · Subs {s.subs}
-                    </div>
-                  </div>
-                  <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-                    <div className="text-[10px] text-slate-400">Health</div>
-                    <div className="w-16 h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                      <div className={`h-full ${s.health > 90 ? 'bg-emerald-400' : s.health > 75 ? 'bg-cyan-400' : 'bg-amber-400'}`} style={{ width: `${s.health}%` }} />
-                    </div>
-                    <div className="text-[10px] text-slate-400">{s.reliability}%</div>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] border flex items-center gap-1 ${statusColor}`}>
-                    {s.status === 'Premium' && <Crown size={8} />}
-                    {s.status === 'Buffer risk' && <AlertCircle size={8} />}
-                    {s.status}
-                  </span>
-                  <button onClick={(e) => e.stopPropagation()} className="px-2 py-1 rounded-md bg-cyan-500/90 hover:bg-cyan-400 text-slate-950 text-[10px] flex items-center gap-1">
-                    <Play size={9} fill="currentColor" /> Play
-                  </button>
-                  <button onClick={(e) => e.stopPropagation()} className="p-1 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-slate-300" title="Copy link">
-                    <Copy size={10} />
-                  </button>
-                  <button onClick={(e) => e.stopPropagation()} className="p-1 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-slate-300" title="Details">
-                    <Info size={10} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-
-        {/* Cast */}
-        <Section title="Cast" icon={null} action={<button className="text-cyan-300 text-[11px] hover:text-cyan-200">View Full Cast</button>}>
-          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-            {CAST.map((c) => (
-              <div key={c.name} className="flex-shrink-0 w-24 text-center">
-                <div className="w-24 h-24 rounded-xl overflow-hidden ring-1 ring-slate-700/50">
-                  <ImageWithFallback src={c.img} alt={c.name} className="w-full h-full object-cover" />
-                </div>
-                <div className="mt-1.5 text-slate-100 text-[11px] truncate">{c.name}</div>
-                <div className="text-slate-500 text-[10px] truncate">{c.char}</div>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        {/* Similar shelves */}
-        {SHELVES.map((shelf) => (
-          <Section key={shelf.title} title={shelf.title} icon={null} action={<button className="text-cyan-300 text-[11px] hover:text-cyan-200">View All</button>}>
-            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-              {Array.from({ length: shelf.count }).map((_, i) => (
-                <div key={i} className="flex-shrink-0 w-[130px]">
-                  <div className="aspect-[2/3] rounded-xl overflow-hidden ring-1 ring-slate-700/40 hover:ring-cyan-400/60 cursor-pointer transition-all hover:-translate-y-1">
-                    <ImageWithFallback src={SIMILAR_POSTERS[(i + shelf.title.length) % SIMILAR_POSTERS.length]} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="mt-1.5 text-slate-200 text-[11px] truncate">Title {i + 1}</div>
-                  <div className="text-slate-500 text-[10px]">2024 · Sci-Fi</div>
-                </div>
-              ))}
+          {streamsLoading && streams.length === 0 && (
+            <div className="flex items-center gap-2 text-slate-400 text-xs py-4 px-3">
+              <Loader2 size={13} className="animate-spin" /> Fetching streams...
             </div>
-          </Section>
-        ))}
+          )}
 
-        {/* Metadata */}
-        <Section title="Details" icon={null}>
-          <div className="rounded-xl border border-slate-700/40 bg-slate-900/50 backdrop-blur-md p-4 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-xs">
-            <Meta label="Director"  value={item.director  ?? 'Denis Villeneuve'} />
-            <Meta label="Writers"   value={(item.writers  ?? ['Jon Spaihts', 'Denis Villeneuve']).join(', ')} />
-            <Meta label="Release"   value={item.releaseDate ?? 'Mar 1, 2024'} />
-            <Meta label="Country"   value={item.country   ?? 'United States'} />
-            <Meta label="Language"  value={item.language  ?? 'English'} />
-            <Meta label="Studio"    value={item.studio    ?? 'Legendary · Warner Bros.'} />
-            <Meta label="Runtime"   value={item.runtime   ?? '2h 46m'} />
-            <Meta label="Budget"    value={item.budget    ?? '$190M'} />
-            <Meta label="Revenue"   value={item.revenue   ?? '$711M worldwide'} />
-            <Meta label="Provider"  value="TMDb · IMDb · Rotten Tomatoes" />
-          </div>
+          {!streamsLoading && streams.length === 0 && (
+            <div className="text-slate-500 text-xs px-3 py-4 rounded-xl border border-slate-700/40 bg-slate-900/40">
+              No sources found. Open this title from the main library shelf to load streams.
+            </div>
+          )}
+
+          {streams.length > 0 && (
+            <div className="space-y-1.5">
+              {streams.map((s) => {
+                const selected = selectedSource === s.sourceId;
+                return (
+                  <div
+                    key={s.sourceId}
+                    onClick={() => setSelectedSource(s.sourceId)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${selected ? 'bg-cyan-500/10 border-cyan-400/40 ring-1 ring-cyan-500/20' : 'bg-slate-950/60 border-slate-700/40 hover:bg-slate-800/60'}`}
+                  >
+                    <div className="flex items-center gap-2 min-w-[130px]">
+                      <span className="w-6 h-6 rounded-md bg-slate-800 border border-slate-600/60 flex items-center justify-center text-slate-200 text-[11px]">
+                        {(s.providerName || s.name || '?')[0].toUpperCase()}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-slate-100 text-xs truncate">{s.name || s.providerName || 'Source'}</div>
+                        {s.requiresDebrid && (
+                          <div className="flex items-center gap-1 text-[9px] text-amber-300">
+                            <Crown size={8} /> Debrid
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-slate-300 text-[11px] truncate">{s.providerName || s.name}</div>
+                      <div className="text-slate-500 text-[10px] truncate">{streamSubtitle(s)}</div>
+                    </div>
+                    {s.quality && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] border bg-slate-700/40 text-slate-300 border-slate-600/50 flex-shrink-0">
+                        {s.quality}
+                      </span>
+                    )}
+                    {s.isPlayable && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          postBridge({
+                            type: 'servers.playSource',
+                            payload: {
+                              sourceId: s.sourceId,
+                              urlOrPath: s.urlOrPath,
+                              name: s.name || s.providerName || 'Source',
+                            },
+                          });
+                        }}
+                        className="px-2 py-1 rounded-md bg-cyan-500/90 hover:bg-cyan-400 text-slate-950 text-[10px] flex items-center gap-1"
+                      >
+                        <Play size={9} fill="currentColor" /> Play
+                      </button>
+                    )}
+                    {s.isInfoOnly && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] border bg-slate-800/60 text-slate-400 border-slate-600/40 flex items-center gap-1">
+                        <Info size={8} /> Info
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        postBridge({
+                          type: 'servers.copyLink',
+                          payload: {
+                            text: s.urlOrPath,
+                            sourceId: s.sourceId,
+                          },
+                        });
+                      }}
+                      className="p-1 rounded-md bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-slate-300"
+                      title="Copy link"
+                    >
+                      <Copy size={10} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Section>
+
       </div>
-
-      {/* Trailer modal */}
-      {trailerOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setTrailerOpen(false)}>
-          <div className="relative w-full max-w-4xl rounded-2xl border border-cyan-400/30 bg-slate-950 overflow-hidden ring-1 ring-cyan-500/20" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800">
-              <div>
-                <div className="text-slate-100 text-sm">{item.title} · Official Trailer</div>
-                <div className="text-slate-500 text-[10px]">Source · YouTube · TMDb</div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <SmallBtn><Plus size={10} /> Watchlist</SmallBtn>
-                <button onClick={() => setTrailerOpen(false)} className="p-1.5 rounded-md hover:bg-rose-500/20 text-slate-300 hover:text-rose-200">
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-            <div className="aspect-video bg-black flex items-center justify-center relative">
-              <ImageWithFallback src={item.backdropUrl ?? SIMILAR_POSTERS[0]} alt="" className="w-full h-full object-cover opacity-50" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <button className="w-16 h-16 rounded-full bg-cyan-500/90 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-cyan-500/40">
-                  <Play size={28} fill="currentColor" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function Section({ title, icon, action, children }: { title: string; icon: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
+// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+function Section({
+  title, icon, action, children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2.5">
@@ -492,19 +818,11 @@ function RatingChip({ label, value, color, icon }: { label: string; value: strin
 
 function Toggle({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick}
-      className={`px-2.5 py-1 rounded-full text-[11px] flex items-center gap-1.5 border transition-colors ${
-        on ? 'bg-cyan-500/15 text-cyan-200 border-cyan-400/40' : 'bg-slate-900/70 text-slate-300 border-slate-700/60 hover:bg-slate-800'
-      }`}>
+    <button
+      onClick={onClick}
+      className={`px-2.5 py-1 rounded-full text-[11px] flex items-center gap-1.5 border transition-colors ${on ? 'bg-cyan-500/15 text-cyan-200 border-cyan-400/40' : 'bg-slate-900/70 text-slate-300 border-slate-700/60 hover:bg-slate-800'}`}
+    >
       <span className={`w-2 h-2 rounded-full ${on ? 'bg-cyan-400' : 'bg-slate-600'}`} />
-      {children}
-    </button>
-  );
-}
-
-function SmallBtn({ children }: { children: React.ReactNode }) {
-  return (
-    <button className="px-2.5 py-1 rounded-md bg-slate-900/70 hover:bg-slate-800 border border-slate-700/60 text-slate-200 text-[11px] flex items-center gap-1">
       {children}
     </button>
   );

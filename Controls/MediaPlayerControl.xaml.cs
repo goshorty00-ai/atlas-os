@@ -72,6 +72,12 @@ namespace AtlasAI.Controls
         [DllImport("user32.dll")]
         public static extern bool GetCursorPos(out POINT lpPoint);
 
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        private const uint SWP_NOMOVE = 0x0002;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOACTIVATE = 0x0010;
+
         // Static singleton for LibVLC to avoid expensive re-initialization
         private static LibVLC? _sharedLibVLC;
         private static readonly object _vlcLock = new object();
@@ -98,6 +104,8 @@ namespace AtlasAI.Controls
         private bool _isDraggingSlider = false;
         private bool _areControlsHidden = false;
         private MediaItem? _currentMedia;
+        private MediaItem? _pendingMediaToLoad;   // deferred load until VideoView HWND is ready
+        private bool _mediaLoadQueued;
         private readonly object _endSync = new object();
         private bool _suppressEndReached = false;
         private string? _endedForPath;
@@ -157,13 +165,111 @@ namespace AtlasAI.Controls
 
         private void PlaybackService_CurrentMediaChanged(object? sender, MediaItem e)
         {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.PlaybackService_CurrentMediaChanged entry path={e?.FilePath ?? ""} title={e?.DisplayName ?? e?.Title ?? ""}");
+            // Always route through QueueMediaLoad so every code path defers until
+            // the VideoView HWND is realized.  This prevents VLC from opening a
+            // detached "Direct3D11 output" window regardless of media type or
+            // whether the player is in fullscreen mode.
             if (Dispatcher.CheckAccess())
-                LoadMedia(e);
+                QueueMediaLoad(e);
             else
-                Dispatcher.BeginInvoke(new Action(() => LoadMedia(e)));
+                Dispatcher.BeginInvoke(new Action(() => QueueMediaLoad(e)));
+        }
+
+        /// <summary>
+        /// Returns true once the VideoView HWND is realized and LibVLC can safely
+        /// render into it.  Until this is true, assigning VideoView.MediaPlayer and
+        /// calling Play() would cause VLC to open a detached Direct3D11 window.
+        /// </summary>
+        private bool IsVideoViewReady()
+        {
+            if (!IsVisible && !IsFullscreen)
+                return false;
+
+            return IsLoaded
+                && VideoView != null
+                && VideoView.IsLoaded
+                && PresentationSource.FromVisual(VideoView) != null;
+        }
+
+        /// <summary>
+        /// Stores <paramref name="media"/> and defers the actual load until
+        /// <see cref="IsVideoViewReady"/> is true, then calls <see cref="LoadMedia"/>.
+        /// </summary>
+        private void QueueMediaLoad(MediaItem? media)
+        {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.QueueMediaLoad entry mediaNull={media == null} queued={_mediaLoadQueued} pendingPath={_pendingMediaToLoad?.FilePath ?? ""}");
+            if (media == null)
+                return;
+
+            _pendingMediaToLoad = media;
+
+            if (_mediaLoadQueued) return;
+
+            _mediaLoadQueued = true;
+
+            Dispatcher.BeginInvoke(
+                DispatcherPriority.Loaded,
+                new Action(TryLoadPendingMedia));
+        }
+
+        private void TryLoadPendingMedia()
+        {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.TryLoadPendingMedia entry queued={_mediaLoadQueued} pendingPath={_pendingMediaToLoad?.FilePath ?? ""}");
+            _mediaLoadQueued = false;
+
+            var media = _pendingMediaToLoad;
+            LogVideoTrace($"TryLoadPendingMedia: media={(media == null ? "null" : media.FilePath ?? "")} IsVisible={IsVisible} IsFullscreen={IsFullscreen}");
+
+            if (media == null)
+                return;
+
+            // Hold latest request until the player is actually visible.
+            if (!IsVisible && !IsFullscreen)
+            {
+                LogVideoTrace($"TryLoadPendingMedia: early-exit !IsVisible && !IsFullscreen");
+                return;
+            }
+
+            var ready = IsVideoViewReady();
+            LogVideoTrace($"TryLoadPendingMedia: IsVideoViewReady={ready} IsLoaded={IsLoaded} VideoViewLoaded={VideoView?.IsLoaded} PresentationSrc={(PresentationSource.FromVisual(VideoView) != null)}");
+            if (!ready)
+            {
+                QueueMediaLoad(media);
+                return;
+            }
+
+            _pendingMediaToLoad = null;
+            LoadMedia(media);
         }
 
         private bool _isFullscreen = false;
+        private bool _useExternalControls = false;
+
+        /// <summary>
+        /// When true, an external overlay (e.g. FullscreenPlayerWindow) is providing the top
+        /// chrome buttons.  TopControlBar is permanently hidden; ControlBar still auto-hides
+        /// normally so the user keeps play/pause/seek.  UserActivityDetected still fires so
+        /// the external overlay can sync its visibility.
+        /// </summary>
+        public bool UseExternalControls
+        {
+            get => _useExternalControls;
+            set
+            {
+                _useExternalControls = value;
+                if (value)
+                {
+                    // Use Hidden (not Collapsed) so Row 0 keeps its 60px height.
+                    // Collapsed would shrink Row 0 to 0px, letting the LibVLC HWND (VideoView, Row 1)
+                    // start at y=0 and swallow all click events on the external overlay buttons.
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        if (TopControlBar != null) TopControlBar.Visibility = Visibility.Hidden;
+                    }, System.Windows.Threading.DispatcherPriority.Render);
+                }
+            }
+        }
         private bool _hasSavedWindowState = false;
         private WindowStyle _savedWindowStyle;
         private ResizeMode _savedResizeMode;
@@ -309,6 +415,35 @@ namespace AtlasAI.Controls
             KeyDown += MediaPlayerControl_KeyDown;
             this.Unloaded += MediaPlayerControl_Unloaded;
             this.Loaded += MediaPlayerControl_Loaded;
+            this.IsVisibleChanged += MediaPlayerControl_IsVisibleChanged;
+            // Play any media that was queued before the HWND was realized.
+            if (VideoView != null)
+                VideoView.Loaded += (_, _) => TryLoadPendingMedia();
+        }
+
+        private static void LogVideoTrace(string msg)
+        {
+            try
+            {
+                var path = System.IO.Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory, "VideoTrace.txt");
+                System.IO.File.AppendAllText(path,
+                    $"[{DateTime.Now:HH:mm:ss.fff}] {msg}\r\n");
+            }
+            catch { }
+        }
+
+        private void MediaPlayerControl_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                LogVideoTrace($"IsVisibleChanged: IsVisible={IsVisible}");
+                if (IsVisible)
+                    TryLoadPendingMedia();
+            }
+            catch
+            {
+            }
         }
 
         private void MediaPlayerControl_Loaded(object sender, RoutedEventArgs e)
@@ -325,6 +460,8 @@ namespace AtlasAI.Controls
             // Update transport button visuals
             UpdateShuffleVisuals();
             UpdateRepeatVisuals();
+            // Flush any media that was requested before the control was in the visual tree.
+            TryLoadPendingMedia();
         }
 
         private void UpdateShuffleVisuals()
@@ -464,12 +601,27 @@ namespace AtlasAI.Controls
                 _mediaPlayer.TimeChanged += MediaPlayer_TimeChanged;
                 _mediaPlayer.EndReached += MediaPlayer_EndReached;
                 _mediaPlayer.EncounteredError += MediaPlayer_EncounteredError;
-                _mediaPlayer.Playing += (s, e) => Dispatcher.Invoke(() =>
+                _mediaPlayer.Playing += (s, e) => Dispatcher.BeginInvoke(new Action(() =>
                 {
                     _suppressEndReached = false;
                     _isPlaying = true;
                     UpdatePlayPauseIcon();
                     PlaybackStateChanged?.Invoke(this, true);
+
+                    // Bring VLC's render HWND to the top of the Win32 z-order so it
+                    // renders above WebView2's HWND (WPF Panel.ZIndex has no effect
+                    // on Win32 sibling windows).
+                    try
+                    {
+                        var vlcHwnd = _mediaPlayer?.Hwnd ?? IntPtr.Zero;
+                        LogVideoTrace($"Playing event: vlcHwnd=0x{vlcHwnd:X} mediaType={_currentMedia?.MediaType} section={_currentMedia?.SectionName} isVideo={(vlcHwnd != IntPtr.Zero)}");
+                        if (vlcHwnd != IntPtr.Zero)
+                        {
+                            var ok = SetWindowPos(vlcHwnd, new IntPtr(0), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                            LogVideoTrace($"Playing event: SetWindowPos result={ok}");
+                        }
+                    }
+                    catch (Exception ex) { LogVideoTrace($"Playing event SetWindowPos EXCEPTION: {ex.Message}"); }
                     
                     // VLC resets volume on new media — force it back
                     try
@@ -490,19 +642,19 @@ namespace AtlasAI.Controls
                         await Task.Delay(500);
                         try { ResetWindowsMixerVolume(); } catch { }
                     });
-                });
-                _mediaPlayer.Paused += (s, e) => Dispatcher.Invoke(() =>
+                }));
+                _mediaPlayer.Paused += (s, e) => Dispatcher.BeginInvoke(new Action(() =>
                 {
                     _isPlaying = false;
                     UpdatePlayPauseIcon();
                     PlaybackStateChanged?.Invoke(this, false);
-                });
-                _mediaPlayer.Stopped += (s, e) => Dispatcher.Invoke(() =>
+                }));
+                _mediaPlayer.Stopped += (s, e) => Dispatcher.BeginInvoke(new Action(() =>
                 {
                     _isPlaying = false;
                     UpdatePlayPauseIcon();
                     PlaybackStateChanged?.Invoke(this, false);
-                });
+                }));
 
                 // Initialize Volume — use slider default or 70
                 var initVol = (int)VolumeSlider.Value;
@@ -544,7 +696,7 @@ namespace AtlasAI.Controls
 
         private void MediaPlayer_LengthChanged(object? sender, MediaPlayerLengthChangedEventArgs e)
         {
-            Dispatcher.Invoke(() => 
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 _receivedLength = e.Length > 0;
                 var duration = TimeSpan.FromMilliseconds(e.Length);
@@ -552,14 +704,14 @@ namespace AtlasAI.Controls
                 ProgressSlider.Maximum = duration.TotalSeconds;
                 System.Diagnostics.Debug.WriteLine($"[MediaPlayer] Duration: {FormatTime(duration)}");
                 PlaybackDurationChanged?.Invoke(this, duration.TotalSeconds);
-            });
+            }));
         }
 
         private void MediaPlayer_TimeChanged(object? sender, MediaPlayerTimeChangedEventArgs e)
         {
             if (_isDraggingSlider) return;
 
-            Dispatcher.Invoke(() => 
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (e.Time > 0)
                     _receivedTime = true;
@@ -568,7 +720,7 @@ namespace AtlasAI.Controls
                 ProgressSlider.Value = time.TotalSeconds;
                 PlaybackPositionChanged?.Invoke(this, time.TotalSeconds);
                 UpdateLyricsSync(time);
-            });
+            }));
         }
 
         private void MediaPlayer_EndReached(object? sender, EventArgs e)
@@ -605,7 +757,7 @@ namespace AtlasAI.Controls
 
         private void MediaPlayer_EncounteredError(object? sender, EventArgs e)
         {
-            Dispatcher.Invoke(() => 
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 try
                 {
@@ -642,7 +794,7 @@ namespace AtlasAI.Controls
                 System.Diagnostics.Debug.WriteLine($"[MediaPlayer] Media failed");
                 ShowError("Playback error occurred. Check file format or codecs.");
                 LoadingOverlay.Visibility = Visibility.Collapsed;
-            });
+            }));
         }
 
         #endregion
@@ -657,6 +809,7 @@ namespace AtlasAI.Controls
 
         public async void LoadMedia(MediaItem mediaItem)
         {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.LoadMedia entry path={mediaItem?.FilePath ?? ""} title={mediaItem?.DisplayName ?? mediaItem?.Title ?? ""}");
             // Cancel any pending load
             _loadCts?.Cancel();
             _loadCts = new CancellationTokenSource();
@@ -673,12 +826,27 @@ namespace AtlasAI.Controls
                     _retryNoHw = false;
                 }
 
-                // Debounce to prevent rapid-fire loading (e.g. holding down Next button)
-                try { await Task.Delay(250, token); } catch (TaskCanceledException) { return; }
+                // Keep a small debounce for rapid key-repeat, but minimize stream startup delay.
+                var sourcePath = (mediaItem.FilePath ?? "").Trim();
+                var isHttpLike = Uri.TryCreate(sourcePath, UriKind.Absolute, out var preloadUri) &&
+                                 (string.Equals(preloadUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(preloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase));
+                var debounceMs = isHttpLike ? 40 : 120;
+                try { await Task.Delay(debounceMs, token); } catch (TaskCanceledException) { return; }
                 if (token.IsCancellationRequested) return;
 
                 System.Diagnostics.Debug.WriteLine($"[MediaPlayer] Loading: {mediaItem.DisplayName}");
 
+                // Safety net for any direct caller of LoadMedia: if VideoView HWND is not
+                // yet realized, store as pending and let TryLoadPendingMedia retry once the
+                // control is visible.  This is the last guard before LibVLC touches the HWND.
+                if (!IsVideoViewReady())
+                {
+                    QueueMediaLoad(mediaItem);
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.LoadMedia before EnsurePlayerInitialized path={mediaItem.FilePath ?? ""}");
                 EnsurePlayerInitialized();
                 if (_mediaPlayer == null)
                 {
@@ -687,7 +855,11 @@ namespace AtlasAI.Controls
                 }
 
                 if (VideoView.MediaPlayer != _mediaPlayer)
+                {
+                    LogVideoTrace($"LoadMedia: assigning VideoView.MediaPlayer. PlayerHwnd=0x{_mediaPlayer.Hwnd:X} IsVisible={IsVisible} VideoViewLoaded={VideoView.IsLoaded}");
                     VideoView.MediaPlayer = _mediaPlayer;
+                    LogVideoTrace($"LoadMedia: after assign, PlayerHwnd=0x{_mediaPlayer.Hwnd:X}");
+                }
 
                 var source = mediaItem.FilePath ?? "";
                 _lastPlaybackSource = source;
@@ -765,6 +937,14 @@ namespace AtlasAI.Controls
                 _isVideoMode = mediaItem.MediaType == AtlasAI.MediaScanner.MediaType.Video || 
                                mediaItem.MediaType == AtlasAI.MediaScanner.MediaType.Unknown ||
                                Array.Exists(videoExtensions, ext => ext == extension);
+
+                if (!_isVideoMode &&
+                    string.Equals(mediaItem.SectionName, "cloud", StringComparison.OrdinalIgnoreCase) &&
+                    isHttp &&
+                    string.IsNullOrWhiteSpace(extension))
+                {
+                    _isVideoMode = true;
+                }
 
                 // Force video mode if we are playing from Karaoke section
                 if (mediaItem.SectionName != null && mediaItem.SectionName.Equals("Karaoke", StringComparison.OrdinalIgnoreCase))
@@ -854,7 +1034,9 @@ namespace AtlasAI.Controls
                     try { PlaybackOutputCoordinator.SetActive(this); } catch { }
                     try { _activeMedia?.Dispose(); } catch { }
                     _activeMedia = media;
-                    _mediaPlayer.Play(media);
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.LoadMedia before MediaPlayer.Play source={source}");
+                    var playResult = _mediaPlayer.Play(media);
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] MediaPlayerControl.LoadMedia after MediaPlayer.Play result={playResult} source={source}");
                     // Ensure volume is applied after play starts (VLC can reset it on new media)
                     _ = Task.Run(async () =>
                     {
@@ -1345,9 +1527,36 @@ namespace AtlasAI.Controls
 
         public void SeekToSeconds(double seconds)
         {
-            if (_mediaPlayer == null) return;
-            if (seconds < 0) return;
-            _mediaPlayer.Time = (long)(seconds * 1000);
+            if (_mediaPlayer == null)
+                return;
+
+            if (seconds < 0)
+                return;
+
+            var targetMs = (long)(seconds * 1000);
+            var lengthMs = _mediaPlayer.Length;
+
+            if (lengthMs > 0)
+                targetMs = Math.Clamp(targetMs, 0, lengthMs);
+
+            if (!_mediaPlayer.IsSeekable && lengthMs <= 0)
+                return;
+
+            var before = _mediaPlayer.Time;
+
+            try
+            {
+                _mediaPlayer.Time = targetMs;
+
+                if (lengthMs > 0 && Math.Abs(_mediaPlayer.Time - before) < 250)
+                {
+                    var pos = Math.Clamp((float)targetMs / lengthMs, 0f, 1f);
+                    _mediaPlayer.Position = pos;
+                }
+            }
+            catch
+            {
+            }
         }
 
         public double GetPlaybackSpeed()
@@ -2622,11 +2831,13 @@ namespace AtlasAI.Controls
                 // Get global mouse position to detect movement even over WinForms host
                 if (GetCursorPos(out POINT p))
                 {
+                    if (!IsCursorOverPlayerBounds(p))
+                        return;
+
                     Point currentPos = p;
-                    // Add significant threshold to avoid jitter and prevent constant timer resets
-                    // Increased from 10 to 50 pixels to be very safe against mouse micro-movements
-                    if (Math.Abs(currentPos.X - _lastMousePosition.X) > 50 || 
-                        Math.Abs(currentPos.Y - _lastMousePosition.Y) > 50)
+                    // Small threshold — main detection path when VLC HWND eats WPF mouse events
+                    if (Math.Abs(currentPos.X - _lastMousePosition.X) > 5 || 
+                        Math.Abs(currentPos.Y - _lastMousePosition.Y) > 5)
                     {
                         _lastMousePosition = currentPos;
                         ShowControls();
@@ -2636,6 +2847,29 @@ namespace AtlasAI.Controls
             catch
             {
                 // Ignore errors (e.g. if window is closed/minimized)
+            }
+        }
+
+        private bool IsCursorOverPlayerBounds(POINT cursor)
+        {
+            try
+            {
+                if (!IsLoaded)
+                    return false;
+
+                var topLeft = PointToScreen(new Point(0, 0));
+                var bottomRight = PointToScreen(new Point(ActualWidth, ActualHeight));
+
+                var minX = Math.Min(topLeft.X, bottomRight.X);
+                var maxX = Math.Max(topLeft.X, bottomRight.X);
+                var minY = Math.Min(topLeft.Y, bottomRight.Y);
+                var maxY = Math.Max(topLeft.Y, bottomRight.Y);
+
+                return cursor.X >= minX && cursor.X <= maxX && cursor.Y >= minY && cursor.Y <= maxY;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -2710,7 +2944,10 @@ namespace AtlasAI.Controls
 
             if (TopControlBar != null)
             {
-                TopControlBar.Visibility = Visibility.Collapsed;
+                // Use Hidden, not Collapsed: Row 0 is Height="Auto" so Collapsed shrinks it to
+                // 0px, which lets the LibVLC HWND start at y=0 and steal all mouse input from
+                // the external ControlsOverlay buttons (same reason UseExternalControls uses Hidden).
+                TopControlBar.Visibility = Visibility.Hidden;
             }
             
             if (IsFullscreen)
@@ -2733,8 +2970,8 @@ namespace AtlasAI.Controls
                 // System.Diagnostics.Debug.WriteLine("[MediaPlayer] Showing controls");
                 _areControlsHidden = false;
                 
-                // Force visibility to ensure layout updates
-                if (TopControlBar != null) { TopControlBar.Visibility = Visibility.Visible; TopControlBar.Opacity = 1.0; }
+                // TopControlBar is suppressed when an external overlay provides top chrome
+                if (TopControlBar != null && !_useExternalControls) { TopControlBar.Visibility = Visibility.Visible; TopControlBar.Opacity = 1.0; }
                 if (ControlBar != null) { ControlBar.Visibility = Visibility.Visible; ControlBar.Opacity = 1.0; }
                 
                 if (IsFullscreen)

@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, SlidersHorizontal, ArrowUpDown, Grid3x3, List, Maximize2, Sparkles, CheckSquare, Square, Star, X, ChevronDown, BookmarkPlus } from 'lucide-react';
+import { ArrowLeft, Search, SlidersHorizontal, ArrowUpDown, Grid3x3, List, Sparkles, CheckSquare, Square, Star, X, ChevronDown, BookmarkPlus } from 'lucide-react';
 import { ServerCard, MediaItem } from './server-card';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
@@ -178,13 +178,6 @@ export function GridView({ shelfName, items, contentType, onBack, onOpenCarousel
               Create Shelf ({selectedItems.size})
             </button>
           )}
-          <button
-            onClick={onOpenCarousel}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
-          >
-            <Maximize2 size={16} />
-            Open Carousel
-          </button>
         </div>
       </div>
 
@@ -421,7 +414,7 @@ export function GridView({ shelfName, items, contentType, onBack, onOpenCarousel
           {visibleItems.map((item) => (
             <div
               key={item.id}
-              onClick={() => !bulkSelectMode && navigate(`/details/${item.id}`)}
+              onClick={() => !bulkSelectMode && navigate(`/details/${item.id}`, { state: { item } })}
               className="flex items-center gap-4 p-4 rounded-lg bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border border-slate-700/30 hover:border-cyan-500/30 transition-all cursor-pointer"
             >
               {bulkSelectMode && (

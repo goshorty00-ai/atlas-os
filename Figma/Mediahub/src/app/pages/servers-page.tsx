@@ -43,6 +43,14 @@ interface BridgeState {
   mode?: string;
 }
 
+interface ClientShelf {
+  key: string;
+  title: string;
+  originalTitle: string;
+  hidden: boolean;
+  items: MediaItem[];
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function postBridge(msg: object) {
@@ -72,6 +80,9 @@ function mapBridgeItem(item: BridgeShelfItem, serverLabel: string, shelfType?: s
     server: serverLabel,
     rating: item.rating,
     posterUrl: item.poster || item.coverUrl || undefined,
+    backdropUrl: item.backdropUrl || item.backdrop || undefined,
+    genres: item.genres || [],
+    trailerUrl: item.trailerUrl || undefined,
     hasMetadata: true,
     hasArtwork: !!(item.poster || item.coverUrl),
     runtime: item.runtimeMinutes ? `${item.runtimeMinutes}min` : undefined,
@@ -224,16 +235,21 @@ export function ServersPage() {
           // Cache globally so Shelf Creator can read even after message has already fired
           (window as any).__atlasBridgeState = payload;
           setBridgeState((prev) => {
-            // Never replace existing shelf data with fewer shelves — prevents blank flash
-            // during incremental addon rebuilds that fire multiple partial state updates.
-            const prevLen = prev?.shelves?.length ?? 0;
-            const newLen = payload.shelves?.length ?? 0;
-            if (prevLen > 0 && newLen < prevLen) {
-              return { ...payload, shelves: prev!.shelves };
+            const incomingCount = payload.shelves?.length ?? 0;
+            const previousCount = prev?.shelves?.length ?? 0;
+            if (incomingCount > 0) return payload;
+
+            // Ignore transient empty snapshots after we already have shelves.
+            if (previousCount > 0) {
+              return {
+                ...payload,
+                shelves: prev?.shelves ?? [],
+              };
             }
+
             return payload;
           });
-          if ((payload.shelves?.length ?? 0) > 0) hasShelvesRef.current = true;
+          hasShelvesRef.current = (payload.shelves?.length ?? 0) > 0 || hasShelvesRef.current;
         }
       }
     };
@@ -244,8 +260,9 @@ export function ServersPage() {
     };
     window.addEventListener('storage', onStorage);
     (window as any).chrome?.webview?.addEventListener('message', handler);
-    // Seed from global cache immediately (no wait for bridge)
-    const cached = (window as any).__atlasBridgeState as BridgeState | undefined;
+    // Seed from global cache immediately — try window global first, then localStorage
+    const cached: BridgeState | undefined = ((window as any).__atlasBridgeState as BridgeState | undefined) ??
+      (() => { try { const s = localStorage.getItem('atlas-bridge-cache'); return s ? JSON.parse(s) as BridgeState : undefined; } catch { return undefined; } })();
     if (cached?.shelves?.length) {
       setBridgeState(cached);
       hasShelvesRef.current = true;
@@ -278,6 +295,30 @@ export function ServersPage() {
     };
   }, []);
 
+  // Persist bridge state to localStorage so the next app open loads instantly
+  useEffect(() => {
+    if (bridgeState && (bridgeState.shelves?.length ?? 0) > 0) {
+      try { localStorage.setItem('atlas-bridge-cache', JSON.stringify(bridgeState)); } catch { /* quota */ }
+      return;
+    }
+
+    try { localStorage.removeItem('atlas-bridge-cache'); } catch { /* ignore */ }
+  }, [bridgeState]);
+
+  // Save/restore scroll position when navigating to/from details
+  useEffect(() => {
+    const el = document.getElementById('atlas-main-scroll');
+    const saved = sessionStorage.getItem('atlas-servers-scroll');
+    if (saved && el) {
+      el.scrollTop = parseInt(saved, 10);
+      sessionStorage.removeItem('atlas-servers-scroll');
+    }
+    return () => {
+      const cur = document.getElementById('atlas-main-scroll');
+      if (cur) sessionStorage.setItem('atlas-servers-scroll', String(cur.scrollTop));
+    };
+  }, []);
+
   const refreshShelves = useCallback(() => {
     setRefreshing(true);
     postBridge({ type: 'servers.getState' });
@@ -294,30 +335,33 @@ export function ServersPage() {
     try { return JSON.parse(localStorage.getItem('atlas-shelf-order-v2') ?? '[]'); } catch { return []; }
   };
 
-  const bridgeShelves = useMemo(() => {
+  const bridgeShelves = useMemo<ClientShelf[]>(() => {
     if (!bridgeState?.shelves) return [];
     const cfg = getShelfCfg();
     const order = getShelfOrder();
     const withItems = bridgeState.shelves.filter((s) => s.items?.length > 0);
     const mapped = withItems.map((s) => {
-      const c = cfg[s.title] ?? {};
+      const shelfKey = (s.key || s.title).trim();
+      const c = cfg[shelfKey] ?? cfg[s.title] ?? {};
       return {
+        key: shelfKey,
         title: c.displayName && c.displayName !== s.title ? c.displayName : s.title,
         originalTitle: s.title,
         hidden: c.hidden === true,  // only hide if EXPLICITLY set
         items: s.items.map((item) => mapBridgeItem(item, selectedServer, s.type)),
       };
     });
-    // Safety: if more than half the shelves would be hidden, ignore the hidden flags
+    // Safety: only ignore hidden flags if every shelf would become hidden.
+    // Users often intentionally hide most shelves, so keep that valid.
     const hiddenCount = mapped.filter((s) => s.hidden).length;
-    const useHidden = hiddenCount < mapped.length / 2;
+    const useHidden = mapped.length > 0 && hiddenCount < mapped.length;
     let shelves = useHidden ? mapped.filter((s) => !s.hidden) : mapped.map((s) => ({ ...s, hidden: false }));
     // Apply saved order if present
     if (order.length > 0) {
       const orderMap = new Map(order.map((k: string, i: number) => [k, i]));
       shelves = [...shelves].sort((a, b) => {
-        const ai = orderMap.get(a.originalTitle) ?? 9999;
-        const bi = orderMap.get(b.originalTitle) ?? 9999;
+        const ai = Math.min(orderMap.get(a.key) ?? 9999, orderMap.get(a.originalTitle) ?? 9999, orderMap.get(a.title) ?? 9999);
+        const bi = Math.min(orderMap.get(b.key) ?? 9999, orderMap.get(b.originalTitle) ?? 9999, orderMap.get(b.title) ?? 9999);
         return ai - bi;
       });
     }
@@ -378,23 +422,24 @@ export function ServersPage() {
     return () => { if (autoRotateRef.current) clearInterval(autoRotateRef.current); };
   }, [startAutoRotate]);
 
-  const openCarousel = (name: string, items: MediaItem[]) => {
-    const allItems = bridgeShelves.find((s) => s.title === name)?.items ?? items;
-    setCurrentShelf({ name, items: allItems });
+  const openCarousel = (shelfKey: string, fallbackName: string, items: MediaItem[]) => {
+    const shelf = bridgeShelves.find((s) => s.key === shelfKey);
+    const allItems = shelf?.items ?? items;
+    setCurrentShelf({ name: shelf?.title ?? fallbackName, items: allItems });
     setCarouselOpen(true);
   };
-  const openGrid = (name: string) => {
-    const shelf = bridgeShelves.find((s) => s.title === name);
+  const openGrid = (shelfKey: string) => {
+    const shelf = bridgeShelves.find((s) => s.key === shelfKey);
     const allItems = shelf?.items ?? [];
-    const origTitle = (shelf as any)?.originalTitle ?? name;
-    const ct = bridgeState?.shelves?.find((s) => s.title === origTitle)?.type ?? 'movie';
-    setCurrentShelf({ name, items: allItems, contentType: ct });
+    const origTitle = shelf?.originalTitle ?? '';
+    const ct = bridgeState?.shelves?.find((s) => ((s.key || s.title).trim() === shelfKey) || s.title === origTitle)?.type ?? 'movie';
+    setCurrentShelf({ name: shelf?.title ?? origTitle, items: allItems, contentType: ct });
     setViewState('grid');
   };
 
   const filteredShelves = useMemo(() => {
     let shelves = bridgeShelves;
-    if (shelfFilter) shelves = shelves.filter((s) => s.title === shelfFilter);
+    if (shelfFilter) shelves = shelves.filter((s) => s.key === shelfFilter);
     return shelves.map((s) => {
       let items = s.items;
       if (typeFilter === 'Movies') items = items.filter((i) => i.type === 'Movie');
@@ -406,7 +451,7 @@ export function ServersPage() {
   // When new state arrives while grid is open, update items so infinite scroll sees the new batch
   useEffect(() => {
     if (viewState === 'grid' && currentShelf) {
-      const updated = bridgeShelves.find((s) => s.title === currentShelf.name || (s as any).originalTitle === currentShelf.name)?.items;
+      const updated = bridgeShelves.find((s) => s.title === currentShelf.name || s.originalTitle === currentShelf.name)?.items;
       if (updated && updated.length !== currentShelf.items.length) {
         setCurrentShelf((prev) => prev ? { ...prev, items: updated } : prev);
       }
@@ -533,9 +578,9 @@ export function ServersPage() {
                 </button>
                 {bridgeShelves.map((s) => (
                   <button
-                    key={s.title}
-                    onClick={() => { setShelfFilter(s.title); setShelfDropOpen(false); }}
-                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${shelfFilter === s.title ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300 hover:bg-slate-800'}`}
+                    key={s.key}
+                    onClick={() => { setShelfFilter(s.key); setShelfDropOpen(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${shelfFilter === s.key ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300 hover:bg-slate-800'}`}
                   >
                     {s.title}
                   </button>
@@ -548,12 +593,12 @@ export function ServersPage() {
         {/* Shelves */}
         {filteredShelves.map((shelf) => (
           <ServerShelf
-            key={shelf.title}
+            key={shelf.key}
             title={shelf.title}
             items={shelf.items}
             count={shelf.items.length}
-            onViewAll={() => openGrid(shelf.title)}
-            onOpenCarousel={() => openCarousel(shelf.title, shelf.items)}
+            onViewAll={() => openGrid(shelf.key)}
+            onOpenCarousel={() => openCarousel(shelf.key, shelf.title, shelf.items)}
           />
         ))}
 
@@ -565,7 +610,7 @@ export function ServersPage() {
             items={shelf.items}
             count={shelf.items.length}
             onViewAll={() => { setCurrentShelf({ name: shelf.title, items: shelf.items }); setViewState('grid'); }}
-            onOpenCarousel={() => openCarousel(shelf.title, shelf.items)}
+            onOpenCarousel={() => openCarousel('custom::' + shelf.title, shelf.title, shelf.items)}
           />
         ))}
       </div>

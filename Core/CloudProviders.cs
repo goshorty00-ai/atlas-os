@@ -80,6 +80,20 @@ namespace AtlasAI.Core
         void DeleteSecret(string key);
     }
 
+    public sealed class InMemorySecretsStore : ISecretsStore
+    {
+        private readonly System.Collections.Generic.Dictionary<string, string> _store = new(StringComparer.OrdinalIgnoreCase);
+
+        public InMemorySecretsStore(string key, string value)
+        {
+            _store[key] = value;
+        }
+
+        public string? GetSecret(string k) => _store.TryGetValue(k, out var v) ? v : null;
+        public void SetSecret(string k, string plaintext) => _store[k] = plaintext;
+        public void DeleteSecret(string k) => _store.Remove(k);
+    }
+
     public sealed class DpapiFileSecretsStore : ISecretsStore
     {
         public string? GetSecret(string key)

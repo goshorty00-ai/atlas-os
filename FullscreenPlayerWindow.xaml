@@ -12,64 +12,138 @@
         ResizeMode="NoResize"
         WindowState="Maximized"
         ShowInTaskbar="True"
-        KeyDown="Window_KeyDown">
+        KeyDown="Window_KeyDown"
+        MouseMove="Window_MouseMove">
 
-    <Border Background="#0A0E14"
-            BorderBrush="#40CC0000"
-            BorderThickness="1"
-            CornerRadius="0"
-            Margin="0"
-            ClipToBounds="True">
-        <Grid>
-            <controls:MediaPlayerControl x:Name="PlayerControl" />
+    <Grid x:Name="RootGrid">
 
-            <Border Height="40"
-                    VerticalAlignment="Top"
-                    Background="#66000000"
-                    MouseLeftButtonDown="TopBar_MouseLeftButtonDown"
-                    Panel.ZIndex="5000">
+        <!-- Video player fills entire window -->
+        <controls:MediaPlayerControl x:Name="PlayerControl" />
+
+        <!-- Auto-hiding controls overlay — shown on mouse activity, fades after inactivity -->
+        <Grid x:Name="ControlsOverlay" Panel.ZIndex="5000">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="56"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top bar: back button + title -->
+                <Border Grid.Row="0"
+                    Background="#BB000000"
+                    IsHitTestVisible="True"
+                    MouseLeftButtonDown="TopBar_MouseLeftButtonDown">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="PLAYER"
+                    <!-- Back to Atlas button -->
+                    <Button Grid.Column="0"
+                            x:Name="BackButton"
+                            Click="BackButton_Click"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Padding="14,0,14,0"
+                            Height="56"
+                            ToolTip="Back to Atlas">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x2190;"
+                                       Foreground="White"
+                                       FontSize="18"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,6,0"/>
+                            <TextBlock Text="Atlas"
+                                       Foreground="White"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Opacity="0.85"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Now-playing title -->
+                    <TextBlock Grid.Column="1"
+                               x:Name="NowPlayingLabel"
+                               Text="Now Playing"
                                Foreground="White"
-                               FontSize="11"
+                               FontSize="13"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Margin="12,0,0,0"
-                               Opacity="0.75"/>
+                               HorizontalAlignment="Center"
+                               Opacity="0.75"
+                               TextTrimming="CharacterEllipsis"/>
 
-                    <Button Grid.Column="1"
+                    <!-- Minimize -->
+                    <Button Grid.Column="2"
                             Click="MinimizeButton_Click"
                             Background="Transparent"
                             BorderThickness="0"
-                            Width="40"
-                            Height="40">
-                        <TextBlock Text="—"
+                            Width="46"
+                            Height="56"
+                            Cursor="Hand">
+                        <TextBlock Text="&#x2014;"
                                    Foreground="White"
                                    FontSize="14"
                                    VerticalAlignment="Center"
                                    HorizontalAlignment="Center"/>
                     </Button>
 
-                    <Button Grid.Column="2"
+                    <!-- Close -->
+                    <Button Grid.Column="3"
                             Click="CloseButton_Click"
                             Background="Transparent"
                             BorderThickness="0"
-                            Width="40"
-                            Height="40">
-                        <TextBlock Text="✕"
+                            Width="46"
+                            Height="56"
+                            Cursor="Hand">
+                        <TextBlock Text="&#x2715;"
                                    Foreground="White"
-                                   FontSize="12"
+                                   FontSize="13"
                                    VerticalAlignment="Center"
                                    HorizontalAlignment="Center"/>
                     </Button>
                 </Grid>
             </Border>
+
+            <!-- Middle click-through area -->
+            <Grid Grid.Row="1" Background="Transparent" IsHitTestVisible="False"/>
+
         </Grid>
-    </Border>
+
+        <!-- PiP mini-bar: shown when picture-in-picture mode is active -->
+        <Grid x:Name="PipBar" Panel.ZIndex="6000" Visibility="Collapsed" VerticalAlignment="Bottom">
+            <Border Background="#CC000000" Height="36">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="PipTitleLabel" Grid.Column="0"
+                               Text="Now Playing"
+                               Foreground="White" FontSize="10"
+                               VerticalAlignment="Center" Margin="8,0"
+                               TextTrimming="CharacterEllipsis" Opacity="0.8"/>
+                    <Button Grid.Column="1" Click="PipRestoreButton_Click"
+                            Background="Transparent" BorderThickness="0"
+                            Width="36" Height="36" Cursor="Hand" ToolTip="Restore fullscreen">
+                        <TextBlock Text="&#x26F6;" Foreground="White" FontSize="11"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Grid.Column="2" Click="CloseButton_Click"
+                            Background="Transparent" BorderThickness="0"
+                            Width="36" Height="36" Cursor="Hand" ToolTip="Close">
+                        <TextBlock Text="&#x2715;" Foreground="White" FontSize="11"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+
+    </Grid>
 </Window>

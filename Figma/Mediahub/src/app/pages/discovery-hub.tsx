@@ -1,8 +1,62 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search, Sparkles, TrendingUp, TrendingDown, Minus, Film, Tv, Gamepad2,
-  Music, User, Play, Plus, Bell, RefreshCw, Clock, Target, AlertTriangle, Info, ChevronLeft, ChevronRight
+  Music, User, Play, Plus, Bell, RefreshCw, Clock, Target, AlertTriangle, Info, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
+
+const YT_API_KEY = (window as any).__ATLAS_YT_KEY ?? import.meta.env.VITE_YT_API_KEY ?? '';
+
+function extractYouTubeVideoId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]{11})/);
+  return m ? m[1] : null;
+}
+
+async function fetchYouTubeVideoId(title: string, type: string): Promise<string | null> {
+  const query = encodeURIComponent(`${title} ${type === 'TV' ? 'series' : type === 'Game' ? 'gameplay' : 'movie'} official trailer`);
+  // Try YouTube Data API if key is set
+  if (YT_API_KEY) {
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${YT_API_KEY}&maxResults=1`
+      );
+      const data = await res.json();
+      const id = data?.items?.[0]?.id?.videoId;
+      if (id) return id;
+    } catch { /* fall through to Invidious */ }
+  }
+  // Fallback: Invidious API (no key required, CORS-enabled)
+  for (const base of ['https://inv.riverside.rocks', 'https://yewtu.be']) {
+    try {
+      const res = await fetch(`${base}/api/v1/search?q=${query}&type=video&fields=videoId`, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data) && data[0]?.videoId) return data[0].videoId as string;
+    } catch { continue; }
+  }
+  return null;
+}
+
+function TrailerModal({ videoId, title, onClose }: { videoId: string; title: string; onClose: () => void }) {
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="relative w-[860px] max-w-[92vw] rounded-xl overflow-hidden shadow-2xl border border-slate-700/60"
+        style={{ aspectRatio: '16/9' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe src={embedUrl} title={`${title} Trailer`} className="w-full h-full"
+          allow="autoplay; encrypted-media; fullscreen" allowFullScreen />
+        <button onClick={onClose}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white border border-white/20">
+          <X size={16} />
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 type HeroCategory = 'Movie' | 'TV' | 'Music' | 'Game' | 'News';
 
@@ -527,6 +581,7 @@ export function DiscoveryHub() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [infoItem, setInfoItem] = useState<HeroItem | null>(null);
+  const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
 
   const postToHost = (message: unknown) => {
     try {
@@ -693,14 +748,15 @@ export function DiscoveryHub() {
     postToHost({ type: 'discovery.getData' });
   };
 
-  const openHeroTrailer = (item: HeroItem) => {
-    const url = resolveTrailerUrl(item);
-    if (!url)
-      return;
-    logDiscovery(`[DiscoveryHeroData] frontend.openTrailer id=${item.id} category=${item.category} hasUrl=true`);
-    logDiscovery(`[DiscoveryMovieTv] trailer.click url=${url}`);
-    postToHost({ type: 'mediahub.openTrailerUrl', payload: { url } });
-    logDiscovery('[DiscoveryMovieTv] trailer.openAtlasBrowser success=true');
+  const openHeroTrailer = async (item: HeroItem) => {
+    // 1. Try direct trailerUrl (TMDB provides youtube.com/watch?v= URLs)
+    if (item.trailerUrl) {
+      const videoId = extractYouTubeVideoId(item.trailerUrl);
+      if (videoId) { setTrailerVideoId(videoId); return; }
+    }
+    // 2. Search YouTube by title
+    const videoId = await fetchYouTubeVideoId(item.title, item.category);
+    if (videoId) setTrailerVideoId(videoId);
   };
 
   const openHeroInfo = (item: HeroItem) => {
@@ -1438,6 +1494,9 @@ export function DiscoveryHub() {
           </div>
         </div>
       ) : null}
+    {trailerVideoId && (
+      <TrailerModal videoId={trailerVideoId} title={heroItems[heroIndex]?.title ?? ''} onClose={() => setTrailerVideoId(null)} />
+    )}
     </div>
   );
 }

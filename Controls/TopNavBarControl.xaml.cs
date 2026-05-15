@@ -845,6 +845,11 @@ namespace AtlasAI.Controls
             }
         }
 
+        private void NowPlayingBtn_Click(object sender, RoutedEventArgs e)
+        {
+            AtlasAI.Views.ViewModels.MediaCentreViewModel.Instance?.RestoreVideoPlayerWindow();
+        }
+
         private void Unload_Click(object sender, RoutedEventArgs e)
         {
             try { UnloadRequested?.Invoke(this, EventArgs.Empty); } catch { }

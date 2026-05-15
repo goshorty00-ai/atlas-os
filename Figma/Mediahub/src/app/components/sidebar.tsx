@@ -26,14 +26,19 @@ const navItems: NavItem[] = [
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  immersive?: boolean;
+}
+
+export function Sidebar({ immersive = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // immersive=true: fully hidden (w-0); collapsed=true: icon-only (w-16); else: full (w-56)
+  const widthClass = immersive ? 'w-0' : collapsed ? 'w-16' : 'w-56';
 
   return (
     <div
-      className={`h-full bg-gradient-to-b from-slate-950/95 to-slate-900/95 backdrop-blur-xl border-r border-cyan-500/20 overflow-hidden transition-[width] duration-300 ${
-        collapsed ? 'w-16' : 'w-56'
-      }`}
+      className={`h-full bg-gradient-to-b from-slate-950/95 to-slate-900/95 backdrop-blur-xl border-r border-cyan-500/20 overflow-hidden transition-[width] duration-300 ${widthClass}`}
       style={{
         background: 'linear-gradient(to bottom, rgba(2, 6, 23, 0.95), rgba(15, 23, 42, 0.95))',
         backdropFilter: 'blur(20px)',

@@ -239,6 +239,15 @@ namespace AtlasAI {
  base.OnStartup(e);
  InitializeServices();
 
+ // Silently register file associations (Atlas Media Player for video, Atlas Music for audio)
+ try
+ {
+     var exePath = GetExecutablePath();
+     if (!string.IsNullOrWhiteSpace(exePath))
+         WindowsShellIntegration.Register(exePath);
+ }
+ catch { }
+
  // Ensure the wake word event hub is initialized for the app lifetime.
  // Without this, WakeWordService events never get broadcast to the orchestrator/UI.
  try
@@ -1125,7 +1134,7 @@ namespace AtlasAI {
 					 {
 						 Current?.Dispatcher?.BeginInvoke(new Action(() =>
 						 {
-							 // try { vm.PlayExternalUrlOrPath(pathOrUrl); } catch { }
+							 try { vm.PlayMediaFile(pathOrUrl); } catch { }
 						 }), DispatcherPriority.Background);
 					 }
 					 catch

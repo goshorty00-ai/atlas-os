@@ -5,6 +5,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 
 export interface MediaItem {
   id: string;
+  imdbId?: string;
   title: string;
   year: string;
   type: 'Movie' | 'TV' | 'Music Video' | 'Game';
@@ -12,6 +13,9 @@ export interface MediaItem {
   rating?: number;
   quality?: string;
   posterUrl?: string;
+  backdropUrl?: string;
+  genres?: string[];
+  trailerUrl?: string;
   hasMetadata: boolean;
   hasArtwork: boolean;
   runtime?: string;
@@ -31,28 +35,23 @@ export function ServerCard({ item, onPlay, onTrailer, className }: ServerCardPro
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/details/${item.id}`);
+    navigate(`/details/${item.id}`, { state: { item } });
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative flex-shrink-0 w-[230px] cursor-pointer${className ? ' ' + className : ''}`}
+      className={`group relative flex-shrink-0 w-[185px] cursor-pointer${className ? ' ' + className : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[3/4] bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden ring-[1.5px] ring-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.18)] group-hover:ring-cyan-400/90 group-hover:shadow-[0_0_22px_rgba(34,211,238,0.5)] transition-all duration-300">
-        {item.posterUrl ? (
-          <ImageWithFallback
-            src={item.posterUrl}
-            alt={item.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-600 text-xs">
-            {item.title}
-          </div>
-        )}
+      <div className="relative aspect-[2/3] bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden ring-[1.5px] ring-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.18)] group-hover:ring-cyan-400/90 group-hover:shadow-[0_0_22px_rgba(34,211,238,0.5)] transition-all duration-300">
+        <ImageWithFallback
+          src={item.posterUrl || `https://images.metahub.space/poster/medium/${item.imdbId ?? item.id}/img`}
+          alt={item.title}
+          className="w-full h-full object-contain"
+          mediaType={item.type === 'Movie' ? 'movie' : item.type === 'TV' ? 'series' : 'both'}
+        />
 
         {/* Quality badge */}
         {item.quality && (
@@ -74,7 +73,7 @@ export function ServerCard({ item, onPlay, onTrailer, className }: ServerCardPro
             onClick={(e) => {
               e.stopPropagation();
               if (onPlay) onPlay();
-              else navigate(`/details/${item.id}`);
+              else navigate(`/details/${item.id}`, { state: { item } });
             }}
             className="absolute inset-0 m-auto w-10 h-10 rounded-full bg-cyan-500/90 hover:bg-cyan-400 text-white flex items-center justify-center shadow-lg backdrop-blur-sm"
           >

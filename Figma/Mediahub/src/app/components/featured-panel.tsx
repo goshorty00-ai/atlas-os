@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
-// YouTube Data API key — must be set via VITE_YT_API_KEY in .env.local (never hardcode)
-const YT_API_KEY = import.meta.env.VITE_YT_API_KEY ?? '';
+// YouTube Data API key — injected at runtime by Atlas via window.__ATLAS_YT_KEY (falls back to .env.local for dev)
+const YT_API_KEY = (window as any).__ATLAS_YT_KEY ?? import.meta.env.VITE_YT_API_KEY ?? '';
 
 function extractYouTubeVideoId(url: string): string | null {
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]{11})/);
@@ -104,11 +104,11 @@ export function FeaturedPanel({ item }: { item: FeaturedItem }) {
   const PrimaryIcon = primary === 'Play' ? Play : primary === 'Add Reminder' ? Bell : Plus;
 
   const handleDetailsClick = () => {
-    navigate(`/details/${item.id || 'dune-part-two'}`);
+    navigate(`/details/${item.id || item.imdbId || 'unknown'}`, { state: { item: { id: item.id ?? item.imdbId ?? '', imdbId: item.imdbId, title: item.title, type: item.type ?? 'Movie', year: item.release ?? '', posterUrl: undefined, backdropUrl: item.backdropUrl, genres: item.genres, trailerUrl: item.trailerUrl, description: item.description, rating: item.rating, server: item.source, hasMetadata: true, hasArtwork: !!item.backdropUrl } } });
   };
 
   const handleTitleClick = () => {
-    navigate(`/details/${item.id || 'dune-part-two'}`);
+    navigate(`/details/${item.id || item.imdbId || 'unknown'}`, { state: { item: { id: item.id ?? item.imdbId ?? '', imdbId: item.imdbId, title: item.title, type: item.type ?? 'Movie', year: item.release ?? '', posterUrl: undefined, backdropUrl: item.backdropUrl, genres: item.genres, trailerUrl: item.trailerUrl, description: item.description, rating: item.rating, server: item.source, hasMetadata: true, hasArtwork: !!item.backdropUrl } } });
   };
 
   const handleTrailerClick = async (e: React.MouseEvent) => {
@@ -177,7 +177,7 @@ export function FeaturedPanel({ item }: { item: FeaturedItem }) {
           </div>
           <p className="text-slate-300/90 text-xs mt-2.5 line-clamp-2 max-w-[520px]">{item.description}</p>
           <div className="flex items-center gap-2 mt-3">
-            <button onClick={(e) => e.stopPropagation()} className="px-3 py-1.5 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/30">
+            <button onClick={(e) => { e.stopPropagation(); handleDetailsClick(); }} className="px-3 py-1.5 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/30">
               <PrimaryIcon size={12} fill={primary === 'Play' ? 'currentColor' : undefined} /> {primary}
             </button>
             <button

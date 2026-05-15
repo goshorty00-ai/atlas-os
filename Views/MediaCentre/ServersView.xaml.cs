@@ -114,8 +114,12 @@ namespace AtlasAI.Views.MediaCentre
         private DateTime _lastStatePostUtc = DateTime.MinValue;
         private DateTime _lastAutoLoadUtc = DateTime.MinValue;
         private DateTime _lastReloadAddonServersUtc = DateTime.MinValue;
+        private DateTime _lastBridgePlaySourceUtc = DateTime.MinValue;
+        private DateTime _lastBridgeOpenDetailUtc = DateTime.MinValue;
         private string? _lastPostedStateMessage;
         private string? _lastPostedStreamsMessage;
+        private string? _lastBridgePlaySourceKey;
+        private string? _lastBridgeOpenDetailKey;
         private string? _lastNavigatedServersUri;
         private string _selectedServerView = string.Empty;
         private bool _mediaHubDistMissingNotified;
@@ -1638,6 +1642,7 @@ namespace AtlasAI.Views.MediaCentre
 
             return candidates
                 .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(GetNewestDistWriteTicks)
                 .FirstOrDefault();
         }
 
@@ -1673,6 +1678,43 @@ namespace AtlasAI.Views.MediaCentre
                 catch { }
 
                 // Keep the bundle's own routing. We only sync state via postMessage.
+
+                // Inject YouTube API key securely — key is stored DPAPI-encrypted in IntegrationKeyStore,
+                // never baked into the JS bundle. Migrate from .env.local on first run if not yet stored.
+                try
+                {
+                    var ytKey = AtlasAI.Core.IntegrationKeyStore.GetDecrypted("youtube_api_key");
+                    if (string.IsNullOrWhiteSpace(ytKey))
+                    {
+                        // One-time migration: read from .env.local in the dev project tree
+                        var envLocal = System.IO.Path.GetFullPath(
+                            System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Figma", "Mediahub", ".env.local"));
+                        if (System.IO.File.Exists(envLocal))
+                        {
+                            foreach (var line in System.IO.File.ReadAllLines(envLocal))
+                            {
+                                if (line.StartsWith("VITE_YT_API_KEY=", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var migrated = line.Substring("VITE_YT_API_KEY=".Length).Trim();
+                                    if (!string.IsNullOrWhiteSpace(migrated))
+                                    {
+                                        AtlasAI.Core.IntegrationKeyStore.SetProtected("youtube_api_key", migrated);
+                                        ytKey = migrated;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(ytKey) && ServersFigmaWebView?.CoreWebView2 != null)
+                    {
+                        var safeKey = System.Text.Json.JsonSerializer.Serialize(ytKey); // produces a quoted, escaped JSON string
+                        await ServersFigmaWebView.CoreWebView2.ExecuteScriptAsync($"window.__ATLAS_YT_KEY = {safeKey};");
+                    }
+                }
+                catch { }
+
                 await ApplyServersChromePatchAsync();
                 SchedulePostState();
                 // After a short delay, send the current chrome collapsed state so React's
@@ -1987,13 +2029,23 @@ namespace AtlasAI.Views.MediaCentre
                         // Force re-send even if payload hasn't changed — the React page just mounted
                         // and needs the state delivered fresh (dedup would otherwise swallow it).
                         _lastPostedStateMessage = null;
-                        // Only reload addon servers on mount (servers.ready) or after a 30s cooldown.
-                        // Reloading on every poll cancels BuildServerShelvesAsync (via RebuildServerShelves)
-                        // so streaming catalog addons (Netflix, Prime, Marvel) never finish building.
+                        // Only reload addon servers when the server list appears uninitialized.
+                        // Avoid reloading on bridge poll/mount messages because that can retrigger
+                        // long catalog rebuilds and temporarily reset shelves back to loading.
                         try
                         {
-                            if (string.Equals(type, "servers.ready", StringComparison.OrdinalIgnoreCase) ||
-                                (DateTime.UtcNow - _lastReloadAddonServersUtc).TotalSeconds > 30)
+                            var shouldReload = false;
+                            if (string.Equals(type, "servers.ready", StringComparison.OrdinalIgnoreCase) && _viewModel != null)
+                            {
+                                var optionCount = 0;
+                                try { optionCount = _viewModel.AddonServerOptions?.Count ?? 0; } catch { optionCount = 0; }
+                                var shelfCount = 0;
+                                try { shelfCount = _viewModel.ServerShelves?.Count ?? 0; } catch { shelfCount = 0; }
+                                var sinceLastReload = DateTime.UtcNow - _lastReloadAddonServersUtc;
+                                shouldReload = optionCount <= 1 && shelfCount <= 0 && sinceLastReload > TimeSpan.FromSeconds(30);
+                            }
+
+                            if (shouldReload)
                             {
                                 _lastReloadAddonServersUtc = DateTime.UtcNow;
                                 _viewModel?.ReloadAddonServersFromStore();
@@ -2019,15 +2071,127 @@ namespace AtlasAI.Views.MediaCentre
                         try
                         {
                             var sourceId = payload.TryGetProperty("sourceId", out var sourceIdEl) && sourceIdEl.ValueKind == JsonValueKind.String ? (sourceIdEl.GetString() ?? "").Trim() : "";
+                            var directUrl = payload.TryGetProperty("urlOrPath", out var urlEl) && urlEl.ValueKind == JsonValueKind.String ? (urlEl.GetString() ?? "").Trim() : "";
+                            var directName = payload.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String ? (nameEl.GetString() ?? "").Trim() : "Source";
+
+                            var dedupeKey = (!string.IsNullOrWhiteSpace(sourceId) ? sourceId : directUrl).Trim();
+                            if (!string.IsNullOrWhiteSpace(dedupeKey))
+                            {
+                                var nowUtc = DateTime.UtcNow;
+                                var duplicateWindow = nowUtc - _lastBridgePlaySourceUtc;
+                                if (string.Equals(_lastBridgePlaySourceKey, dedupeKey, StringComparison.OrdinalIgnoreCase) && duplicateWindow < TimeSpan.FromMilliseconds(1500))
+                                {
+                                    try { AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] duplicate playSource ignored key={dedupeKey} dtMs={(int)duplicateWindow.TotalMilliseconds}"); } catch { }
+                                    break;
+                                }
+                            }
+
                             var vm = _viewModel;
-                            if (vm == null || string.IsNullOrWhiteSpace(sourceId)) break;
-                            var source = ResolvePlaySource(vm, sourceId);
-                            if (source != null && vm.PlayStreamSourceCommand?.CanExecute(source) == true)
-                                vm.PlayStreamSourceCommand.Execute(source);
+                            if (vm == null) break;
+
+                            if (vm.IsStreamsBusy)
+                            {
+                                try { AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] playSource ignored while streams busy sourceId={sourceId} url={(string.IsNullOrWhiteSpace(directUrl) ? "" : "present")}"); } catch { }
+                                break;
+                            }
+
+                            AtlasAI.Streaming.AddonSource? source = null;
+                            try
+                            {
+                                source = string.IsNullOrWhiteSpace(sourceId) ? null : ResolvePlaySource(vm, sourceId);
+                            }
+                            catch (Exception resolveEx)
+                            {
+                                try { AtlasAI.Core.AppLogger.LogError($"[BridgePlay] ResolvePlaySource failed sourceId={sourceId}: {resolveEx.Message}"); } catch { }
+                            }
+
+                            var playAttempted = false;
+                            if (source is not null)
+                            {
+                                try
+                                {
+                                    vm.PlayStreamSourceFromBridge(source);
+                                    playAttempted = true;
+                                }
+                                catch (Exception bridgeEx)
+                                {
+                                    try { AtlasAI.Core.AppLogger.LogError($"[BridgePlay] PlayStreamSourceFromBridge failed sourceId={sourceId}: {bridgeEx.Message}"); } catch { }
+                                }
+                            }
+
+                            if (!playAttempted && !string.IsNullOrWhiteSpace(directUrl))
+                            {
+                                try
+                                {
+                                    vm.PlayMediaFile(directUrl);
+                                    playAttempted = true;
+                                }
+                                catch (Exception directEx)
+                                {
+                                    try { AtlasAI.Core.AppLogger.LogError($"[BridgePlay] PlayMediaFile fallback failed: {directEx.Message}"); } catch { }
+                                }
+                            }
+
+                            try
+                            {
+                                AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] playSource requested sourceId={sourceId} resolved={(source is not null)} directUrl={!string.IsNullOrWhiteSpace(directUrl)} attempted={playAttempted} name={directName}");
+                            }
+                            catch
+                            {
+                            }
+
+                            if (playAttempted)
+                            {
+                                _lastBridgePlaySourceKey = dedupeKey;
+                                _lastBridgePlaySourceUtc = DateTime.UtcNow;
+                            }
+
                             SchedulePostState();
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            try { AtlasAI.Core.AppLogger.LogError($"[BridgePlay] playSource handler error: {ex.Message}"); } catch { }
+                        }
+                        break;
+                    case "servers.copyLink":
+                        try
+                        {
+                            var text = payload.TryGetProperty("text", out var copyTextEl) && copyTextEl.ValueKind == JsonValueKind.String ? (copyTextEl.GetString() ?? "").Trim() : "";
+                            var sourceId = payload.TryGetProperty("sourceId", out var sidEl) && sidEl.ValueKind == JsonValueKind.String ? (sidEl.GetString() ?? "").Trim() : "";
+
+                            if (string.IsNullOrWhiteSpace(text) && !string.IsNullOrWhiteSpace(sourceId) && _viewModel != null)
+                            {
+                                var source = ResolvePlaySource(_viewModel, sourceId);
+                                text = (source?.UrlOrPath ?? "").Trim();
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(text))
+                            {
+                                Dispatcher.BeginInvoke(new Action(() =>
+                                {
+                                    for (var attempt = 0; attempt < 3; attempt++)
+                                    {
+                                        try
+                                        {
+                                            System.Windows.Clipboard.SetText(text);
+                                            System.Windows.Clipboard.Flush();
+                                            AtlasAI.Core.AppLogger.LogInfo($"[BridgeClipboard] copied ok len={text.Length}");
+                                            break;
+                                        }
+                                        catch (Exception clipEx)
+                                        {
+                                            AtlasAI.Core.AppLogger.LogError($"[BridgeClipboard] SetText failed attempt={attempt + 1}: {clipEx.Message}");
+                                            if (attempt >= 2)
+                                                break;
+                                            try { System.Threading.Thread.Sleep(30); } catch { }
+                                        }
+                                    }
+                                }));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            try { AtlasAI.Core.AppLogger.LogError($"[BridgeClipboard] outer error: {ex.Message}"); } catch { }
                         }
                         break;
                     case "servers.ai.query":
@@ -2453,6 +2617,41 @@ namespace AtlasAI.Views.MediaCentre
                         {
                         }
                         break;
+                    case "servers.playItem":
+                        try
+                        {
+                            var itemId = payload.TryGetProperty("id", out var piEl) && piEl.ValueKind == JsonValueKind.String ? (piEl.GetString() ?? "").Trim() : "";
+                            var mediaType = payload.TryGetProperty("mediaType", out var mtEl) && mtEl.ValueKind == JsonValueKind.String ? (mtEl.GetString() ?? "").Trim() : "";
+                            var vm = _viewModel;
+                            if (vm == null || string.IsNullOrWhiteSpace(itemId)) break;
+
+                            // If the id matches a loaded episode, load streams for that episode directly.
+                            var episode = vm.VisibleServerSeriesEpisodes.FirstOrDefault(e =>
+                                string.Equals((e.MetaId ?? e.FilePath ?? "").Trim(), itemId, StringComparison.OrdinalIgnoreCase));
+                            if (episode != null)
+                            {
+                                vm.LoadStreamsForBridge(episode);
+                            }
+                            else
+                            {
+                                var item = ResolveServerItem(vm, payload, itemId);
+                                if (item == null) break;
+                                var isSeries = string.Equals(item.Type, "series", StringComparison.OrdinalIgnoreCase) ||
+                                               string.Equals(item.Type, "tv", StringComparison.OrdinalIgnoreCase) ||
+                                               string.Equals(mediaType, "series", StringComparison.OrdinalIgnoreCase) ||
+                                               string.Equals(mediaType, "tv", StringComparison.OrdinalIgnoreCase);
+                                if (isSeries)
+                                    vm.LoadServerSeriesForBridge(item);
+                                else
+                                    vm.LoadStreamsForBridge(item);
+                            }
+
+                            SchedulePostState();
+                        }
+                        catch
+                        {
+                        }
+                        break;
                     case "servers.local.playMovie":
                         try
                         {
@@ -2549,11 +2748,32 @@ namespace AtlasAI.Views.MediaCentre
                     case "servers.openDetail":
                         try
                         {
+                            // React remounts the detail page and resets its local streams state
+                            // (streamsLoading=true, streams=[]) before re-sending this message.
+                            // Clear the streams dedup cache so PostStreamsState always re-sends the
+                            // cached sources to React instead of silently skipping the identical message.
+                            _lastPostedStreamsMessage = null;
+
                             var shelfKey = payload.TryGetProperty("key", out var skEl) ? (skEl.GetString() ?? "").Trim() : "";
                             var metaId = payload.TryGetProperty("metaId", out var idEl) ? (idEl.GetString() ?? "").Trim() : "";
                             if (string.IsNullOrWhiteSpace(metaId)) break;
                             var vm = _viewModel;
                             if (vm == null) break;
+
+                            var openDetailKey = $"{shelfKey}::{metaId}".Trim();
+                            if (!string.IsNullOrWhiteSpace(openDetailKey))
+                            {
+                                var dt = DateTime.UtcNow - _lastBridgeOpenDetailUtc;
+                                if (string.Equals(_lastBridgeOpenDetailKey, openDetailKey, StringComparison.OrdinalIgnoreCase) && dt < TimeSpan.FromSeconds(5))
+                                {
+                                    if (vm.IsStreamsBusy || vm.StreamSources.Count > 0)
+                                    {
+                                        try { AtlasAI.Core.AppLogger.LogInfo($"[BridgeStreams] duplicate openDetail ignored key={openDetailKey} dtMs={(int)dt.TotalMilliseconds} busy={vm.IsStreamsBusy} sources={vm.StreamSources.Count}"); } catch { }
+                                        SchedulePostState();
+                                        break;
+                                    }
+                                }
+                            }
 
                             // Close any existing native panels — React handles the detail view.
                             if (vm.CloseStreamsCommand?.CanExecute(null) == true)
@@ -2568,6 +2788,9 @@ namespace AtlasAI.Views.MediaCentre
                             if (item != null)
                             {
                                 vm.SetPreviewItem(item);
+
+                                _lastBridgeOpenDetailKey = openDetailKey;
+                                _lastBridgeOpenDetailUtc = DateTime.UtcNow;
 
                                 var itemType = (item.Type ?? "").Trim();
                                 var isSeries = string.Equals(itemType, "series", StringComparison.OrdinalIgnoreCase) ||
@@ -2653,6 +2876,43 @@ namespace AtlasAI.Views.MediaCentre
                                     catch { }
                                 });
                             }
+                        }
+                        catch { }
+                        break;
+                    case "servers.openLocalFile":
+                        // Open a local media file via Windows file picker and play it
+                        try
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                try
+                                {
+                                    var dlg = new Microsoft.Win32.OpenFileDialog
+                                    {
+                                        Title = "Open Media File",
+                                        Filter = "Media Files|*.mp4;*.mkv;*.avi;*.mov;*.wmv;*.webm;*.m4v;*.flv;*.ts;*.m2ts;*.mpg;*.mpeg;*.mp3;*.flac;*.wav;*.m4a;*.aac;*.ogg;*.opus;*.wma|All Files|*.*",
+                                        Multiselect = false
+                                    };
+                                    if (dlg.ShowDialog() == true && !string.IsNullOrWhiteSpace(dlg.FileName))
+                                    {
+                                        var vm = _viewModel;
+                                        if (vm != null) vm.PlayMediaFile(dlg.FileName);
+                                    }
+                                }
+                                catch (Exception ex) { AtlasAI.Core.AppLogger.LogError($"[OpenLocalFile] {ex.Message}"); }
+                            });
+                        }
+                        catch { }
+                        break;
+                    case "servers.openDefaultApps":
+                        // Open Windows Default Apps settings so user can set Atlas as default player
+                        try
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "ms-settings:defaultapps",
+                                UseShellExecute = true
+                            });
                         }
                         catch { }
                         break;
@@ -4170,7 +4430,12 @@ namespace AtlasAI.Views.MediaCentre
                 try
                 {
                     var target = vm.StreamsTargetItem ?? vm.PreviewItem ?? vm.DetailsItem;
-                    mediaId = (target?.MetaId ?? target?.ImdbId ?? target?.FilePath ?? "").Trim();
+                    // React matches streams state by (imdbId ?? id) — prefer ImdbId so the
+                    // ID check in the React handler doesn't silently discard the message when
+                    // the catalog item's MetaId uses a non-IMDB format (e.g. "tmdb:12345").
+                    mediaId = (!string.IsNullOrWhiteSpace(target?.ImdbId)
+                        ? target.ImdbId
+                        : (target?.MetaId ?? target?.FilePath ?? "")).Trim();
                 }
                 catch
                 {

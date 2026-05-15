@@ -115,7 +115,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="SidebarColumn" Width="80"/>   <!-- Left Sidebar -->
+                <ColumnDefinition x:Name="SidebarColumn" Width="90"/>   <!-- Left Sidebar -->
                 <ColumnDefinition Width="*"/>    <!-- Main Content -->
             </Grid.ColumnDefinitions>
 
@@ -212,6 +212,14 @@
                         Source="pack://application:,,,/Assets/Logos/AtlasAiChatLogo.png"/>
             
             <!-- Left Sidebar -->
+            <!-- Gutter background — matches MediaHub React slate-950 left edge so collapsed gutter is invisible -->
+            <Border x:Name="SidebarGutterBg"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    Grid.RowSpan="2"
+                    Panel.ZIndex="2"
+                    Background="#020617"
+                    IsHitTestVisible="False"/>
             <controls:LeftSidebarControl Grid.Column="0"
                                          Grid.Row="0"
                                          Grid.RowSpan="2"

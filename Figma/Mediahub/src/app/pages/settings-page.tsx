@@ -1,4 +1,4 @@
-import { Settings, Server, Palette, Bell, Shield, Database, Sparkles } from 'lucide-react';
+import { Settings, Server, Palette, Bell, Shield, Database, Sparkles, Film, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
 
 export function SettingsPage() {
@@ -232,6 +232,38 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+
+        {/* Media Player */}
+        <div className="bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-cyan-500/20">
+              <Film size={20} className="text-cyan-300" />
+            </div>
+            <h3 className="text-slate-100">Media Player</h3>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => (window as any).chrome?.webview?.postMessage(JSON.stringify({ type: 'servers.openLocalFile' }))}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-950/50 border border-slate-700/30 hover:border-cyan-500/50 text-slate-200 text-sm transition-all group"
+            >
+              <FolderOpen size={16} className="text-cyan-400 group-hover:text-cyan-300 shrink-0" />
+              <div className="text-left">
+                <div className="font-medium">Open Local File</div>
+                <div className="text-xs text-slate-400">Play a video or music file from your PC</div>
+              </div>
+            </button>
+            <button
+              onClick={() => (window as any).chrome?.webview?.postMessage(JSON.stringify({ type: 'servers.openDefaultApps' }))}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-950/50 border border-slate-700/30 hover:border-purple-500/50 text-slate-200 text-sm transition-all group"
+            >
+              <Film size={16} className="text-purple-400 group-hover:text-purple-300 shrink-0" />
+              <div className="text-left">
+                <div className="font-medium">Set as Default Player</div>
+                <div className="text-xs text-slate-400">Open Windows Default Apps to register Atlas for video &amp; audio files</div>
+              </div>
+            </button>
+          </div>
+        </div>
 
       <div className="h-8" />
     </div>

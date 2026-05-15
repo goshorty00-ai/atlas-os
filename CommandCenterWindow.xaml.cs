@@ -20,6 +20,7 @@ using AtlasAI.UI;
 using AtlasAI.SmartHome;
 using System.Windows.Input;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using AtlasAI.Brain;
 using Unosquare.FFME;
 using Unosquare.FFME.Common;
@@ -63,6 +64,17 @@ namespace AtlasAI
         private bool _emailMicTranscriptCaptured;
         private DispatcherTimer? _emailMicRestoreTimer;
         private DispatcherTimer? _sectionVoiceNoteTimer;
+        private DispatcherTimer? _arrowPollTimer;
+        private POINT _lastArrowCursorPos;
+        private DateTime _lastArrowMouseMove = DateTime.MinValue;
+        private const double ArrowHideAfterSeconds = 3.0;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT { public int X; public int Y; }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WINRECT { public int Left, Top, Right, Bottom; }
+        [DllImport("user32.dll")] private static extern bool GetCursorPos(out POINT pt);
+        [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hWnd, out WINRECT rect);
 
         public VoiceManager VoiceManager => _voiceManager;
         public string CurrentTab => _currentTab;
@@ -90,6 +102,11 @@ namespace AtlasAI
             try { InitializeSmartSuggestionMode(); } catch { }
             
             Loaded += CommandCenterWindow_Loaded;
+
+            // Poll mouse position to auto-show/hide the header restore arrow (handles WebView2 HWND airspace).
+            _arrowPollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+            _arrowPollTimer.Tick += ArrowPollTimer_Tick;
+            _arrowPollTimer.Start();
 
             TrySetWindowBuildStamp();
             try
@@ -467,15 +484,14 @@ namespace AtlasAI
 
                 if (collapsed)
                 {
-                    // Keep a narrow gutter so the toggle remains outside embedded WebView2 airspace.
-                    SidebarColumn.Width = new GridLength(24);
+                    SidebarColumn.Width = new GridLength(0);
                     LeftSidebar.Visibility = Visibility.Collapsed;
                     ContentArea.Margin = new Thickness(0);
                     try
                     {
-                        Grid.SetColumn(SidebarToggleButton, 0);
-                        SidebarToggleButton.HorizontalAlignment = HorizontalAlignment.Right;
-                        SidebarToggleButton.Margin = new Thickness(0);
+                        Grid.SetColumn(SidebarToggleButton, 1);
+                        SidebarToggleButton.HorizontalAlignment = HorizontalAlignment.Left;
+                        SidebarToggleButton.Margin = new Thickness(2, 0, 0, 0);
                     }
                     catch
                     {
@@ -484,7 +500,7 @@ namespace AtlasAI
                 }
                 else
                 {
-                    SidebarColumn.Width = new GridLength(80);
+                    SidebarColumn.Width = new GridLength(90);
                     LeftSidebar.Visibility = Visibility.Visible;
                     ContentArea.Margin = new Thickness(0);
                     try
@@ -538,6 +554,8 @@ namespace AtlasAI
         }
 
         private bool _headerCollapsed;
+        public bool IsHeaderCollapsed => _headerCollapsed;
+        public void RestoreHeader() { if (_headerCollapsed) ToggleHeader(); }
         private bool _wallpaperOnlyMode;
 
         private void SetWallpaperOnlyMode(bool enable)
@@ -580,11 +598,17 @@ namespace AtlasAI
                     TopNavBar.Visibility = Visibility.Collapsed;
                     try
                     {
-                        // Keep the reopen button in the left gutter so it is never covered by WebView2.
-                        Grid.SetColumn(ShowHeaderArrowButton, 0);
-                        ShowHeaderArrowButton.HorizontalAlignment = HorizontalAlignment.Right;
-                        ShowHeaderArrowButton.Margin = new Thickness(0, 10, 2, 0);
-                        ShowHeaderArrowButton.Visibility = Visibility.Visible;
+                        Grid.SetColumn(ShowHeaderArrowButton, 1);
+                        ShowHeaderArrowButton.HorizontalAlignment = HorizontalAlignment.Left;
+                        ShowHeaderArrowButton.Margin = new Thickness(2, 10, 0, 0);
+                        ShowHeaderArrowButton.Visibility = Visibility.Visible; // timer hides when mouse leaves
+                    }
+                    catch { }
+                    // Stamp the collapse moment so the 3-second idle clock starts from now.
+                    try
+                    {
+                        _lastArrowMouseMove = DateTime.UtcNow;
+                        GetCursorPos(out _lastArrowCursorPos);
                     }
                     catch { }
                     chrome.CaptionHeight = 0;
@@ -604,11 +628,91 @@ namespace AtlasAI
                     chrome.CaptionHeight = 0;
                 }
                 WindowChrome.SetWindowChrome(this, chrome);
+
+                // Also hide/restore the left sidebar with the header
+                try
+                {
+                    if (_headerCollapsed)
+                    {
+                        SidebarColumn.Width = new GridLength(0);
+                        LeftSidebar.Visibility = Visibility.Collapsed;
+                        SidebarToggleButton.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        // Restore sidebar to whatever state it was in before header was hidden
+                        SetSidebarCollapsed(_sidebarCollapsed);
+                        SidebarToggleButton.Visibility = Visibility.Visible;
+                    }
+                }
+                catch { }
+
+                // Notify active MediaHub WebView so the React sidebar collapses/restores with the header
+                try
+                {
+                    if (_viewCache.TryGetValue("AI MEDIA CENTRE", out var mediaCentreView) &&
+                        mediaCentreView is AtlasAI.Views.MediaCentre.ServersView sv)
+                    {
+                        var collapsedStr = _headerCollapsed ? "true" : "false";
+                        var json = $"{{\"type\":\"mediahub.chromeCollapsed\",\"payload\":{{\"collapsed\":{collapsedStr}}}}}";
+                        sv.PostToWebView(json);
+                        AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] headerCollapsed={_headerCollapsed} sentToWebView=true");
+                    }
+                    else
+                    {
+                        AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] headerCollapsed={_headerCollapsed} sentToWebView=false (ServersView not in cache)");
+                    }
+                }
+                catch (Exception ex) { AtlasAI.Core.AppLogger.LogInfo($"[MediaHubImmersive] ToggleHeader notify error: {ex.Message}"); }
             }
             catch { }
         }
 
         private void HeaderToggle_Click(object sender, RoutedEventArgs e) => ToggleHeader();
+
+        private void ArrowPollTimer_Tick(object? sender, EventArgs e)
+        {
+            if (!_headerCollapsed)
+            {
+                if (ShowHeaderArrowButton.Visibility != Visibility.Collapsed)
+                    ShowHeaderArrowButton.Visibility = Visibility.Collapsed;
+                return;
+            }
+            try
+            {
+                var hwnd = new WindowInteropHelper(this).Handle;
+                if (!GetCursorPos(out var pt)) return;
+
+                // Immediately hide if cursor has left the window (different monitor / other app).
+                if (hwnd != IntPtr.Zero && GetWindowRect(hwnd, out var wr))
+                {
+                    bool insideWindow = pt.X >= wr.Left && pt.X < wr.Right && pt.Y >= wr.Top && pt.Y < wr.Bottom;
+                    if (!insideWindow)
+                    {
+                        _lastArrowMouseMove = DateTime.MinValue;
+                        if (ShowHeaderArrowButton.Visibility != Visibility.Collapsed)
+                            ShowHeaderArrowButton.Visibility = Visibility.Collapsed;
+                        return;
+                    }
+                }
+
+                // Inside the window: show on movement, hide after 3 s of inactivity.
+                if (pt.X != _lastArrowCursorPos.X || pt.Y != _lastArrowCursorPos.Y)
+                {
+                    _lastArrowCursorPos = pt;
+                    _lastArrowMouseMove = DateTime.UtcNow;
+                    if (ShowHeaderArrowButton.Visibility != Visibility.Visible)
+                        ShowHeaderArrowButton.Visibility = Visibility.Visible;
+                }
+                else if (_lastArrowMouseMove != DateTime.MinValue &&
+                         (DateTime.UtcNow - _lastArrowMouseMove).TotalSeconds >= ArrowHideAfterSeconds)
+                {
+                    if (ShowHeaderArrowButton.Visibility != Visibility.Collapsed)
+                        ShowHeaderArrowButton.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch { }
+        }
 
         private void WallpaperOnlyExitButton_Click(object sender, RoutedEventArgs e)
         {

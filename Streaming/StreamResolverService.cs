@@ -52,9 +52,19 @@ namespace AtlasAI.Streaming
 
             try
             {
-                var all = await Task.WhenAll(tasks).ConfigureAwait(false);
-                foreach (var l in all)
-                    if (l != null && l.Count > 0) results.AddRange(l);
+                var allTask = Task.WhenAll(tasks);
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(20), ct);
+                await Task.WhenAny(allTask, timeoutTask).ConfigureAwait(false);
+
+                foreach (var task in tasks)
+                {
+                    if (!task.IsCompletedSuccessfully)
+                        continue;
+
+                    var l = task.Result;
+                    if (l != null && l.Count > 0)
+                        results.AddRange(l);
+                }
             }
             catch
             {
@@ -139,14 +149,16 @@ namespace AtlasAI.Streaming
 
             if (source.RequiresDebrid)
             {
-                if (unrestrict == null)
-                    throw new InvalidOperationException("Debrid provider not available");
+                if (unrestrict != null)
+                {
+                    var r = await unrestrict(source.UrlOrPath, ct).ConfigureAwait(false);
+                    if (!r.Success || string.IsNullOrWhiteSpace(r.Url))
+                        throw new InvalidOperationException(string.IsNullOrWhiteSpace(r.Error) ? "Unrestrict failed" : r.Error);
 
-                var r = await unrestrict(source.UrlOrPath, ct).ConfigureAwait(false);
-                if (!r.Success || string.IsNullOrWhiteSpace(r.Url))
-                    throw new InvalidOperationException(string.IsNullOrWhiteSpace(r.Error) ? "Unrestrict failed" : r.Error);
-
-                return new ResolvePlan(source, r.Url!, IsHttp: true);
+                    return new ResolvePlan(source, r.Url!, IsHttp: true);
+                }
+                // No unrestrict function — addon already resolved the URL (e.g. Torrentio+RD)
+                // Fall through and return the URL as-is
             }
 
             if (TryHttpUrl(source.UrlOrPath, out _))

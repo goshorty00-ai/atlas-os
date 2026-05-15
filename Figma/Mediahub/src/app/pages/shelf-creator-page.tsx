@@ -24,7 +24,7 @@ const examplePrompts = [
 
 // ── Shelf Manager types & persistence ─────────────────────────────────────────
 
-interface BridgeShelfRaw { title: string; type?: string; items?: unknown[]; }
+interface BridgeShelfRaw { key?: string; title: string; type?: string; items?: unknown[]; }
 interface BridgeStateRaw { shelves?: BridgeShelfRaw[]; }
 
 interface ManagedShelf {
@@ -74,9 +74,10 @@ function mergeBridgeShelves(raw: BridgeShelfRaw[]): ManagedShelf[] {
   const cfg = loadShelfConfig();
   const savedOrder = loadShelfOrder();
   const items = raw.map((s): ManagedShelf => {
-    const c = cfg[s.title] ?? {};
+    const shelfKey = (s.key ?? s.title).trim();
+    const c = cfg[shelfKey] ?? cfg[s.title] ?? {};
     return {
-      key: s.title,
+      key: shelfKey,
       displayName: c.displayName ?? s.title,
       type: s.type ?? 'movie',
       count: s.items?.length ?? 0,
@@ -115,16 +116,23 @@ export function ShelfCreatorPage() {
       setShelves((prev) => {
         if (prev.length === 0) return mergeBridgeShelves(raw);
         const prevMap = new Map(prev.map((s) => [s.key, s]));
-        const rawKeys = new Set(raw.map((r) => r.title));
+        const rawKeys = new Set(raw.map((r) => (r.key ?? r.title).trim()));
         const updated = prev
           .filter((s) => rawKeys.has(s.key))
           .map((s) => {
-            const r = raw.find((r) => r.title === s.key);
-            return r ? { ...s, count: r.items?.length ?? s.count } : s;
+            const r = raw.find((r) => ((r.key ?? r.title).trim() === s.key));
+            return r
+              ? {
+                  ...s,
+                  type: r.type ?? s.type,
+                  count: r.items?.length ?? s.count,
+                }
+              : s;
           });
         raw.forEach((r) => {
-          if (!prevMap.has(r.title)) {
-            updated.push({ key: r.title, displayName: r.title, type: r.type ?? 'movie', count: r.items?.length ?? 0, hidden: false });
+          const key = (r.key ?? r.title).trim();
+          if (!prevMap.has(key)) {
+            updated.push({ key, displayName: r.title, type: r.type ?? 'movie', count: r.items?.length ?? 0, hidden: false });
           }
         });
         return updated;

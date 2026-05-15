@@ -1,6 +1,3 @@
 <Solution>
-  <Folder Name="/Tests/">
-    <Project Path="Tests/AtlasAI.Tests.csproj" />
-  </Folder>
   <Project Path="AtlasAI.csproj" />
 </Solution>

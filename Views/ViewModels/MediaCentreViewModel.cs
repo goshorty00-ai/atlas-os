@@ -641,6 +641,7 @@ namespace AtlasAI.Views.ViewModels
 
         private readonly Dispatcher _uiDispatcher;
         private readonly PlaybackService _playbackService;
+        private FullscreenPlayerWindow? _videoPlayerWindow;
         private readonly TaggingService _taggingService = new();
         private readonly MusicBrainzClient _mbClient = new();
         private readonly TmdbClient _tmdbClient = new();
@@ -787,6 +788,7 @@ namespace AtlasAI.Views.ViewModels
         private bool _useServersWebViewBridge;
         private StreamsMode _selectedStreamsMode = StreamsMode.Own;
         private bool _streamsRefreshRequested;
+        private MediaItem? _pendingStreamsTargetItem;
         private readonly ObservableCollection<AppsBookmarkEntry> _appsBookmarks = new();
         private readonly ObservableCollection<AppsServiceEntry> _appsServices = new();
         private Action<string>? _appsNavigator;
@@ -2212,6 +2214,17 @@ namespace AtlasAI.Views.ViewModels
 
                 var isAll = snap.isAllServers;
                 var normalizedSelection = (snap.normalizedSelection ?? "").Trim();
+
+                if (_addonServers.Count == 0)
+                {
+                    await _uiDispatcher.InvokeAsync(() =>
+                    {
+                        _serverShelves.Clear();
+                        ActiveServerShelf = null;
+                        OnPropertyChanged(nameof(ServerShelves));
+                    });
+                    return;
+                }
 
                 static ServerShelf? CreateSnapshotShelf(string title, string contentType, string catalogId, List<MediaItem> items, int previewCount)
                 {
@@ -6759,14 +6772,11 @@ namespace AtlasAI.Views.ViewModels
         {
             try
             {
-                var trailerAddonUrl = NormalizeAddonServerUrl(DefaultTrailerMetadataAddonManifestUrl);
-
                 try
                 {
                     var seeded = (IntegrationKeyStore.GetDecrypted(AddonServersSeededKey) ?? "").Trim();
                     if (string.Equals(seeded, "1", StringComparison.OrdinalIgnoreCase))
                     {
-                        EnsureAddonServerPresent(trailerAddonUrl);
                         return;
                     }
                 }
@@ -6779,7 +6789,6 @@ namespace AtlasAI.Views.ViewModels
                 // If the user already has servers configured (or has removed them), do not force defaults back in.
                 if (current.Count > 0)
                 {
-                    EnsureAddonServerPresent(trailerAddonUrl);
                     try { IntegrationKeyStore.SetProtected(AddonServersSeededKey, "1"); } catch { }
                     return;
                 }
@@ -6792,7 +6801,6 @@ namespace AtlasAI.Views.ViewModels
                         var items = JsonSerializer.Deserialize<List<AtlasAI.Models.AddonServerItem>>(File.ReadAllText(cfgPath)) ?? new List<AtlasAI.Models.AddonServerItem>();
                         if (items.Any(i => i != null && !string.IsNullOrWhiteSpace(i.Url) && i.Enabled))
                         {
-                            EnsureAddonServerPresent(trailerAddonUrl);
                             try { IntegrationKeyStore.SetProtected(AddonServersSeededKey, "1"); } catch { }
                             return;
                         }
@@ -11347,6 +11355,8 @@ namespace AtlasAI.Views.ViewModels
             if (!IsServersView || item == null)
                 return;
 
+            StopBackgroundPlaybackForBridge();
+
             IsServerStreamsPanelOpen = false;
             _serverStreamsBackToSeries = false;
             IsWatchLaterPanelOpen = false;
@@ -11378,6 +11388,40 @@ namespace AtlasAI.Views.ViewModels
         {
             if (item == null) return;
 
+            StopBackgroundPlaybackForBridge();
+
+            var incomingToken = (item.MetaId ?? item.ImdbId ?? item.FilePath ?? "").Trim();
+            var currentToken = (_streamsTargetItem?.MetaId ?? _streamsTargetItem?.ImdbId ?? _streamsTargetItem?.FilePath ?? "").Trim();
+            var sameTarget = !string.IsNullOrWhiteSpace(incomingToken) &&
+                             string.Equals(incomingToken, currentToken, StringComparison.OrdinalIgnoreCase);
+
+            // Ignore duplicate bridge requests for the same item while loading or after sources are present.
+            if (sameTarget)
+            {
+                if (IsStreamsBusy)
+                {
+                    AtlasAI.Core.AppLogger.LogInfo($"[BridgeStreams] ignored duplicate while busy token={incomingToken}");
+                    return;
+                }
+
+                if (_streamSources.Count > 0)
+                {
+                    AtlasAI.Core.AppLogger.LogInfo($"[BridgeStreams] ignored duplicate with cached sources token={incomingToken} count={_streamSources.Count}");
+                    return;
+                }
+            }
+
+            // If a different item's fetch is already running, queue it and return without
+            // touching _streamsTargetItem. PostStreamsState must keep reporting the mediaId
+            // of the currently running fetch; updating it now would label the old fetch's
+            // sources with the new item's id (the race that caused the double-load bug).
+            if (IsStreamsBusy)
+            {
+                _pendingStreamsTargetItem = item;
+                _streamsRefreshRequested = true;
+                return;
+            }
+
             try { SetPreviewItem(item); } catch { }
 
             // Populate full metadata (overview, ratings, cast) from TMDB/meta endpoint.
@@ -11396,6 +11440,25 @@ namespace AtlasAI.Views.ViewModels
             RefreshAddonServers();
             _ = RefreshStreamsAsync(item);
         }
+
+        private void StopBackgroundPlaybackForBridge()
+        {
+            try
+            {
+                var hasActivePlayback = IsPlaying;
+                try { hasActivePlayback = hasActivePlayback || _playbackService.CurrentMedia != null; } catch { }
+                if (!hasActivePlayback)
+                    return;
+
+                StopPlayback();
+                try { _playbackService.ClearQueue(); } catch { }
+                try { AtlasAI.Core.AppLogger.LogInfo("[BridgePlay] background playback stopped before loading detail/streams"); } catch { }
+            }
+            catch
+            {
+            }
+        }
+
 
         private bool CanAddToWatchLater(MediaItem? item)
         {
@@ -14725,16 +14788,58 @@ namespace AtlasAI.Views.ViewModels
                 if (string.IsNullOrWhiteSpace(normalizedBaseUrl))
                     return;
 
+                var normalizedTarget = NormalizeAddonServerUrl(normalizedBaseUrl);
+                if (string.IsNullOrWhiteSpace(normalizedTarget))
+                    return;
+
+                Uri.TryCreate(normalizedTarget, UriKind.Absolute, out var targetUri);
+                var targetHost = (targetUri?.Host ?? "").Trim();
+                var targetPath = (targetUri?.AbsolutePath ?? "").Trim().Trim('/');
+
                 var cfgPath = GetAddonServersConfigPath();
                 if (string.IsNullOrWhiteSpace(cfgPath) || !File.Exists(cfgPath))
                     return;
 
                 var json = File.ReadAllText(cfgPath);
                 var items = JsonSerializer.Deserialize<List<AtlasAI.Models.AddonServerItem>>(json) ?? new List<AtlasAI.Models.AddonServerItem>();
-                var before = items.Count;
-                items.RemoveAll(i => AddonUrlsMatch(i?.Url ?? "", normalizedBaseUrl));
+                var changed = false;
 
-                if (items.Count != before)
+                for (var index = items.Count - 1; index >= 0; index--)
+                {
+                    var item = items[index];
+                    var itemUrl = item?.Url ?? "";
+                    var itemNormalized = NormalizeAddonServerUrl(itemUrl);
+                    if (string.IsNullOrWhiteSpace(itemNormalized))
+                        continue;
+
+                    var directMatch = AddonUrlsMatch(itemNormalized, normalizedTarget);
+                    var hostPathMatch = false;
+                    try
+                    {
+                        if (targetUri != null && Uri.TryCreate(itemNormalized, UriKind.Absolute, out var itemUri))
+                        {
+                            var itemHost = (itemUri.Host ?? "").Trim();
+                            var itemPath = (itemUri.AbsolutePath ?? "").Trim().Trim('/');
+                            hostPathMatch = !string.IsNullOrWhiteSpace(targetHost)
+                                && string.Equals(itemHost, targetHost, StringComparison.OrdinalIgnoreCase)
+                                && (string.IsNullOrWhiteSpace(targetPath)
+                                    || string.Equals(itemPath, targetPath, StringComparison.OrdinalIgnoreCase)
+                                    || itemPath.StartsWith(targetPath + "/", StringComparison.OrdinalIgnoreCase)
+                                    || targetPath.StartsWith(itemPath + "/", StringComparison.OrdinalIgnoreCase));
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    if (!directMatch && !hostPathMatch)
+                        continue;
+
+                    items.RemoveAt(index);
+                    changed = true;
+                }
+
+                if (changed)
                     File.WriteAllText(cfgPath, JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch
@@ -14851,8 +14956,50 @@ namespace AtlasAI.Views.ViewModels
             }
             finally
             {
-                _uiDispatcher.Invoke(RefreshAddonServers);
+                _uiDispatcher.Invoke(() =>
+                {
+                    InvalidateServerCatalogAndShelvesState();
+                    RefreshAddonServers();
+                    RebuildServerShelves();
+                });
             }
+        }
+
+        private void InvalidateServerCatalogAndShelvesState()
+        {
+            try { _serverShelvesDebounCts?.Cancel(); _serverShelvesDebounCts?.Dispose(); } catch { }
+            _serverShelvesDebounCts = null;
+            try { _serverShelvesBuildCts?.Cancel(); _serverShelvesBuildCts?.Dispose(); } catch { }
+            _serverShelvesBuildCts = null;
+
+            _cachedIntelligenceShelves = null;
+            _cachedIntelligenceShelvesTime = DateTime.MinValue;
+
+            lock (_stateLock)
+            {
+                _serverMovieCatalogOptionsByServer.Clear();
+                _serverSeriesCatalogOptionsByServer.Clear();
+                _serverMusicCatalogOptionsByServer.Clear();
+                _serverMoviePageStates.Clear();
+                _serverTvPageStates.Clear();
+                _serverMusicPageStates.Clear();
+                _serverCatalogSupportCache.Clear();
+                _serverCatalogBackoffUntil.Clear();
+            }
+
+            _serverShelves.Clear();
+            ActiveServerShelf = null;
+            _serverCatalogItems.Clear();
+            _serverMovieCatalogItems.Clear();
+            _serverTvCatalogItems.Clear();
+            _serverMusicCatalogItems.Clear();
+            _serverCatalogCatalogs.Clear();
+            _serverMovieVisibleCount = 0;
+            _serverTvVisibleCount = 0;
+            _serverMusicVisibleCount = 0;
+            OnPropertyChanged(nameof(ServerShelves));
+            OnPropertyChanged(nameof(CanLoadMoreServerCatalog));
+            OnPropertyChanged(nameof(CanLoadNextServerCatalogPage));
         }
 
         private void UseOnlySelectedServer()
@@ -15341,7 +15488,7 @@ namespace AtlasAI.Views.ViewModels
 
                             var seed = new ServerCatalogPageState("https://v3-cinemeta.strem.io", "movie", "top", NextSkip: 0, HasMore: true, RequestType: "movie");
                             _serverMoviePageStates[seed.BaseUrl] = seed;
-                            _serverTvPageStates[seed.BaseUrl] = seed with { ContentType = "series" };
+                            _serverTvPageStates[seed.BaseUrl] = seed with { ContentType = "series", RequestType = "series" };
 
                             var moviesRaw = await LoadNextPagesForTypeAsync(_serverMoviePageStates, primeCt).ConfigureAwait(false);
                             var seriesRaw = await LoadNextPagesForTypeAsync(_serverTvPageStates, primeCt).ConfigureAwait(false);
@@ -16649,7 +16796,7 @@ namespace AtlasAI.Views.ViewModels
                         try
                         {
                             using var reqCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                            reqCts.CancelAfter(TimeSpan.FromSeconds(3));
+                            reqCts.CancelAfter(TimeSpan.FromSeconds(8));
                             resp = await ServerHttp.GetAsync(u, HttpCompletionOption.ResponseHeadersRead, reqCts.Token).ConfigureAwait(false);
                             if (!resp.IsSuccessStatusCode) continue;
                             var parsed = await TryParseAsync(resp).ConfigureAwait(false);
@@ -17441,6 +17588,10 @@ namespace AtlasAI.Views.ViewModels
         {
             if (IsStreamsBusy) return;
 
+            // Pin the target for this fetch. Everything from here until finally is
+            // guaranteed to correspond to `item`, so PostStreamsState will always
+            // send the correct mediaId while these streams are loading.
+            _streamsTargetItem = item;
             IsStreamsBusy = true;
             StreamsStatusText = "Finding sources...";
             CommandManager.InvalidateRequerySuggested();
@@ -17450,7 +17601,7 @@ namespace AtlasAI.Views.ViewModels
             try
             {
                 _uiDispatcher.Invoke(RefreshAddonServers);
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                 var request = BuildStreamRequest(item);
                 var resolver = _streamResolver;
                 var sources = await resolver.GetSourcesAsync(request, cts.Token).ConfigureAwait(false);
@@ -17494,10 +17645,29 @@ namespace AtlasAI.Views.ViewModels
                 {
                     IsStreamsBusy = false;
                     CommandManager.InvalidateRequerySuggested();
-                    if (_streamsRefreshRequested && _streamsTargetItem != null)
+                    if (_streamsRefreshRequested)
                     {
                         _streamsRefreshRequested = false;
-                        rerunItem = _streamsTargetItem;
+                        if (_pendingStreamsTargetItem != null)
+                        {
+                            // A new item was requested while this fetch was running.
+                            // Run its metadata now (we're on the UI thread) then start
+                            // its fetch. _streamsTargetItem is set at the top of
+                            // RefreshStreamsAsync so PostStreamsState stays correct.
+                            rerunItem = _pendingStreamsTargetItem;
+                            _pendingStreamsTargetItem = null;
+                            try { SetPreviewItem(rerunItem); } catch { }
+                            DetailsItem = rerunItem;
+                            DetailsOverview = string.IsNullOrWhiteSpace(rerunItem!.Metadata) ? "Loading metadata..." : rerunItem.Metadata;
+                            try { _detailsMetaCts?.Cancel(); _detailsMetaCts?.Dispose(); } catch { }
+                            _detailsMetaCts = new CancellationTokenSource();
+                            _ = LoadDetailsMetaAsync(rerunItem, _detailsMetaCts.Token);
+                        }
+                        else
+                        {
+                            // Legacy path: mode-change rerun with no pending item.
+                            rerunItem = _streamsTargetItem;
+                        }
                     }
                 });
                 if (rerunItem != null)
@@ -17578,33 +17748,8 @@ namespace AtlasAI.Views.ViewModels
                     .ToList();
                 var initialSnapshot = string.Join("|", normalized.OrderBy(s => s, StringComparer.OrdinalIgnoreCase));
 
-                // Merge enabled addons from addon_servers.json so installs/toggles auto-appear.
-                try
-                {
-                    var cfgPath = GetAddonServersConfigPath();
-                    if (!string.IsNullOrWhiteSpace(cfgPath) && File.Exists(cfgPath))
-                    {
-                        var json = File.ReadAllText(cfgPath);
-                        var items = JsonSerializer.Deserialize<List<AtlasAI.Models.AddonServerItem>>(json) ?? new List<AtlasAI.Models.AddonServerItem>();
-                        var merged = false;
-                        foreach (var it in items)
-                        {
-                            if (it == null || !it.Enabled) continue;
-                            var u = NormalizeAddonServerUrl(it.Url ?? "");
-                            if (string.IsNullOrWhiteSpace(u)) continue;
-                            if (normalized.Any(x => AddonUrlsMatch(x, u) || AddonUrlsMatch(x, it.Url ?? "")))
-                                continue;
-                            normalized.Add(u);
-                            merged = true;
-                        }
-
-                        if (merged)
-                            SaveAddonServersToStore(normalized);
-                    }
-                }
-                catch
-                {
-                }
+                // Do not auto-merge enabled addons from addon_servers.json back into secure store.
+                // User deletion must stay authoritative and should not be undone by config drift.
 
                 // Clean the config file without stripping enabled entries that exist only in config.
                 // This keeps poster/rating/source addons available even when the secure store lags.
@@ -17654,20 +17799,8 @@ namespace AtlasAI.Views.ViewModels
                 {
                 }
 
-                // Sync installed addons from Stremio's local storage
-                try
-                {
-                    foreach (var stremioUrl in ExtractStremioManifestUrls())
-                    {
-                        var u = NormalizeAddonServerUrl(stremioUrl);
-                        if (string.IsNullOrWhiteSpace(u)) continue;
-                        if (normalized.Any(x => AddonUrlsMatch(x, u))) continue;
-                        normalized.Add(u);
-                    }
-                }
-                catch
-                {
-                }
+                // Keep Atlas addon server state authoritative to avoid re-adding removed addons
+                // from external app storage.
 
                 var finalSnapshot = string.Join("|", normalized.OrderBy(s => s, StringComparer.OrdinalIgnoreCase));
                 if (!string.Equals(initialSnapshot, finalSnapshot, StringComparison.Ordinal))
@@ -17819,8 +17952,14 @@ namespace AtlasAI.Views.ViewModels
         {
             try
             {
+                var before = BuildAddonServersSnapshotKey();
                 RefreshAddonServers();
-                _ = RefreshServerCatalogAsync();
+                var after = BuildAddonServersSnapshotKey();
+
+                if (!string.Equals(before, after, StringComparison.Ordinal))
+                {
+                    _ = RefreshServerCatalogAsync();
+                }
             }
             catch
             {
@@ -17948,6 +18087,29 @@ namespace AtlasAI.Views.ViewModels
             if (string.Equals(_streamsTargetItem.Type, "tv", StringComparison.OrdinalIgnoreCase))
                 _lastPlayedSeriesEpisode = _streamsTargetItem;
             _ = PlayStreamSourceAsync(_streamsTargetItem, source);
+        }
+
+        /// <summary>
+        /// Bridge-initiated playback — bypasses the IsStreamsBusy guard so the user
+        /// can play a stream immediately even while additional sources are still loading.
+        /// </summary>
+        public void PlayStreamSourceFromBridge(AddonSource? source)
+        {
+            if (source == null || source.IsInfoOnly || string.IsNullOrWhiteSpace(source.UrlOrPath))
+            {
+                AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] skipped: source={source?.SourceId ?? "null"} isInfoOnly={source?.IsInfoOnly} url={source?.UrlOrPath ?? "null"}");
+                return;
+            }
+            var item = _streamsTargetItem;
+            if (item == null)
+            {
+                AtlasAI.Core.AppLogger.LogInfo("[BridgePlay] skipped: _streamsTargetItem is null");
+                return;
+            }
+            AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] starting: source={source.SourceId} item={item.Title}");
+            if (string.Equals(item.Type, "tv", StringComparison.OrdinalIgnoreCase))
+                _lastPlayedSeriesEpisode = item;
+            _ = PlayStreamSourceAsync(item, source);
         }
 
         private void DownloadStreamSource(AddonSource? source)
@@ -18159,18 +18321,21 @@ namespace AtlasAI.Views.ViewModels
                                ?? SelectedCloudProvider
                                ?? _cloudProviders.FirstOrDefault();
 
-                    if (provider == null || !provider.IsConfigured)
-                        throw new InvalidOperationException("Real-Debrid is not configured");
-
-                    unrestrict = async (url, ct) =>
+                    if (provider != null && provider.IsConfigured)
                     {
-                        var r = await provider.UnrestrictAsync(url, ct).ConfigureAwait(false);
-                        return new UnrestrictResult(r.Success, r.Success ? r.StreamUrl : null, r.Error);
-                    };
+                        unrestrict = async (url, ct) =>
+                        {
+                            var r = await provider.UnrestrictAsync(url, ct).ConfigureAwait(false);
+                            return new UnrestrictResult(r.Success, r.Success ? r.StreamUrl : null, r.Error);
+                        };
+                    }
+                    // If no Atlas debrid provider configured, ResolveAsync will handle the fallback
                 }
 
+                AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] pre-resolve sourceUrl={source.UrlOrPath?.Substring(0, Math.Min(80, source.UrlOrPath?.Length ?? 0))} requiresDebrid={source.RequiresDebrid}");
                 var plan = await _streamResolver.ResolveAsync(request, source, unrestrict, cts.Token).ConfigureAwait(false);
                 var playUrlOrPath = plan.PlayUrlOrPath;
+                AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] post-resolve url={playUrlOrPath?.Substring(0, Math.Min(120, playUrlOrPath?.Length ?? 0))} isHttp={plan.IsHttp}");
 
                 if (!source.RequiresDebrid && IsMagnetUrl(playUrlOrPath))
                 {
@@ -18200,36 +18365,50 @@ namespace AtlasAI.Views.ViewModels
                             if (r.Success && !string.IsNullOrWhiteSpace(r.StreamUrl))
                                 playUrlOrPath = r.StreamUrl;
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] PlayStreamSourceAsync provider.UnrestrictAsync catch: {ex.Message}\n{ex.StackTrace}");
                         }
                     }
                 }
 
+                AtlasAI.Core.AppLogger.LogInfo($"[BridgePlay] pre-navcheck url={playUrlOrPath?.Substring(0, Math.Min(120, playUrlOrPath?.Length ?? 0))}");
+                System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] after pre-navcheck url={playUrlOrPath}");
                 if (IsLikelyAddonNavigationUrl(playUrlOrPath))
-                    throw new InvalidOperationException("No playable stream returned by addon");
+                    throw new InvalidOperationException("No playable stream returned by addon - url was: " + (playUrlOrPath?.Substring(0, Math.Min(120, playUrlOrPath?.Length ?? 0))));
 
                 var displayName = string.IsNullOrWhiteSpace(source.Name) ? item.Title : source.Name;
+                System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] before _uiDispatcher.Invoke playUrlOrPath={playUrlOrPath} displayName={displayName}");
                 _uiDispatcher.Invoke(() =>
                 {
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] inside _uiDispatcher.Invoke start playUrlOrPath={playUrlOrPath}");
+                    // Close streams panel first so it doesn't appear behind the player
+                    if (IsStreamsOpen)
+                        IsStreamsOpen = false;
+                    EnsureVideoPlayerWindow();
                     SetPendingWatchHistoryForStream(item);
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] before PlayStreamUrl url={playUrlOrPath} title={displayName}");
                     PlayStreamUrl(playUrlOrPath, displayName);
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] after PlayStreamUrl url={playUrlOrPath} title={displayName}");
                     if (string.Equals(item.Type, "tv", StringComparison.OrdinalIgnoreCase))
                         _lastPlayedSeriesEpisode = item;
                     StreamsStatusText = "Playing";
-                    if (IsStreamsOpen)
-                        IsStreamsOpen = false;
                 });
             }
             catch (Exception ex)
             {
+                AtlasAI.Core.AppLogger.LogError($"[BridgePlay] FAILED: {ex.GetType().Name}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] PlayStreamSourceAsync catch: {ex.Message}\n{ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine("[BridgePlayTrace] before _uiDispatcher.Invoke in PlayStreamSourceAsync catch");
                 _uiDispatcher.Invoke(() =>
                 {
+                    System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] inside _uiDispatcher.Invoke catch setting status: {ex.Message}");
                     StreamsStatusText = string.IsNullOrWhiteSpace(ex.Message) ? "Resolve failed" : ex.Message;
                 });
             }
             finally
             {
+                System.Diagnostics.Debug.WriteLine("[BridgePlayTrace] before _uiDispatcher.Invoke in PlayStreamSourceAsync finally");
                 _uiDispatcher.Invoke(() =>
                 {
                     IsStreamsBusy = false;
@@ -18737,8 +18916,109 @@ namespace AtlasAI.Views.ViewModels
             }
         }
 
+        private string? TryExtractRdKeyFromAddonServers()
+        {
+            try
+            {
+                foreach (var server in _addonServers)
+                {
+                    if (string.IsNullOrWhiteSpace(server)) continue;
+                    var m = System.Text.RegularExpressions.Regex.Match(server, @"[|/]realdebrid=([A-Za-z0-9]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    if (m.Success && m.Groups[1].Length >= 10)
+                        return m.Groups[1].Value;
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private void EnsureVideoPlayerWindow()
+        {
+            AtlasAI.Core.AppLogger.LogInfo("[BridgePlay] EnsureVideoPlayerWindow called");
+            // Use != null check only — IsVisible may still be false right after Show(), causing double-create
+            if (_videoPlayerWindow != null)
+            {
+                AtlasAI.Core.AppLogger.LogInfo("[BridgePlay] player window already exists");
+                if (!_videoPlayerWindow.IsVisible)
+                    _videoPlayerWindow.Show();
+                // Minimized WPF windows still have IsVisible=true, so Show() above is skipped.
+                // Activate()/Focus() do not restore a minimized window — WindowState must be reset first.
+                if (_videoPlayerWindow.WindowState == WindowState.Minimized)
+                    _videoPlayerWindow.WindowState = WindowState.Maximized;
+                _videoPlayerWindow.Topmost = true;
+                _videoPlayerWindow.Topmost = false;
+                _videoPlayerWindow.Activate();
+                _videoPlayerWindow.Focus();
+                return;
+            }
+            try
+            {
+                _videoPlayerWindow = new FullscreenPlayerWindow(_playbackService);
+                _videoPlayerWindow.Closed += (_, __) => _videoPlayerWindow = null;
+                _videoPlayerWindow.Show();
+                _videoPlayerWindow.Topmost = true;
+                _videoPlayerWindow.Topmost = false;
+                _videoPlayerWindow.Activate();
+                _videoPlayerWindow.Focus();
+                _videoPlayerWindow.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.ApplicationIdle,
+                    new Action(() =>
+                    {
+                        if (_videoPlayerWindow != null)
+                        {
+                            _videoPlayerWindow.Activate();
+                            _videoPlayerWindow.Focus();
+                        }
+                    }));
+                AtlasAI.Core.AppLogger.LogInfo("[BridgePlay] player window shown OK");
+            }
+            catch (Exception ex)
+            {
+                AtlasAI.Core.AppLogger.LogError($"[BridgePlay] player window FAILED: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Restores an existing minimized/hidden FullscreenPlayerWindow without starting or restarting playback.
+        /// </summary>
+        public void RestoreVideoPlayerWindow()
+        {
+            if (_videoPlayerWindow == null)
+                return;
+
+            if (!_videoPlayerWindow.IsVisible)
+                _videoPlayerWindow.Show();
+
+            if (_videoPlayerWindow.WindowState == WindowState.Minimized)
+                _videoPlayerWindow.WindowState = WindowState.Maximized;
+
+            _videoPlayerWindow.Topmost = true;
+            _videoPlayerWindow.Topmost = false;
+            _videoPlayerWindow.Activate();
+            _videoPlayerWindow.Focus();
+        }
+
+        public void PlayMediaFile(string pathOrUrl)
+        {
+            if (string.IsNullOrWhiteSpace(pathOrUrl)) return;
+            _uiDispatcher.Invoke(() =>
+            {
+                try
+                {
+                    if (_videoPlayerWindow != null)
+                    {
+                        try { _videoPlayerWindow.Close(); } catch { }
+                        _videoPlayerWindow = null;
+                    }
+                    PlayStreamUrl(pathOrUrl.Trim(), Path.GetFileNameWithoutExtension(pathOrUrl.Trim()));
+                }
+                catch { }
+            });
+        }
+
         private void PlayStreamUrl(string streamUrl, string title)
         {
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] PlayStreamUrl entry url={streamUrl} title={title}");
             if (string.IsNullOrWhiteSpace(streamUrl)) return;
 
             var ext = "";
@@ -18747,19 +19027,19 @@ namespace AtlasAI.Views.ViewModels
             else
                 ext = Path.GetExtension(streamUrl).ToLowerInvariant();
 
+            var isAudioOnly = AudioExtensions.Contains(ext);
+
+            // Only open YouTube in browser — everything else (including no-extension stream URLs) goes to VLC
             if (IsHttpUrl(streamUrl, out var httpUri))
             {
                 var host = (httpUri.Host ?? "").ToLowerInvariant();
                 var isYouTube = host.Contains("youtube.") || host.Contains("youtu.be");
-                var isWebPage = ext is ".html" or ".htm" || string.IsNullOrWhiteSpace(ext);
-                var isDirectMedia = VideoExtensions.Contains(ext) || AudioExtensions.Contains(ext);
-
-                if ((isYouTube || isWebPage) && !isDirectMedia)
+                if (isYouTube)
                 {
                     try
                     {
                         Process.Start(new ProcessStartInfo(streamUrl) { UseShellExecute = true });
-                        StatusText = "Opened link";
+                        StatusText = "Opened in browser";
                         OnPropertyChanged(nameof(StatusText));
                         return;
                     }
@@ -18777,11 +19057,14 @@ namespace AtlasAI.Views.ViewModels
                 FilePath = streamUrl,
                 Title = title,
                 Extension = ext,
+                MediaType = isAudioOnly ? AtlasAI.MediaScanner.MediaType.Audio : AtlasAI.MediaScanner.MediaType.Video,
                 SectionName = "cloud",
                 DateAdded = DateTime.UtcNow
             };
 
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] before _playbackService.PlaySingle path={playbackItem.FilePath} title={playbackItem.Title}");
             _playbackService.PlaySingle(playbackItem);
+            System.Diagnostics.Debug.WriteLine($"[BridgePlayTrace] after _playbackService.PlaySingle path={playbackItem.FilePath} title={playbackItem.Title}");
 
             NowPlayingTitle = title;
             NowPlayingArtist = "";
@@ -27806,6 +28089,37 @@ namespace AtlasAI.Views.ViewModels
             try
             {
                 _stopPlayer?.Invoke();
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                if (_videoPlayerWindow != null)
+                {
+                    try { _videoPlayerWindow.Close(); } catch { }
+                    _videoPlayerWindow = null;
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                foreach (var window in Application.Current.Windows.OfType<AtlasAI.FullscreenPlayerWindow>().ToList())
+                {
+                    try { window.Close(); } catch { }
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                _playbackService.ClearQueue();
             }
             catch
             {

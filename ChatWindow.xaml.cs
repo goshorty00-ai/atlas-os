@@ -166,6 +166,19 @@ namespace AtlasAI {
             }
         }
 
+        /// <summary>Directly sets header collapsed state (e.g. called from MediaHub React restore arrow).</summary>
+        public void SetHeaderCollapsed(bool collapsed)
+        {
+            try
+            {
+                _headerCollapsed = collapsed;
+                ApplyHeaderChromeState();
+            }
+            catch
+            {
+            }
+        }
+
         private void SetWallpaperOnlyMode(bool enable)
         {
             try
@@ -261,6 +274,8 @@ namespace AtlasAI {
                     }
                     if (ShowHeaderArrowButton != null) ShowHeaderArrowButton.Visibility = Visibility.Collapsed;
                 }
+                // Notify active MediaHub WebView to collapse/restore its internal sidebar
+                try { MediaPageRoot?.NotifyMediaHubChromeState(_headerCollapsed); } catch { }
             }
             catch
             {
